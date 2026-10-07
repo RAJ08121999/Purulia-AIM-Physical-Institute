@@ -98,7 +98,8 @@ export default function ContactPage() {
                         Direct assistance for candidates coming from Bankura, Purulia, Jhargram, and Midnapore districts:
                       </p>
                       <div className="text-amber-400 font-mono font-bold text-sm mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
-                        <span>Helpline: +91 98000 00000</span>
+                        <span>Helpline: +91 8699261094
+                        </span>
                         <span className="hidden sm:inline text-gray-600">•</span>
                         <span>dutyroom@puruliaaim.in</span>
                       </div>
