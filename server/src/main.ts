@@ -35,8 +35,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   const port = process.env.PORT || 4000;
-  await app.listen(port);
-  logger.log(`AIM Modular API running on http://localhost:${port}/api/v1`);
+  await app.listen(port, '0.0.0.0');
+  logger.log(`AIM Modular API running on http://0.0.0.0:${port}/api/v1`);
 }
 
 bootstrap();
