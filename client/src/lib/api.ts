@@ -12,6 +12,8 @@ export interface AdmissionFormData {
   aadhaarNumber: string;
   phone: string;
   emergencyPhone: string;
+  email?: string;
+  password?: string;
   domicileDistrict: string;
   policeStation: string;
   villageTown: string;
@@ -617,4 +619,98 @@ export async function saveRunTrial(payload: RecordRunTrialPayload): Promise<RunT
   if (!res.ok) throw new Error(`Failed to save run trial: ${res.status}`);
   return res.json();
 }
+
+// -------------------------------------------------------------
+// AUTHENTICATION API (CADETS & USTADS)
+// -------------------------------------------------------------
+
+export interface LoginPayload {
+  identifier: string;
+  password?: string;
+  role?: 'STUDENT' | 'TRAINER' | 'ADMIN' | 'SUPER_ADMIN';
+}
+
+export interface RegisterTrainerPayload {
+  fullName: string;
+  email: string;
+  phone: string;
+  password: string;
+  regimentOrTitle?: string;
+  specialization?: string;
+  secretVerificationCode?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message?: string;
+  token: string;
+  user: {
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    role: string;
+    dossierNumber?: string;
+    batchId?: string;
+    targetForce?: string;
+    regiment?: string;
+  };
+}
+
+export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Login failed. Please check your credentials.');
+  }
+  const data: AuthResponse = await res.json();
+  if (data.token) {
+    localStorage.setItem('aim_auth_token', data.token);
+    localStorage.setItem('aim_auth_user', JSON.stringify(data.user));
+    if (data.user.name) localStorage.setItem('cadet_name', data.user.name);
+    if (data.user.dossierNumber) localStorage.setItem('cadet_dossier_id', data.user.dossierNumber);
+    if (data.user.targetForce) localStorage.setItem('cadet_target_force', data.user.targetForce);
+  }
+  return data;
+}
+
+export async function registerTrainer(payload: RegisterTrainerPayload): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE_URL}/auth/register-trainer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Trainer registration failed.');
+  }
+  const data: AuthResponse = await res.json();
+  if (data.token) {
+    localStorage.setItem('aim_auth_token', data.token);
+    localStorage.setItem('aim_auth_user', JSON.stringify(data.user));
+  }
+  return data;
+}
+
+export function getCurrentUser() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('aim_auth_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function logoutUser() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('aim_auth_token');
+  localStorage.removeItem('aim_auth_user');
+  window.location.href = '/';
+}
+
 

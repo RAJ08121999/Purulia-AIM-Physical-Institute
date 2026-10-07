@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException, Logger } from '@nes
 import { DbService } from './db.service';
 import { PrismaService } from './prisma.service';
 import { StudentProfileEntity } from '../models';
+import * as argon2 from 'argon2';
 
 export interface CreateAdmissionDto {
   fullName: string;
@@ -13,6 +14,8 @@ export interface CreateAdmissionDto {
   aadhaarNumber: string;
   phone: string;
   emergencyPhone: string;
+  email?: string;
+  password?: string;
   domicileDistrict?: string;
   policeStation: string;
   villageTown: string;
@@ -280,8 +283,43 @@ export class AdmissionsService {
       const parsedDob = new Date(newCadet.dob);
       const validDob = isNaN(parsedDob.getTime()) ? new Date('2004-01-01') : parsedDob;
 
+      let createdUserId: string | null = null;
+      if (dto.email && dto.password) {
+        try {
+          const cleanEmail = dto.email.trim().toLowerCase();
+          const existingUser = await this.prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: cleanEmail },
+                { phone: newCadet.phone }
+              ]
+            }
+          });
+          if (existingUser) {
+            createdUserId = existingUser.id;
+          } else {
+            const passwordHash = await argon2.hash(dto.password);
+            const user = await this.prisma.user.create({
+              data: {
+                email: cleanEmail,
+                phone: newCadet.phone,
+                fullName: newCadet.fullName,
+                passwordHash,
+                role: 'STUDENT',
+                status: 'ACTIVE'
+              }
+            });
+            createdUserId = user.id;
+            this.logger.log(`Created cadet User login account: ${cleanEmail}`);
+          }
+        } catch (uErr: any) {
+          this.logger.warn(`Could not create User login credentials: ${uErr.message}`);
+        }
+      }
+
       await this.prisma.studentProfile.create({
         data: {
+          userId: createdUserId || undefined,
           dossierNumber: newCadet.dossierNumber,
           fullName: newCadet.fullName,
           fatherName: newCadet.fatherName,

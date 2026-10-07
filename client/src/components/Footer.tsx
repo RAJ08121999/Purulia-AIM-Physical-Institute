@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Shield, Phone, Mail, MapPin, Heart, ArrowUpRight, Compass } from 'lucide-react';
+import { FacebookIcon, InstagramIcon, YoutubeIcon } from '@/components/SocialIcons';
 import Link from 'next/link';
 
 export const Footer: React.FC = () => {
@@ -100,12 +101,48 @@ export const Footer: React.FC = () => {
                 <span>dutyroom@puruliaaim.in</span>
               </li>
             </ul>
-            <div className="mt-5 pt-4 border-t border-[#273623]">
+            <div className="mt-4 pt-3 border-t border-[#273623] space-y-2">
+              <span className="text-xs font-mono text-gray-400 block font-bold uppercase">Official Social Channels:</span>
+              <div className="grid grid-cols-3 gap-2">
+                <a
+                  href="https://www.facebook.com/Puruliaaim?mibextid=rS40aB7S9Ucbxw6v"
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Facebook"
+                  className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-[#121811] hover:bg-[#1A2415] text-blue-400 border border-[#273623] hover:border-blue-500/50 transition-all text-xs font-mono"
+                >
+                  <FacebookIcon className="w-4 h-4" />
+                  <span className="text-[10px]">FB</span>
+                </a>
+                <a
+                  href="https://www.instagram.com/puruliaaim?stkn=NGprY3V3OHRpZmJr"
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Instagram @puruliaaim"
+                  className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-[#121811] hover:bg-[#1A2415] text-pink-400 border border-[#273623] hover:border-pink-500/50 transition-all text-xs font-mono"
+                >
+                  <InstagramIcon className="w-4 h-4" />
+                  <span className="text-[10px]">Insta</span>
+                </a>
+                <a
+                  href="https://youtube.com/@anupfaujipuruliaaimphysica4494?si=dQpEoma6CzzGkf88"
+                  target="_blank"
+                  rel="noreferrer"
+                  title="YouTube @anupfaujipuruliaaim"
+                  className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-[#121811] hover:bg-[#1A2415] text-rose-500 border border-[#273623] hover:border-rose-500/50 transition-all text-xs font-mono"
+                >
+                  <YoutubeIcon className="w-4 h-4" />
+                  <span className="text-[10px]">YT</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="mt-3">
               <a
-                href="https://wa.me/919800000000"
+                href="https://wa.me/918699261094"
                 target="_blank"
                 rel="noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 font-display uppercase tracking-wider text-xs font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 font-display uppercase tracking-wider text-xs font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]"
               >
                 <span>Duty Room WhatsApp</span>
                 <ArrowUpRight className="w-4 h-4" />

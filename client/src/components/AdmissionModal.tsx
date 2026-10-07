@@ -35,9 +35,10 @@ import { submitCadetAdmission } from '@/lib/api';
 interface AdmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenLogin?: () => void;
 }
 
-export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose }) => {
+export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose, onOpenLogin }) => {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,6 +58,8 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose 
     aadhaarNumber: '',
     phone: '',
     emergencyPhone: '',
+    email: '',
+    password: '',
     domicileDistrict: 'Purulia',
     policeStation: '',
     villageTown: '',
@@ -700,9 +703,20 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose 
               {/* STEP 1: PERSONAL & IDENTIFICATION BIO-DATA */}
               {step === 1 && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between bg-[#121811] p-3 rounded-xl border border-[#273623] text-xs font-mono">
-                    <span className="text-amber-400 font-bold uppercase">Section 1: Identification & Residential Details</span>
-                    <span className="text-gray-400">Strict As Per Matriculation Certificate</span>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-[#121811] p-3 rounded-xl border border-[#273623] text-xs font-mono gap-2">
+                    <span className="text-amber-400 font-bold uppercase">Section 1: Identification & Security Credentials</span>
+                    {onOpenLogin && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onOpenLogin();
+                        }}
+                        className="text-amber-400 hover:text-amber-300 underline font-bold cursor-pointer"
+                      >
+                        Already Enlisted? Login to Cadet Dossier →
+                      </button>
+                    )}
                   </div>
 
                   {/* Passport Sized Photograph (35mm x 45mm) Upload Module */}
@@ -1000,6 +1014,49 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose 
                         placeholder="Alternate phone number"
                         className="w-full bg-[#121811] border border-[#273623] rounded-lg px-4 py-2.5 text-white text-sm"
                       />
+                    </div>
+                  </div>
+
+                  {/* Account Login Credentials */}
+                  <div className="p-3.5 rounded-xl bg-[#0E140C] border border-amber-500/40 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-amber-400" />
+                        Cadet Login & Security Credentials
+                      </span>
+                      <span className="text-[10px] font-mono text-gray-400">Used for Cadet Dossier Login</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
+                          Email Address (Login ID) *
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          required
+                          value={formData.email}
+                          onChange={handleChange}
+                          placeholder="cadet.name@gmail.com"
+                          className="w-full bg-[#121811] border border-[#273623] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
+                          Create Password (min. 6 characters) *
+                        </label>
+                        <input
+                          type="password"
+                          name="password"
+                          required
+                          minLength={6}
+                          value={formData.password}
+                          onChange={handleChange}
+                          placeholder="••••••••"
+                          className="w-full bg-[#121811] border border-[#273623] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500 font-mono"
+                        />
+                      </div>
                     </div>
                   </div>
 

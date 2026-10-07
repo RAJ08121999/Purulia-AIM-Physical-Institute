@@ -30,12 +30,13 @@ import {
   Calculator,
   Percent,
   Edit3,
-  Save
+  Save,
+  LogOut
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
 import { ParadeDrillStopwatch } from '@/components';
 import { DEFAULT_CADET_REPORT } from '@/components/ProgressReportPDFView';
-import { fetchLiveDrillSession, LiveDrillSession } from '@/lib/api';
+import { fetchLiveDrillSession, LiveDrillSession, logoutUser } from '@/lib/api';
 
 // Performance Optimization: Dynamic imports with React Suspense & Skeletons (LCP < 2.5s)
 const DynamicStudentProgressVisualizer = dynamic(
@@ -457,6 +458,15 @@ export default function StudentPortalPage() {
                 </div>
               </div>
             </div>
+
+            <button
+              onClick={() => logoutUser()}
+              title="Sign Out of Cadet Dossier"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 text-red-400 hover:text-red-200 text-xs font-display font-bold uppercase tracking-wider transition-all cursor-pointer ml-1"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
           </div>
         </div>
       </header>
