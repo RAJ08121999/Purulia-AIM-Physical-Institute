@@ -115,11 +115,11 @@ export class AdmissionsService {
         where: status ? { admissionStatus: status.toUpperCase() } : undefined,
         orderBy: { createdAt: 'desc' }
       });
-      if (prismaStudents && prismaStudents.length > 0) {
+      if (prismaStudents) {
         return prismaStudents;
       }
     } catch (err: any) {
-      this.logger.warn(`Prisma fetch failed, using memory store: ${err.message}`);
+      this.logger.warn(`Prisma fetch failed, using fallback store: ${err.message}`);
     }
 
     const students = this.db.getStudents();

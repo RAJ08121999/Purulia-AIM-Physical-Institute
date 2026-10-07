@@ -30,7 +30,7 @@ import {
   Upload
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
-import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser } from '@/lib/api';
+import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications } from '@/lib/api';
 import { ParadeDrillStopwatch } from '@/components';
 
 interface CadetAttendance {
@@ -75,58 +75,7 @@ export interface RecruitmentOrder {
   date: string;
 }
 
-const initialCadets: CadetAttendance[] = [
-  {
-    id: '1',
-    roll: 'AIM-2026-001',
-    name: 'Rohan Karmakar',
-    batch: 'Morning Alfa (Army GD)',
-    target: 'Army GD (5m30s)',
-    consecutiveAbsences: 3, // Defaulter!
-    last1600m: '05m 58s',
-    status: 'ABSENT'
-  },
-  {
-    id: '2',
-    roll: 'AIM-2026-004',
-    name: 'Amit Bauri',
-    batch: 'Morning Alfa (Army GD)',
-    target: 'Army GD (5m30s)',
-    consecutiveAbsences: 0,
-    last1600m: '05m 28s',
-    status: 'PRESENT'
-  },
-  {
-    id: '3',
-    roll: 'AIM-2026-012',
-    name: 'Deepak Sen',
-    batch: 'Morning Alfa (Army GD)',
-    target: 'WBP Constable (6m30s)',
-    consecutiveAbsences: 0,
-    last1600m: '05m 45s',
-    status: 'PRESENT'
-  },
-  {
-    id: '4',
-    roll: 'AIM-2026-018',
-    name: 'Bapi Soren',
-    batch: 'Morning Alfa (Army GD)',
-    target: 'Army GD (5m30s)',
-    consecutiveAbsences: 1,
-    last1600m: '06m 12s',
-    status: 'LATE'
-  },
-  {
-    id: '5',
-    roll: 'AIM-2026-042',
-    name: 'Sourav Mukherjee',
-    batch: 'Morning Alfa (Army GD)',
-    target: 'Army GD (5m30s)',
-    consecutiveAbsences: 0,
-    last1600m: '05m 24s',
-    status: 'PRESENT'
-  }
-];
+const initialCadets: CadetAttendance[] = [];
 
 const initialEvents: DrillEvent[] = [
   {
@@ -262,13 +211,33 @@ export default function TrainerCommandCenter() {
   const [quoteSaved, setQuoteSaved] = useState(false);
   const [isEditingQuote, setIsEditingQuote] = useState(false);
 
-  // Load user & local stored items
+  // Load user, live database cadets & local stored items
   React.useEffect(() => {
     const user = getCurrentUser();
     if (user) {
       setCurrentUser(user);
       if (user.name) setQuoteAuthor(`${user.name} (Drill Ustad)`);
     }
+
+    // Load authentic registered cadets from database
+    fetchCadetApplications().then(apps => {
+      if (Array.isArray(apps) && apps.length > 0) {
+        const mapped: CadetAttendance[] = apps.map((a: any, idx: number) => ({
+          id: a.id || String(idx + 1),
+          roll: a.dossierNumber || a.rollNumber || `AIM-2026-${String(idx + 1).padStart(3, '0')}`,
+          name: a.fullName || 'Enlisted Cadet',
+          batch: a.targetForce ? `${a.targetForce} Platoon` : 'Morning Alfa (Army GD)',
+          target: a.targetForce || 'Army GD (5m30s)',
+          consecutiveAbsences: 0,
+          last1600m: a.current1600mTime || 'Not Tested',
+          status: 'PRESENT'
+        }));
+        setCadets(mapped);
+        setSelectedCadetId(mapped[0].roll);
+      }
+    }).catch(err => {
+      console.warn('Failed to load authentic cadets for trainer:', err);
+    });
 
     try {
       const storedQuote = localStorage.getItem('aim_daily_motivational_quote');
@@ -301,12 +270,12 @@ export default function TrainerCommandCenter() {
   };
 
   // Assessment Telemetry Form State
-  const [selectedCadetId, setSelectedCadetId] = useState('AIM-2026-042');
+  const [selectedCadetId, setSelectedCadetId] = useState('');
   const [entryRunMins, setEntryRunMins] = useState(5);
-  const [entryRunSecs, setEntryRunSecs] = useState(24);
-  const [entryPullUps, setEntryPullUps] = useState(11);
-  const [entryPushUps, setEntryPushUps] = useState(48);
-  const [trainerRemarks, setTrainerRemarks] = useState('Excellent sprint finish. Maintained rhythm in final lap.');
+  const [entryRunSecs, setEntryRunSecs] = useState(30);
+  const [entryPullUps, setEntryPullUps] = useState(10);
+  const [entryPushUps, setEntryPushUps] = useState(40);
+  const [trainerRemarks, setTrainerRemarks] = useState('');
   const [telemetrySaved, setTelemetrySaved] = useState(false);
 
   // Status toggle handler
@@ -705,50 +674,58 @@ export default function TrainerCommandCenter() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1A2415]">
-                  {filteredCadets.map(cadet => (
-                    <tr key={cadet.id} className="hover:bg-[#161F15]/50 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <div className="font-display font-bold text-sm text-white uppercase">{cadet.name}</div>
-                        <div className="text-[11px] text-amber-400/80">{cadet.roll}</div>
-                      </td>
-                      <td className="py-3.5 px-4 text-gray-300">{cadet.target}</td>
-                      <td className="py-3.5 px-4 font-bold text-amber-400">{cadet.last1600m}</td>
-                      <td className="py-3.5 px-4">
-                        {cadet.consecutiveAbsences >= 3 ? (
-                          <span className="text-rose-400 font-bold flex items-center gap-1">
-                            <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
-                            {cadet.consecutiveAbsences} Days (Defaulter)
-                          </span>
-                        ) : cadet.consecutiveAbsences > 0 ? (
-                          <span className="text-amber-400 font-bold">{cadet.consecutiveAbsences} Day Absent</span>
-                        ) : (
-                          <span className="text-emerald-400">Regular</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {(['PRESENT', 'ABSENT', 'LATE', 'LEAVE'] as const).map(s => (
-                            <button
-                              key={s}
-                              onClick={() => handleStatusChange(cadet.id, s)}
-                              className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all ${cadet.status === s
-                                ? s === 'PRESENT'
-                                  ? 'bg-emerald-500 text-black shadow-[0_0_8px_rgba(16,185,129,0.5)]'
-                                  : s === 'ABSENT'
-                                    ? 'bg-rose-500 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)]'
-                                    : s === 'LATE'
-                                      ? 'bg-amber-500 text-black shadow-[0_0_8px_rgba(245,158,11,0.5)]'
-                                      : 'bg-blue-500 text-white'
-                                : 'bg-[#0B0F0A] text-gray-500 border border-[#273623] hover:text-white'
-                                }`}
-                            >
-                              {s[0]}
-                            </button>
-                          ))}
-                        </div>
+                  {filteredCadets.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-gray-400 font-mono text-xs">
+                        No enrolled cadets found in database. Cadets will appear here automatically when they enlist or register.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredCadets.map(cadet => (
+                      <tr key={cadet.id} className="hover:bg-[#161F15]/50 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <div className="font-display font-bold text-sm text-white uppercase">{cadet.name}</div>
+                          <div className="text-[11px] text-amber-400/80">{cadet.roll}</div>
+                        </td>
+                        <td className="py-3.5 px-4 text-gray-300">{cadet.target}</td>
+                        <td className="py-3.5 px-4 font-bold text-amber-400">{cadet.last1600m}</td>
+                        <td className="py-3.5 px-4">
+                          {cadet.consecutiveAbsences >= 3 ? (
+                            <span className="text-rose-400 font-bold flex items-center gap-1">
+                              <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                              {cadet.consecutiveAbsences} Days (Defaulter)
+                            </span>
+                          ) : cadet.consecutiveAbsences > 0 ? (
+                            <span className="text-amber-400 font-bold">{cadet.consecutiveAbsences} Day Absent</span>
+                          ) : (
+                            <span className="text-emerald-400">Regular</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center justify-center gap-1.5">
+                            {(['PRESENT', 'ABSENT', 'LATE', 'LEAVE'] as const).map(s => (
+                              <button
+                                key={s}
+                                onClick={() => handleStatusChange(cadet.id, s)}
+                                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all ${cadet.status === s
+                                  ? s === 'PRESENT'
+                                    ? 'bg-emerald-500 text-black shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                                    : s === 'ABSENT'
+                                      ? 'bg-rose-500 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                                      : s === 'LATE'
+                                        ? 'bg-amber-500 text-black shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                                        : 'bg-blue-500 text-white'
+                                  : 'bg-[#0B0F0A] text-gray-500 border border-[#273623] hover:text-white'
+                                  }`}
+                              >
+                                {s[0]}
+                              </button>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -776,10 +753,15 @@ export default function TrainerCommandCenter() {
                     onChange={e => setSelectedCadetId(e.target.value)}
                     className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
                   >
-                    <option value="AIM-2026-042">AIM-2026-042 — Sourav Mukherjee (Army GD)</option>
-                    <option value="AIM-2026-004">AIM-2026-004 — Amit Bauri (Army GD)</option>
-                    <option value="AIM-2026-012">AIM-2026-012 — Deepak Sen (WBP Constable)</option>
-                    <option value="AIM-2026-018">AIM-2026-018 — Bapi Soren (Army GD)</option>
+                    {cadets.length === 0 ? (
+                      <option value="">No enrolled cadets found in database</option>
+                    ) : (
+                      cadets.map(c => (
+                        <option key={c.id} value={c.roll}>
+                          {c.roll} — {c.name} ({c.target})
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
 

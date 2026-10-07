@@ -14,7 +14,16 @@ export const metadata: Metadata = {
     'WB Police SI Preparation',
     'Army GD 1600m Running'
   ],
-  authors: [{ name: 'Purulia Aim Physical Institute' }]
+  authors: [{ name: 'Purulia Aim Physical Institute' }],
+  icons: {
+    icon: [
+      { url: '/assets/images/logo.png', type: 'image/png' },
+      { url: '/assets/images/logo.png', sizes: '32x32', type: 'image/png' },
+      { url: '/assets/images/logo.png', sizes: '192x192', type: 'image/png' }
+    ],
+    shortcut: '/assets/images/logo.png',
+    apple: '/assets/images/logo.png'
+  }
 };
 
 export const viewport = {

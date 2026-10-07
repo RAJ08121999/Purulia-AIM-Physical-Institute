@@ -264,6 +264,7 @@ export const DEFAULT_TRIAL_HISTORY: TrialDataPoint[] = [
 
 export interface StudentProgressVisualizerProps {
   data?: TrialDataPoint[];
+  cadetId?: string;
   studentName?: string;
   initialForce?: TargetForceKey;
   defaultCategory?: RunCategoryKey;
@@ -273,7 +274,8 @@ export interface StudentProgressVisualizerProps {
 
 export function StudentProgressVisualizer({
   data,
-  studentName = 'Cadet Sourav Mukherjee',
+  cadetId,
+  studentName = 'Enlisted Cadet',
   initialForce = 'ARMY_GD',
   defaultCategory = '1600M',
   onExportReport,
@@ -287,31 +289,39 @@ export function StudentProgressVisualizer({
   const standard = TARGET_STANDARDS[selectedForce];
   const activeCategorySpec = RUN_CATEGORY_SPECS[selectedCategory];
 
-  // Fetch any newly logged trials for this cadet in this category
+  // Fetch authentic logged trials for this cadet in this category
   React.useEffect(() => {
     let active = true;
-    fetchRunTrials('AIM-2026-042', selectedCategory).then(res => {
+    if (!cadetId) {
+      setLiveTrials([]);
+      return;
+    }
+    fetchRunTrials(cadetId, selectedCategory).then(res => {
       if (active && Array.isArray(res) && res.length > 0) {
         const mapped: TrialDataPoint[] = res.map(t => ({
           id: t.id,
           trialDate: new Date(t.date || t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
           timeSeconds: t.timeSeconds,
           displayTime: t.timeFormatted,
-          pullups: 10,
-          marks: 95,
+          pullups: t.pullupsCount || 10,
+          marks: t.marksPullups ? (t.marks1600m || 60) + t.marksPullups : 80,
           note: t.trainerRemarks || `${t.source === 'TRAINER_DRILL' ? 'Parade Ground Drill' : 'Cadet Self-Training'}`,
           ditchPass: true,
           zigzagPass: true,
           source: t.source
         }));
         setLiveTrials(mapped);
+      } else if (active) {
+        setLiveTrials([]);
       }
-    }).catch(() => {});
+    }).catch(() => {
+      if (active) setLiveTrials([]);
+    });
     return () => { active = false; };
-  }, [selectedCategory]);
+  }, [cadetId, selectedCategory]);
 
-  // Combine static progression with live recorded trials
-  const categoryBaseData = data || CATEGORY_TRIAL_HISTORY[selectedCategory] || DEFAULT_TRIAL_HISTORY;
+  // Use authentic records (passed via data or fetched from live database)
+  const categoryBaseData = data || [];
   const activeData: TrialDataPoint[] = useMemo(() => {
     if (liveTrials.length > 0) {
       const existingIds = new Set(categoryBaseData.map(d => d.id));
@@ -569,7 +579,18 @@ export function StudentProgressVisualizer({
 
         {/* Dynamic Chart Container */}
         <div className="h-64 sm:h-80 w-full pt-2 sm:pt-4">
-          <ResponsiveContainer width="100%" height="100%">
+          {activeData.length === 0 ? (
+            <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-[#273623] rounded-2xl bg-[#0B0F0A]">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mb-3 border border-amber-500/30">
+                <Timer className="w-6 h-6" />
+              </div>
+              <h5 className="font-display font-bold text-white text-base">No Recorded Field Trials Yet</h5>
+              <p className="text-xs font-mono text-gray-400 max-w-md mt-1">
+                No official trials logged for {activeCategorySpec.label} yet. Timings logged during morning parade drills or stopwatch runs will plot here automatically.
+              </p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
             {selectedMetric === '1600M_RUN' ? (
               <AreaChart data={activeData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <defs>
@@ -749,8 +770,9 @@ export function StudentProgressVisualizer({
               </BarChart>
             )}
           </ResponsiveContainer>
-        </div>
+        )}
       </div>
+    </div>
 
       {/* Trial Assessment Table Breakdown */}
       <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#121811] border border-[#273623] space-y-4">
@@ -781,16 +803,23 @@ export function StudentProgressVisualizer({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1A2415]">
-              {activeData.map((trial, idx) => {
-                const isCleared = trial.timeSeconds <= activeCategorySpec.benchmarkSeconds;
-                return (
-                  <tr key={trial.id} className="hover:bg-[#161F15]/50 transition-colors">
-                    <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-[#1A2415] text-amber-400 text-[10px] flex items-center justify-center font-bold">
-                        {idx + 1}
-                      </span>
-                      <span>{trial.trialDate}</span>
-                    </td>
+              {activeData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-gray-500 font-mono text-xs">
+                    0 trials recorded for {activeCategorySpec.label}. Timing logs will list chronologically once completed.
+                  </td>
+                </tr>
+              ) : (
+                activeData.map((trial, idx) => {
+                  const isCleared = trial.timeSeconds <= activeCategorySpec.benchmarkSeconds;
+                  return (
+                    <tr key={trial.id} className="hover:bg-[#161F15]/50 transition-colors">
+                      <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[#1A2415] text-amber-400 text-[10px] flex items-center justify-center font-bold">
+                          {idx + 1}
+                        </span>
+                        <span>{trial.trialDate}</span>
+                      </td>
                     <td className="py-3 px-4 text-amber-400 font-bold">
                       {trial.displayTime}
                     </td>
@@ -820,7 +849,7 @@ export function StudentProgressVisualizer({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         </div>

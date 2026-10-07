@@ -67,8 +67,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
                 </div>
                 <div className="text-[9px] sm:text-[10px] text-amber-400 font-mono tracking-tight flex items-center gap-1 font-semibold whitespace-nowrap">
                   <span className="text-amber-300">PURULIA HQ</span>
-                  <span className="text-gray-600 hidden xs:inline">•</span>
-                  <span className="text-gray-400 hidden xs:inline">HAV. ANUP KR. MAHATO</span>
+                  <span className="text-gray-600 xs:inline">•</span>
+                  <span className="text-gray-400 xs:inline">HAV. ANUP KR. MAHATO</span>
                 </div>
               </div>
             </Link>
@@ -105,7 +105,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
             {/* Action CTAs + Social Media Links */}
             <div className="hidden sm:flex items-center gap-2.5 xl:gap-3 flex-shrink-0">
               {/* Verified Social Media Channels */}
-              <div className="flex items-center gap-1 bg-[#0E140C] border border-[#273623] px-2 py-1.5 rounded-xl">
+              <div className="flex items-center gap-1  py-1.5 rounded-xl">
                 <a
                   href="https://www.facebook.com/Puruliaaim?mibextid=rS40aB7S9Ucbxw6v"
                   target="_blank"
@@ -113,7 +113,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
                   title="Official Facebook Page"
                   className="p-1.5 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-[#1A2415] transition-all"
                 >
-                  <FacebookIcon className="w-4 h-4" />
+                  <FacebookIcon className="w-5 h-5" />
                 </a>
                 <a
                   href="https://www.instagram.com/puruliaaim?stkn=NGprY3V3OHRpZmJr"
@@ -122,7 +122,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
                   title="Official Instagram @puruliaaim"
                   className="p-1.5 rounded-lg text-gray-400 hover:text-pink-400 hover:bg-[#1A2415] transition-all"
                 >
-                  <InstagramIcon className="w-4 h-4" />
+                  <InstagramIcon className="w-5 h-5" />
                 </a>
                 <a
                   href="https://youtube.com/@anupfaujipuruliaaimphysica4494?si=dQpEoma6CzzGkf88"
@@ -131,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
                   title="Official YouTube Channel @anupfaujipuruliaaim"
                   className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-[#1A2415] transition-all"
                 >
-                  <YoutubeIcon className="w-4 h-4" />
+                  <YoutubeIcon className="w-5 h-5" />
                 </a>
               </div>
 

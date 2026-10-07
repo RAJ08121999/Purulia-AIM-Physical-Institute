@@ -197,22 +197,7 @@ export async function fetchInstituteEvents(): Promise<InstituteEvent[]> {
     return res.json();
   } catch (err) {
     console.warn('Fallback to local event cache:', err);
-    return [
-      {
-        id: 'evt-001',
-        title: 'Sunday 1600m Super-Timed Trial (Open Rally Simulation)',
-        date: '2026-10-11',
-        time: '05:30 hrs - 08:30 hrs',
-        location: 'J.K. College Stadium Ground, Purulia',
-        category: 'TRIAL',
-        description: 'Electronic chip & synchronized stopwatch timed 1600m trial simulating official Army ARO Barrackpore rally conditions. Group 1 cut-off: 5m 30s.',
-        requiredKit: 'White Running Vest, Running Spikes/Shoes, AIM Chest Number Bib, Water Flask',
-        reportingTime: '05:00 hrs sharp at North Pavilion Gate',
-        isRollCallOpen: true,
-        slotsLimit: 120,
-        registeredCount: 84
-      }
-    ];
+    return [];
   }
 }
 
@@ -363,32 +348,7 @@ export async function fetchAuditLogs(limit: number = 50): Promise<AuditLogItem[]
     return data.logs || [];
   } catch (err) {
     console.warn('Falling back to local audit cache:', err);
-    return [
-      {
-        id: 'log-1',
-        actor: 'Havaldar Anup Kumar Mahato (Admin)',
-        action: 'ADMISSION_APPROVED',
-        details: 'Approved applicant Anjali Hansda. Allocated to Morning Alfa. Roll: AIM-2026-039',
-        createdAt: new Date().toISOString(),
-        ip: '192.168.1.42'
-      },
-      {
-        id: 'log-2',
-        actor: 'System Telemetry Engine',
-        action: 'ATTENDANCE_BATCH_RECORDED',
-        details: 'Recorded 42 presents, 3 absents for Morning Alfa drill session.',
-        createdAt: new Date().toISOString(),
-        ip: '127.0.0.1'
-      },
-      {
-        id: 'log-3',
-        actor: 'Havaldar Anup Kumar Mahato (Admin)',
-        action: 'TRIAL_TELEMETRY_LOGGED',
-        details: 'Recorded Sunday 1600m time for Cadet Sourav Mukherjee (05m 24s).',
-        createdAt: new Date().toISOString(),
-        ip: '192.168.1.42'
-      }
-    ];
+    return [];
   }
 }
 
@@ -440,6 +400,8 @@ export interface RunTrial {
   varianceSeconds: number;
   isQualified: boolean;
   pullupsCount?: number;
+  marks1600m?: number;
+  marksPullups?: number;
   source: 'TRAINER_DRILL' | 'CADET_SELF_TRAINING';
   drillSessionId?: string;
   trainerRemarks?: string;

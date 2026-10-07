@@ -828,7 +828,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                       required
                       value={formData.fullName}
                       onChange={handleChange}
-                      placeholder="e.g. Sourav Mukherjee"
+                      placeholder="e.g. Cadet Full Name"
                       className="w-full bg-[#121811] border border-[#273623] rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 text-sm"
                     />
                   </div>

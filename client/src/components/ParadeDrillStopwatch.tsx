@@ -32,7 +32,8 @@ import {
   fetchRunCategories,
   fetchLiveDrillSession,
   controlLiveDrillSession,
-  saveRunTrial
+  saveRunTrial,
+  fetchCadetApplications
 } from '@/lib/api';
 
 export interface ParadeDrillStopwatchProps {
@@ -49,12 +50,12 @@ export function ParadeDrillStopwatch({
   mode,
   cadetId,
   cadetRoll,
-  cadetName = 'Cadet Sourav Mukherjee',
+  cadetName = 'Cadet Aspirant',
   onTrialRecorded,
   onClose,
   className = ''
 }: ParadeDrillStopwatchProps) {
-  const activeCadetId = cadetId || cadetRoll || 'AIM-2026-042';
+  const activeCadetId = cadetId || cadetRoll || '';
   // Categories & Configuration
   const [categories, setCategories] = useState<RunCategoryItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<RunCategoryKey>('1600M');
@@ -82,17 +83,11 @@ export function ParadeDrillStopwatch({
   // Active display elapsed milliseconds (computed smoothly)
   const [displayElapsedMs, setDisplayElapsedMs] = useState(0);
 
-  // Batch Cadets for Quick Heat Logging (Trainer Mode)
-  const sampleRoster = [
-    { id: 'AIM-2026-042', name: 'Sourav Mukherjee', roll: 'AIM-ALPHA-01', batch: 'Alfa (Army GD)' },
-    { id: 'AIM-2026-004', name: 'Amit Bauri', roll: 'AIM-ALPHA-02', batch: 'Alfa (Army GD)' },
-    { id: 'AIM-2026-012', name: 'Deepak Sen', roll: 'AIM-ALPHA-03', batch: 'Alfa (WBP)' },
-    { id: 'AIM-2026-018', name: 'Bapi Soren', roll: 'AIM-ALPHA-04', batch: 'Alfa (Army GD)' },
-    { id: 'AIM-2026-001', name: 'Rohan Karmakar', roll: 'AIM-ALPHA-05', batch: 'Alfa (Army GD)' }
-  ];
+  // Batch Cadets for Quick Heat Logging (Trainer Mode) - Authentically Loaded from Database
+  const [cadetRoster, setCadetRoster] = useState<Array<{ id: string; name: string; roll: string; batch: string }>>([]);
   const [loggedCadetIds, setLoggedCadetIds] = useState<Record<string, boolean>>({});
 
-  // 1. Load Standard Categories on mount
+  // 1. Load Standard Categories & Authentic Cadets on mount
   useEffect(() => {
     fetchRunCategories()
       .then(cats => {
@@ -106,6 +101,20 @@ export function ParadeDrillStopwatch({
         }
       })
       .catch(console.error);
+
+    fetchCadetApplications()
+      .then(apps => {
+        if (Array.isArray(apps) && apps.length > 0) {
+          const mapped = apps.map((a: any, idx: number) => ({
+            id: a.dossierNumber || a.id || `AIM-2026-${String(idx + 1).padStart(3, '0')}`,
+            name: a.fullName || 'Enlisted Cadet',
+            roll: a.dossierNumber || a.rollNumber || `AIM-2026-${String(idx + 1).padStart(3, '0')}`,
+            batch: a.targetForce ? `${a.targetForce} Platoon` : 'Morning Alfa Platoon'
+          }));
+          setCadetRoster(mapped);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // 2. Poll Live Drill Session every 1.5 seconds
@@ -1004,42 +1013,48 @@ export function ParadeDrillStopwatch({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1">
-            {sampleRoster.map(cadet => {
-              const isLogged = loggedCadetIds[cadet.id];
-              return (
-                <div
-                  key={cadet.id}
-                  className="p-3 rounded-xl bg-[#0B0F0A] border border-[#273623] flex items-center justify-between gap-3 text-xs font-mono"
-                >
-                  <div className="min-w-0">
-                    <div className="text-white font-bold truncate">{cadet.name}</div>
-                    <div className="text-[10px] text-gray-500">{cadet.roll}</div>
-                  </div>
-
-                  <button
-                    disabled={isLogged || displayElapsedMs === 0}
-                    onClick={() => handleLogCadetFinish(cadet)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                      isLogged
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                        : 'bg-amber-500 hover:bg-amber-400 text-black font-extrabold'
-                    }`}
+            {cadetRoster.length === 0 ? (
+              <div className="col-span-full py-6 text-center text-gray-500 font-mono text-xs">
+                No registered cadets found in database. Once cadets register, their quick-log buttons will appear here.
+              </div>
+            ) : (
+              cadetRoster.map(cadet => {
+                const isLogged = loggedCadetIds[cadet.id];
+                return (
+                  <div
+                    key={cadet.id}
+                    className="p-3 rounded-xl bg-[#0B0F0A] border border-[#273623] flex items-center justify-between gap-3 text-xs font-mono"
                   >
-                    {isLogged ? (
-                      <>
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>Logged</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-3 h-3" />
-                        <span>Record Time</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              );
-            })}
+                    <div className="min-w-0">
+                      <div className="text-white font-bold truncate">{cadet.name}</div>
+                      <div className="text-[10px] text-gray-500">{cadet.roll}</div>
+                    </div>
+
+                    <button
+                      disabled={isLogged || displayElapsedMs === 0}
+                      onClick={() => handleLogCadetFinish(cadet)}
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                        isLogged
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                          : 'bg-amber-500 hover:bg-amber-400 text-black font-extrabold'
+                      }`}
+                    >
+                      {isLogged ? (
+                        <>
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Logged</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-3 h-3" />
+                          <span>Record Time</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Shield,
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
 import { ProgressReportPDFView } from '@/components';
+import { fetchCadetApplications, updateCadetStatus, fetchAuditLogs } from '@/lib/api';
 
 interface Application {
   id: string;
@@ -36,114 +37,89 @@ interface Application {
   assignedBatch?: string;
 }
 
-const mockApplications: Application[] = [
-  {
-    id: 'app-101',
-    name: 'Debojit Singha Mahapatra',
-    phone: '+91 97330 11223',
-    age: 19,
-    isUnder18: false,
-    heightCm: 172,
-    weightKg: 64,
-    targetForce: 'Indian Army GD',
-    status: 'PENDING',
-    appliedDate: '04-Oct-2026',
-    medicalConsent: true
-  },
-  {
-    id: 'app-102',
-    name: 'Manoj Murmu',
-    phone: '+91 96472 88990',
-    age: 17,
-    isUnder18: true,
-    heightCm: 168,
-    weightKg: 59,
-    targetForce: 'WBP Constable',
-    status: 'PENDING',
-    appliedDate: '03-Oct-2026',
-    medicalConsent: true
-  },
-  {
-    id: 'app-103',
-    name: 'Anjali Hansda',
-    phone: '+91 94750 33445',
-    age: 21,
-    isUnder18: false,
-    heightCm: 161,
-    weightKg: 52,
-    targetForce: 'Kolkata Police Lady Constable',
-    status: 'APPROVED',
-    appliedDate: '29-Sep-2026',
-    medicalConsent: true,
-    assignedRoll: 'AIM-2026-039',
-    assignedBatch: 'Morning Alfa (Track)'
-  },
-  {
-    id: 'app-104',
-    name: 'Soumen Roy',
-    phone: '+91 98321 44556',
-    age: 20,
-    isUnder18: false,
-    heightCm: 170,
-    weightKg: 63,
-    targetForce: 'Railway Protection Force',
-    status: 'WAITLISTED',
-    appliedDate: '28-Sep-2026',
-    medicalConsent: true
-  }
-];
-
-const mockAuditLogs = [
-  {
-    id: 'log-1',
-    actor: 'Havaldar Anup Kumar Mahato (Admin)',
-    action: 'ADMISSION_APPROVED',
-    details: 'Approved applicant Anjali Hansda. Allocated to Morning Alfa. Roll: AIM-2026-039',
-    timestamp: '04-Oct-2026 10:14 AM',
-    ip: '192.168.1.42'
-  },
-  {
-    id: 'log-2',
-    actor: 'System Telemetry Engine',
-    action: 'ATTENDANCE_BATCH_RECORDED',
-    details: 'Recorded 42 presents, 3 absents for Morning Alfa drill session.',
-    timestamp: '04-Oct-2026 08:35 AM',
-    ip: '127.0.0.1'
-  },
-  {
-    id: 'log-3',
-    actor: 'Havaldar Anup Kumar Mahato (Admin)',
-    action: 'TRIAL_TELEMETRY_LOGGED',
-    details: 'Recorded Sunday 1600m time for Cadet Sourav Mukherjee (05m 24s).',
-    timestamp: '03-Oct-2026 06:45 PM',
-    ip: '192.168.1.42'
-  }
-];
-
 export default function AdminCommandCenter() {
   const [activeTab, setActiveTab] = useState<'ADMISSIONS' | 'EVALUATION' | 'AUDIT'>('ADMISSIONS');
-  const [applications, setApplications] = useState<Application[]>(mockApplications);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
 
-  const handleApprove = (appId: string) => {
-    setApplications(prev =>
-      prev.map(app =>
-        app.id === appId
-          ? {
-            ...app,
-            status: 'APPROVED',
-            assignedRoll: `AIM-2026-0${Math.floor(Math.random() * 50 + 45)}`,
-            assignedBatch: 'Morning Alfa (Track)'
-          }
-          : app
-      )
-    );
+  useEffect(() => {
+    let mounted = true;
+    async function loadData() {
+      try {
+        const apps = await fetchCadetApplications();
+        if (mounted && Array.isArray(apps)) {
+          const mapped: Application[] = apps.map((a: any) => {
+            const birthYear = a.dob ? new Date(a.dob).getFullYear() : 2005;
+            const approxAge = new Date().getFullYear() - birthYear;
+            return {
+              id: a.id,
+              name: a.fullName || 'Aspirant Cadet',
+              phone: a.phone || '',
+              age: isNaN(approxAge) ? 19 : approxAge,
+              isUnder18: approxAge < 18,
+              heightCm: Number(a.heightCm) || 0,
+              weightKg: Number(a.weightKg) || 0,
+              targetForce: a.targetForce || 'Indian Army GD',
+              status: (a.admissionStatus as any) || 'PENDING',
+              appliedDate: a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent',
+              medicalConsent: true,
+              assignedRoll: a.dossierNumber || a.rollNumber,
+              assignedBatch: a.batchName || (a.batchId ? `Platoon (${a.batchId})` : undefined)
+            };
+          });
+          setApplications(mapped);
+        }
+      } catch (err) {
+        console.warn('Failed to load applications from database:', err);
+      }
+
+      try {
+        const logs = await fetchAuditLogs();
+        if (mounted && Array.isArray(logs)) {
+          setAuditLogs(logs);
+        }
+      } catch (err) {
+        console.warn('Failed to load audit logs:', err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+
+    loadData();
+    return () => { mounted = false; };
+  }, []);
+
+  const handleApprove = async (appId: string) => {
+    try {
+      await updateCadetStatus(appId, 'APPROVED');
+      setApplications(prev =>
+        prev.map(app =>
+          app.id === appId
+            ? {
+                ...app,
+                status: 'APPROVED',
+                assignedRoll: app.assignedRoll || `AIM-2026-0${Math.floor(Math.random() * 50 + 45)}`,
+                assignedBatch: 'Morning Alfa Platoon'
+              }
+            : app
+        )
+      );
+    } catch (err) {
+      console.warn('Approval failed:', err);
+    }
   };
 
-  const handleReject = (appId: string) => {
-    setApplications(prev =>
-      prev.map(app => (app.id === appId ? { ...app, status: 'REJECTED' } : app))
-    );
+  const handleReject = async (appId: string) => {
+    try {
+      await updateCadetStatus(appId, 'REJECTED');
+      setApplications(prev =>
+        prev.map(app => (app.id === appId ? { ...app, status: 'REJECTED' } : app))
+      );
+    } catch (err) {
+      console.warn('Rejection failed:', err);
+    }
   };
 
   const filteredApps = applications.filter(a => {
@@ -279,76 +255,84 @@ export default function AdminCommandCenter() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1A2415]">
-                  {filteredApps.map(app => (
-                    <tr key={app.id} className="hover:bg-[#161F15]/50 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <div className="font-display font-bold text-sm text-white uppercase">{app.name}</div>
-                        <div className="text-[11px] text-gray-400 mt-0.5">{app.phone}</div>
-                        <div className="text-[10px] text-amber-400">
-                          Age: {app.age} {app.isUnder18 ? '(Guardian Verified)' : ''}
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-gray-300">
-                        <div>Height: <strong className="text-white">{app.heightCm} cm</strong></div>
-                        <div>Weight: <strong className="text-white">{app.weightKg} kg</strong></div>
-                        <div className="text-emerald-400 text-[10px]">Medical Consent: Confirmed</div>
-                      </td>
-                      <td className="py-3.5 px-4 font-bold text-amber-400">
-                        {app.targetForce}
-                        <div className="text-[10px] text-gray-500 font-normal">Applied: {app.appliedDate}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <Badge
-                          variant={
-                            app.status === 'APPROVED'
-                              ? 'success'
-                              : app.status === 'PENDING'
-                                ? 'saffron'
-                                : 'default'
-                          }
-                          size="sm"
-                        >
-                          {app.status}
-                        </Badge>
-                        {app.assignedRoll && (
-                          <div className="text-[10px] font-bold text-lime-400 mt-1">
-                            Roll: {app.assignedRoll}
-                          </div>
-                        )}
-                        {app.assignedBatch && (
-                          <div className="text-[10px] text-gray-400">
-                            {app.assignedBatch}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        {app.status === 'PENDING' ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <Button
-                              variant="army"
-                              size="sm"
-                              onClick={() => handleApprove(app.id)}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              onClick={() => handleReject(app.id)}
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        ) : app.status === 'APPROVED' ? (
-                          <span className="text-emerald-400 font-bold flex items-center justify-center gap-1">
-                            <CheckCircle2 className="w-4 h-4" /> Cadet Enrolled
-                          </span>
-                        ) : (
-                          <span className="text-gray-500">Waitlisted</span>
-                        )}
+                  {filteredApps.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-10 text-center text-gray-400 font-mono text-xs">
+                        No cadet admissions found matching status &quot;{filterStatus}&quot;. Authentic cadet registrations will appear here directly from the database.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredApps.map(app => (
+                      <tr key={app.id} className="hover:bg-[#161F15]/50 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <div className="font-display font-bold text-sm text-white uppercase">{app.name}</div>
+                          <div className="text-[11px] text-gray-400 mt-0.5">{app.phone}</div>
+                          <div className="text-[10px] text-amber-400">
+                            Age: {app.age} {app.isUnder18 ? '(Guardian Verified)' : ''}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-gray-300">
+                          <div>Height: <strong className="text-white">{app.heightCm} cm</strong></div>
+                          <div>Weight: <strong className="text-white">{app.weightKg} kg</strong></div>
+                          <div className="text-emerald-400 text-[10px]">Medical Consent: Confirmed</div>
+                        </td>
+                        <td className="py-3.5 px-4 font-bold text-amber-400">
+                          {app.targetForce}
+                          <div className="text-[10px] text-gray-500 font-normal">Applied: {app.appliedDate}</div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <Badge
+                            variant={
+                              app.status === 'APPROVED'
+                                ? 'success'
+                                : app.status === 'PENDING'
+                                  ? 'saffron'
+                                  : 'default'
+                            }
+                            size="sm"
+                          >
+                            {app.status}
+                          </Badge>
+                          {app.assignedRoll && (
+                            <div className="text-[10px] font-bold text-lime-400 mt-1">
+                              Roll: {app.assignedRoll}
+                            </div>
+                          )}
+                          {app.assignedBatch && (
+                            <div className="text-[10px] text-gray-400">
+                              {app.assignedBatch}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          {app.status === 'PENDING' ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                variant="army"
+                                size="sm"
+                                onClick={() => handleApprove(app.id)}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => handleReject(app.id)}
+                              >
+                                Reject
+                              </Button>
+                            </div>
+                          ) : app.status === 'APPROVED' ? (
+                            <span className="text-emerald-400 font-bold flex items-center justify-center gap-1">
+                              <CheckCircle2 className="w-4 h-4" /> Cadet Enrolled
+                            </span>
+                          ) : (
+                            <span className="text-gray-500">Waitlisted</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -386,19 +370,29 @@ export default function AdminCommandCenter() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1A2415]">
-                  {mockAuditLogs.map(log => (
-                    <tr key={log.id} className="hover:bg-[#161F15]/50 transition-colors">
-                      <td className="py-3.5 px-4 text-gray-400">{log.timestamp}</td>
-                      <td className="py-3.5 px-4">
-                        <span className="text-amber-400 font-bold bg-[#161F15] px-2 py-0.5 rounded border border-[#273623]">
-                          {log.action}
-                        </span>
+                  {auditLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-10 text-center text-gray-400 font-mono text-xs">
+                        No system audit mutations recorded yet. Administrative operations will be immutably recorded here.
                       </td>
-                      <td className="py-3.5 px-4 text-white font-bold">{log.actor}</td>
-                      <td className="py-3.5 px-4 text-gray-300 max-w-xs">{log.details}</td>
-                      <td className="py-3.5 px-4 text-gray-500">{log.ip}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    auditLogs.map((log: any) => (
+                      <tr key={log.id} className="hover:bg-[#161F15]/50 transition-colors">
+                        <td className="py-3.5 px-4 text-gray-400">
+                          {log.timestamp || (log.createdAt ? new Date(log.createdAt).toLocaleString('en-IN') : 'Recent')}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="text-amber-400 font-bold bg-[#161F15] px-2 py-0.5 rounded border border-[#273623]">
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-white font-bold">{log.actor}</td>
+                        <td className="py-3.5 px-4 text-gray-300 max-w-xs">{log.details}</td>
+                        <td className="py-3.5 px-4 text-gray-500">{log.ip || '127.0.0.1'}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

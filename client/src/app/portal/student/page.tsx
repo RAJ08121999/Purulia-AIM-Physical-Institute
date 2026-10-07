@@ -113,19 +113,19 @@ export default function StudentPortalPage() {
 
   // Cadet Profile & Passport Photo State
   const [cadetPhoto, setCadetPhoto] = useState<string | null>(null);
-  const [cadetName, setCadetName] = useState<string>('Sourav Mukherjee');
-  const [cadetRoll, setCadetRoll] = useState<string>('AIM-2026-042');
+  const [cadetName, setCadetName] = useState<string>('');
+  const [cadetRoll, setCadetRoll] = useState<string>('');
   const [targetForce, setTargetForce] = useState<string>('Indian Army GD');
-  const [bloodGroup, setBloodGroup] = useState<string>('B+');
-  const [birthMarks, setBirthMarks] = useState<string>('');
-  const [cadetHeight, setCadetHeight] = useState<number>(172.5);
-  const [cadetWeight, setCadetWeight] = useState<number>(64.0);
-  const [cadetChestNormal, setCadetChestNormal] = useState<number>(81.0);
-  const [cadetChestExpanded, setCadetChestExpanded] = useState<number>(87.0);
-  const [attendancePercent, setAttendancePercent] = useState<number>(94.2);
-  const [attendanceStreak, setAttendanceStreak] = useState<string>('18d streak');
-  const [best1600m, setBest1600m] = useState<string>('05m 24s');
-  const [isNewRecruit, setIsNewRecruit] = useState<boolean>(false);
+  const [bloodGroup, setBloodGroup] = useState<string>('—');
+  const [birthMarks, setBirthMarks] = useState<string>('—');
+  const [cadetHeight, setCadetHeight] = useState<number>(0);
+  const [cadetWeight, setCadetWeight] = useState<number>(0);
+  const [cadetChestNormal, setCadetChestNormal] = useState<number>(0);
+  const [cadetChestExpanded, setCadetChestExpanded] = useState<number>(0);
+  const [attendancePercent, setAttendancePercent] = useState<number>(0);
+  const [attendanceStreak, setAttendanceStreak] = useState<string>('New Recruit');
+  const [best1600m, setBest1600m] = useState<string>('Not Tested');
+  const [isNewRecruit, setIsNewRecruit] = useState<boolean>(true);
   const [photoUploadMsg, setPhotoUploadMsg] = useState<string | null>(null);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -154,25 +154,32 @@ export default function StudentPortalPage() {
       if (savedBirthMarks) setBirthMarks(savedBirthMarks);
       if (savedPhoto) setCadetPhoto(savedPhoto);
 
-      if (savedHeight && !isNaN(Number(savedHeight))) {
+      if (savedHeight && !isNaN(Number(savedHeight)) && Number(savedHeight) > 0) {
         setCadetHeight(Number(savedHeight));
       }
-      if (savedWeight && !isNaN(Number(savedWeight))) {
+      if (savedWeight && !isNaN(Number(savedWeight)) && Number(savedWeight) > 0) {
         setCadetWeight(Number(savedWeight));
       }
-      if (savedChestNormal && !isNaN(Number(savedChestNormal))) {
+      if (savedChestNormal && !isNaN(Number(savedChestNormal)) && Number(savedChestNormal) > 0) {
         setCadetChestNormal(Number(savedChestNormal));
       }
-      if (savedChestExpanded && !isNaN(Number(savedChestExpanded))) {
+      if (savedChestExpanded && !isNaN(Number(savedChestExpanded)) && Number(savedChestExpanded) > 0) {
         setCadetChestExpanded(Number(savedChestExpanded));
       }
 
       if (rawProfile) {
         try {
           const parsed = JSON.parse(rawProfile);
-          setIsNewRecruit(true);
-          setAttendancePercent(100);
-          setAttendanceStreak('Enlisted • Day 1');
+          if (parsed.fullName) setCadetName(parsed.fullName);
+          if (parsed.dossierNumber) setCadetRoll(parsed.dossierNumber);
+          if (parsed.targetForce) setTargetForce(parsed.targetForce);
+          if (parsed.bloodGroup) setBloodGroup(parsed.bloodGroup);
+          if (parsed.birthMarks) setBirthMarks(parsed.birthMarks);
+          if (parsed.passportPhoto) setCadetPhoto(parsed.passportPhoto);
+          if (parsed.heightCm && !isNaN(Number(parsed.heightCm))) setCadetHeight(Number(parsed.heightCm));
+          if (parsed.weightKg && !isNaN(Number(parsed.weightKg))) setCadetWeight(Number(parsed.weightKg));
+          if (parsed.chestNormalCm && !isNaN(Number(parsed.chestNormalCm))) setCadetChestNormal(Number(parsed.chestNormalCm));
+          if (parsed.chestExpandedCm && !isNaN(Number(parsed.chestExpandedCm))) setCadetChestExpanded(Number(parsed.chestExpandedCm));
           if (parsed.current1600mTime) setBest1600m(parsed.current1600mTime);
         } catch (e) {}
       }
@@ -180,13 +187,12 @@ export default function StudentPortalPage() {
       if (savedQuals) {
         try {
           const parsedQ = JSON.parse(savedQuals);
-          setQualifications((prev: any) => ({
-            ...prev,
-            ...(parsedQ.tenth ? { tenth: parsedQ.tenth } : {}),
-            ...(parsedQ.twelfth ? { twelfth: parsedQ.twelfth } : {}),
-            ...(parsedQ.graduation ? { graduation: parsedQ.graduation } : {}),
-            ...(parsedQ.postGraduation ? { postGraduation: parsedQ.postGraduation } : {})
-          }));
+          setQualifications({
+            tenth: parsedQ.tenth || { board: '', stream: 'General', specialization: '', passingYear: '', rollNumber: '', marksObtained: '', fullMarks: '', percentage: '' },
+            twelfth: parsedQ.twelfth || { board: '', stream: '', specialization: '', passingYear: '', rollNumber: '', marksObtained: '', fullMarks: '', percentage: '' },
+            graduation: parsedQ.graduation || { board: '', stream: '', specialization: '', passingYear: '', rollNumber: '', marksObtained: '', fullMarks: '', percentage: '' },
+            postGraduation: parsedQ.postGraduation || { board: '', stream: '', specialization: '', passingYear: '', rollNumber: '', marksObtained: '', fullMarks: '', percentage: '' }
+          });
         } catch (e) {}
       }
 
@@ -201,11 +207,67 @@ export default function StudentPortalPage() {
               if (cadet.dossierNumber) setCadetRoll(cadet.dossierNumber);
               if (cadet.targetForce) setTargetForce(cadet.targetForce);
               if (cadet.bloodGroup) setBloodGroup(cadet.bloodGroup);
+              if (cadet.birthMarks) setBirthMarks(cadet.birthMarks);
+              if (cadet.passportPhoto) setCadetPhoto(cadet.passportPhoto);
               if (cadet.heightCm) setCadetHeight(Number(cadet.heightCm));
               if (cadet.weightKg) setCadetWeight(Number(cadet.weightKg));
               if (cadet.chestNormalCm) setCadetChestNormal(Number(cadet.chestNormalCm));
               if (cadet.chestExpandedCm) setCadetChestExpanded(Number(cadet.chestExpandedCm));
               if (cadet.current1600mTime) setBest1600m(cadet.current1600mTime);
+
+              // Update qualifications from authentic backend record if present
+              const backendQuals: any = {};
+              if (cadet.tenthBoard || cadet.matricBoard) {
+                backendQuals.tenth = {
+                  board: cadet.tenthBoard || cadet.matricBoard || '',
+                  stream: cadet.tenthStream || 'General',
+                  specialization: cadet.tenthSpecialization || '',
+                  passingYear: cadet.tenthPassingYear || cadet.matricPassingYear || '',
+                  rollNumber: cadet.tenthRollNumber || cadet.matricRollNumber || '',
+                  marksObtained: cadet.tenthMarksObtained || '',
+                  fullMarks: cadet.tenthFullMarks || '',
+                  percentage: cadet.tenthPercentage || cadet.matricAggregatePercent || ''
+                };
+              }
+              if (cadet.hasTwelfth || cadet.twelfthBoard) {
+                backendQuals.twelfth = {
+                  board: cadet.twelfthBoard || '',
+                  stream: cadet.twelfthStream || '',
+                  specialization: cadet.twelfthSpecialization || '',
+                  passingYear: cadet.twelfthPassingYear || '',
+                  rollNumber: cadet.twelfthRollNumber || '',
+                  marksObtained: cadet.twelfthMarksObtained || '',
+                  fullMarks: cadet.twelfthFullMarks || '',
+                  percentage: cadet.twelfthPercentage || ''
+                };
+              }
+              if (cadet.hasGraduation || cadet.gradUniversity) {
+                backendQuals.graduation = {
+                  board: cadet.gradUniversity || '',
+                  stream: cadet.gradStream || '',
+                  specialization: cadet.gradSpecialization || '',
+                  passingYear: cadet.gradPassingYear || '',
+                  rollNumber: cadet.gradRollNumber || '',
+                  marksObtained: cadet.gradMarksObtained || '',
+                  fullMarks: cadet.gradFullMarks || '',
+                  percentage: cadet.gradPercentage || ''
+                };
+              }
+              if (cadet.hasPostGraduation || cadet.pgUniversity) {
+                backendQuals.postGraduation = {
+                  board: cadet.pgUniversity || '',
+                  stream: cadet.pgStream || '',
+                  specialization: cadet.pgSpecialization || '',
+                  passingYear: cadet.pgPassingYear || '',
+                  rollNumber: cadet.pgRollNumber || '',
+                  marksObtained: cadet.pgMarksObtained || '',
+                  fullMarks: cadet.pgFullMarks || '',
+                  percentage: cadet.pgPercentage || ''
+                };
+              }
+              if (Object.keys(backendQuals).length > 0) {
+                setQualifications((prev: any) => ({ ...prev, ...backendQuals }));
+              }
             }
           })
           .catch(() => {});
@@ -222,30 +284,7 @@ export default function StudentPortalPage() {
       if (storedEvents) {
         try { setTrainerEvents(JSON.parse(storedEvents)); } catch {}
       } else {
-        setTrainerEvents([
-          {
-            id: 'EV-01',
-            title: 'State Level 1600m Timed Speed Simulation & PET Trial',
-            type: 'Mock Physical Rally',
-            date: '2026-10-25',
-            time: '05:00 AM IST',
-            venue: 'J.K. College Ground Synthetic & Mud Track, Purulia',
-            targetCadre: 'Indian Army Agniveer GD, WBP Constable',
-            reportingStatus: 'OPEN',
-            guidelines: 'Reporting in physical uniform with chest bib numbers. Mandatory running spikes or studs allowed on outer rim.'
-          },
-          {
-            id: 'EV-02',
-            title: 'Army Beam (10 Chin-ups) & 9ft Ditch Assessment Clinic',
-            type: 'Obstacle Drill Clinic',
-            date: '2026-11-02',
-            time: '05:30 AM IST',
-            venue: 'AIM Obstacle Ground Purulia',
-            targetCadre: 'All Enlisted Cadets',
-            reportingStatus: 'OPEN',
-            guidelines: 'Complete 10 dead-hang chin-ups under drill master inspection without body swing.'
-          }
-        ]);
+        setTrainerEvents([]);
       }
 
       const storedOrders = localStorage.getItem('aim_trainer_orders');
@@ -260,44 +299,44 @@ export default function StudentPortalPage() {
   // Previous Qualifications Records (10th, 12th, Graduation, Post-Graduation)
   const [qualifications, setQualifications] = useState<any>({
     tenth: {
-      board: 'WBBSE (West Bengal Board of Secondary Education)',
-      stream: 'General (Secondary)',
-      specialization: 'All Compulsory Secondary Subjects',
-      passingYear: '2024',
-      rollNumber: '1024-WB-042',
-      marksObtained: 525,
-      fullMarks: 700,
-      percentage: '75.00'
+      board: '',
+      stream: 'General',
+      specialization: '',
+      passingYear: '',
+      rollNumber: '',
+      marksObtained: '',
+      fullMarks: '',
+      percentage: ''
     },
     twelfth: {
-      board: 'WBCHSE (West Bengal Council of Higher Secondary)',
-      stream: 'Science (PCM)',
-      specialization: 'Physics, Chemistry, Mathematics',
-      passingYear: '2026',
-      rollNumber: '2108-WB-042',
-      marksObtained: 410,
-      fullMarks: 500,
-      percentage: '82.00'
+      board: '',
+      stream: '',
+      specialization: '',
+      passingYear: '',
+      rollNumber: '',
+      marksObtained: '',
+      fullMarks: '',
+      percentage: ''
     },
     graduation: {
-      board: 'Sidho Kanho Birsha University (SKBU Purulia)',
-      stream: 'B.Sc (Bachelor of Science)',
-      specialization: 'Physics Honours',
-      passingYear: '2024',
-      rollNumber: 'SKBU/UG/2021/042',
-      marksObtained: 1350,
-      fullMarks: 1800,
-      percentage: '75.00'
+      board: '',
+      stream: '',
+      specialization: '',
+      passingYear: '',
+      rollNumber: '',
+      marksObtained: '',
+      fullMarks: '',
+      percentage: ''
     },
     postGraduation: {
-      board: 'Sidho Kanho Birsha University (SKBU Purulia)',
-      stream: 'M.Sc (Master of Science)',
-      specialization: 'Applied Physics & Condensed Matter',
-      passingYear: '2026',
-      rollNumber: 'SKBU/PG/2024/012',
-      marksObtained: 920,
-      fullMarks: 1200,
-      percentage: '76.67'
+      board: '',
+      stream: '',
+      specialization: '',
+      passingYear: '',
+      rollNumber: '',
+      marksObtained: '',
+      fullMarks: '',
+      percentage: ''
     }
   });
 
@@ -357,44 +396,6 @@ export default function StudentPortalPage() {
   };
 
   useEffect(() => {
-    // Read saved photo and cadet details from enlistment or past updates
-    try {
-      const storedPhoto = localStorage.getItem('cadet_passport_photo');
-      if (storedPhoto) setCadetPhoto(storedPhoto);
-
-      const storedName = localStorage.getItem('cadet_name');
-      if (storedName) setCadetName(storedName);
-
-      const storedRoll = localStorage.getItem('cadet_dossier_id');
-      if (storedRoll) setCadetRoll(storedRoll);
-
-      const storedTarget = localStorage.getItem('cadet_target_force');
-      if (storedTarget) setTargetForce(storedTarget);
-
-      const storedBlood = localStorage.getItem('cadet_blood_group');
-      if (storedBlood) setBloodGroup(storedBlood);
-
-      const storedMarks = localStorage.getItem('cadet_birth_marks');
-      if (storedMarks) setBirthMarks(storedMarks);
-
-      const storedQual = localStorage.getItem('cadet_qualifications');
-      if (storedQual) {
-        try {
-          const parsed = JSON.parse(storedQual);
-          setQualifications((prev: any) => ({
-            tenth: parsed.tenth || prev.tenth,
-            twelfth: parsed.twelfth || prev.twelfth,
-            graduation: parsed.graduation || prev.graduation,
-            postGraduation: parsed.postGraduation || prev.postGraduation
-          }));
-        } catch (e) {
-          console.warn('Could not parse stored qualifications:', e);
-        }
-      }
-    } catch (e) {
-      console.warn('LocalStorage access warning:', e);
-    }
-
     let active = true;
     const checkDrill = async () => {
       try {
@@ -762,8 +763,8 @@ export default function StudentPortalPage() {
         {activeTab === 'STOPWATCH' && (
           <ParadeDrillStopwatch
             mode="CADET_VIEWER"
-            cadetName="Cadet Sourav Mukherjee"
-            cadetRoll="AIM-2026-042"
+            cadetName={cadetName ? `Cadet ${cadetName}` : 'Enlisted Cadet'}
+            cadetRoll={cadetRoll}
           />
         )}
 
@@ -797,39 +798,45 @@ export default function StudentPortalPage() {
                 <span>Upcoming Physical Trials & PET Simulations ({trainerEvents.length})</span>
               </h4>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {trainerEvents.map((evt: any) => (
-                  <div
-                    key={evt.id}
-                    className="p-5 rounded-2xl bg-[#161F15] border border-[#273623] hover:border-amber-500/50 transition-all flex flex-col justify-between space-y-3"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <Badge variant="army" size="sm">{evt.type}</Badge>
-                        <span className="text-[10px] font-mono bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800">
-                          {evt.reportingStatus || 'OPEN'}
-                        </span>
-                      </div>
-                      <h4 className="font-display font-black text-base sm:text-lg text-white uppercase leading-snug">
-                        {evt.title}
-                      </h4>
-                      <div className="text-xs font-mono text-gray-300 space-y-1 pt-1">
-                        <div className="flex items-center gap-1.5 text-amber-400">
-                          <Calendar className="w-3.5 h-3.5" />
-                          <span>{evt.date} • {evt.time}</span>
+              {trainerEvents.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-[#161F15] border border-[#273623] text-center text-gray-500 font-mono text-xs">
+                  No upcoming physical trial rallies or clinics posted yet. Official notifications uploaded by trainers will reflect here automatically.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {trainerEvents.map((evt: any) => (
+                    <div
+                      key={evt.id}
+                      className="p-5 rounded-2xl bg-[#161F15] border border-[#273623] hover:border-amber-500/50 transition-all flex flex-col justify-between space-y-3"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <Badge variant="army" size="sm">{evt.type}</Badge>
+                          <span className="text-[10px] font-mono bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800">
+                            {evt.reportingStatus || 'OPEN'}
+                          </span>
                         </div>
-                        <div className="text-gray-400">📍 {evt.venue}</div>
-                        <div className="text-gray-400">🎯 Target: <strong className="text-white">{evt.targetCadre}</strong></div>
+                        <h4 className="font-display font-black text-base sm:text-lg text-white uppercase leading-snug">
+                          {evt.title}
+                        </h4>
+                        <div className="text-xs font-mono text-gray-300 space-y-1 pt-1">
+                          <div className="flex items-center gap-1.5 text-amber-400">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>{evt.date} • {evt.time}</span>
+                          </div>
+                          <div className="text-gray-400">📍 {evt.venue}</div>
+                          <div className="text-gray-400">🎯 Target: <strong className="text-white">{evt.targetCadre}</strong></div>
+                        </div>
+                        {evt.guidelines && (
+                          <p className="text-xs text-gray-400 bg-[#0E140C] p-2.5 rounded-xl border border-[#273623]">
+                            {evt.guidelines}
+                          </p>
+                        )}
                       </div>
-                      {evt.guidelines && (
-                        <p className="text-xs text-gray-400 bg-[#0E140C] p-2.5 rounded-xl border border-[#273623]">
-                          {evt.guidelines}
-                        </p>
-                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Official Recruitment Orders & Notices */}
@@ -878,7 +885,8 @@ export default function StudentPortalPage() {
         {activeTab === 'TELEMETRY' && (
           <Suspense fallback={<TelemetryChartSkeleton />}>
             <DynamicStudentProgressVisualizer
-              studentName="Cadet Sourav Mukherjee"
+              cadetId={cadetRoll}
+              studentName={cadetName ? `Cadet ${cadetName}` : 'Enlisted Cadet'}
               initialForce="ARMY_GD"
               onExportReport={() => setActiveTab('REPORT')}
             />
@@ -1480,43 +1488,52 @@ export default function StudentPortalPage() {
                 </Badge>
               </div>
 
-              {/* Grid representation of daily drill days */}
-              <div className="grid grid-cols-7 gap-2 pt-4">
-                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-                  <div
-                    key={i}
-                    className="text-center font-mono text-[11px] text-gray-500 font-bold py-1"
-                  >
-                    {d}
+              {/* Daily Parade Ground Attendance State */}
+              {attendancePercent === 0 ? (
+                <div className="py-12 text-center p-6 border border-dashed border-[#273623] rounded-2xl bg-[#0B0F0A] space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mx-auto border border-amber-500/30">
+                    <Calendar className="w-6 h-6" />
                   </div>
-                ))}
-                {Array.from({ length: 31 }, (_, i) => {
-                  const day = i + 1;
-                  const isSunday = day % 7 === 0;
-                  const isAbsent = day === 12; // 1 mock absent day
-                  const isFuture = day > 15;
-
-                  return (
+                  <h5 className="font-display font-bold text-white text-base">New Recruit Muster Status</h5>
+                  <p className="text-xs font-mono text-gray-400 max-w-md mx-auto">
+                    0 parade ground roll-call attendances recorded. Your daily morning parade attendance markings will appear here once morning roll call is logged by Ustad.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-7 gap-2 pt-4">
+                  {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
                     <div
-                      key={day}
-                      className={`h-12 rounded-xl border flex flex-col items-center justify-center font-mono text-xs transition-colors ${
-                        isFuture
-                          ? 'border-[#1A2415] bg-[#0E140C] text-gray-600'
-                          : isAbsent
-                          ? 'border-rose-500/50 bg-rose-500/10 text-rose-400 font-bold'
-                          : isSunday
-                          ? 'border-amber-500/40 bg-amber-500/10 text-amber-400 font-bold'
-                          : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold'
-                      }`}
+                      key={i}
+                      className="text-center font-mono text-[11px] text-gray-500 font-bold py-1"
                     >
-                      <span>{day}</span>
-                      <span className="text-[9px]">
-                        {isFuture ? '' : isAbsent ? 'ABS' : isSunday ? 'TRIAL' : 'P'}
-                      </span>
+                      {d}
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                  {Array.from({ length: 31 }, (_, i) => {
+                    const day = i + 1;
+                    const isSunday = day % 7 === 0;
+                    const isFuture = day > 1;
+
+                    return (
+                      <div
+                        key={day}
+                        className={`h-12 rounded-xl border flex flex-col items-center justify-center font-mono text-xs transition-colors ${
+                          isFuture
+                            ? 'border-[#1A2415] bg-[#0E140C] text-gray-600'
+                            : isSunday
+                            ? 'border-amber-500/40 bg-amber-500/10 text-amber-400 font-bold'
+                            : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold'
+                        }`}
+                      >
+                        <span>{day}</span>
+                        <span className="text-[9px]">
+                          {isFuture ? '' : isSunday ? 'TRIAL' : 'P'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <div className="flex flex-wrap items-center gap-6 pt-4 text-xs font-mono text-gray-400 border-t border-[#1A2415]">
                 <div className="flex items-center gap-1.5">

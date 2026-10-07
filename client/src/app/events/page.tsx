@@ -432,7 +432,7 @@ export default function EventsPage() {
                       required
                       value={cadetName}
                       onChange={e => setCadetName(e.target.value)}
-                      placeholder="e.g. Sourav Mukherjee"
+                      placeholder="e.g. Cadet Full Name"
                       className="w-full bg-[#121811] border border-[#273623] rounded-lg px-3.5 py-2 text-white font-sans text-sm outline-none focus:border-amber-500"
                     />
                   </div>

@@ -52,36 +52,36 @@ export interface CadetReportData {
 }
 
 export const DEFAULT_CADET_REPORT: CadetReportData = {
-  cadetName: 'Sourav Mukherjee',
-  dossierNumber: 'AIM-2026-042',
-  batchName: 'Agniveer Morning Alfa (05:00 AM)',
-  targetForce: 'Indian Army Soldier GD (ARO Rally)',
-  admissionDate: '01-Aug-2026',
-  evaluationDate: '04-Oct-2026',
-  age: 19,
-  bloodGroup: 'B+',
-  heightCm: 172.5,
-  weightKg: 64.0,
-  chestNormalCm: 81.0,
-  chestExpandedCm: 87.0,
-  attendancePercent: 94.2,
-  sessionsAttended: 18,
-  totalSessions: 19,
-  runBaseline: '07m 15s',
-  runLatest: '05m 24s',
-  runSeconds: 324,
-  pullupsBaseline: 4,
-  pullupsLatest: 11,
-  ditchJumpPass: true,
-  zigzagBalancePass: true,
-  totalPhysicalMarks: 100,
-  gradeClassification: 'GRADE A+ (EXCELLENT)',
-  batchRank: 'Rank 1 / 48 (Alfa Batch)',
+  cadetName: 'Enlisted Cadet',
+  dossierNumber: '—',
+  batchName: 'Training Platoon',
+  targetForce: 'Aspirant',
+  admissionDate: '—',
+  evaluationDate: '—',
+  age: 0,
+  bloodGroup: '—',
+  heightCm: 0,
+  weightKg: 0,
+  chestNormalCm: 0,
+  chestExpandedCm: 0,
+  attendancePercent: 0,
+  sessionsAttended: 0,
+  totalSessions: 0,
+  runBaseline: 'Not Tested',
+  runLatest: 'Not Tested',
+  runSeconds: 0,
+  pullupsBaseline: 0,
+  pullupsLatest: 0,
+  ditchJumpPass: false,
+  zigzagBalancePass: false,
+  totalPhysicalMarks: 0,
+  gradeClassification: 'Pending Evaluation',
+  batchRank: '—',
   trainerRemarks:
-    'Cadet Sourav Mukherjee exhibits exemplary aerobic capacity and explosive speed discipline on the J.K. College 400m cinder track. Pacing across all four laps is clockwork, completing the final 400m kick in under 74 seconds. He has achieved the maximum 100 physical marks under official Indian Army Rally criteria (Group 1 1600m + 10+ Beam pull-ups). Cleared for upcoming rally selection.',
-  coachName: 'Anup Ghosh (Head Coach & Founder)',
-  verificationCode: 'PAPI-VERIFY-2026-SM042-9981',
-  birthMarks: 'Black mole on right cheek'
+    'Cadet enrolled in Purulia AIM Physical Institute training squad. Formal 1600m timed trial and beam pull-up evaluation will be recorded during official parade assessments.',
+  coachName: 'Havaldar Anup Kumar Mahato (Head Drill Ustad)',
+  verificationCode: 'AIM-VERIFY-PENDING',
+  birthMarks: '—'
 };
 
 export interface ProgressReportPDFViewProps {
@@ -98,22 +98,8 @@ export function ProgressReportPDFView({
   const printRef = useRef<HTMLDivElement>(null);
 
   const [qualifications, setQualifications] = React.useState<any>({
-    tenth: {
-      board: 'WBBSE (West Bengal Board)',
-      stream: 'General (Secondary)',
-      specialization: 'Compulsory All Subjects',
-      marksObtained: 525,
-      fullMarks: 700,
-      percentage: '75.00'
-    },
-    twelfth: {
-      board: 'WBCHSE (West Bengal Council)',
-      stream: 'Science (PCM)',
-      specialization: 'Physics, Chemistry, Mathematics',
-      marksObtained: 410,
-      fullMarks: 500,
-      percentage: '82.00'
-    },
+    tenth: null,
+    twelfth: null,
     graduation: null,
     postGraduation: null
   });
@@ -578,6 +564,13 @@ export function ProgressReportPDFView({
                     </td>
                   </tr>
                 )}
+                {(!qualifications.tenth && !qualifications.twelfth && !qualifications.graduation && !qualifications.postGraduation) && (
+                  <tr>
+                    <td colSpan={7} className="py-6 text-center text-gray-500 font-mono text-xs">
+                      No academic credentials recorded in cadet profile.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -638,7 +631,7 @@ export function ProgressReportPDFView({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 w-full md:w-auto">
             <div className="text-center w-full sm:w-auto">
               <div className="h-8 sm:h-10 flex items-end justify-center font-display font-black text-amber-400 tracking-wider italic text-sm">
-                Sourav Mukherjee
+                {data.cadetName || 'Enlisted Cadet'}
               </div>
               <div className="w-36 border-t border-gray-500 pt-1 text-[10px] font-mono text-gray-400 uppercase mx-auto">
                 Cadet Signature
@@ -647,7 +640,7 @@ export function ProgressReportPDFView({
 
             <div className="text-center w-full sm:w-auto">
               <div className="h-8 sm:h-10 flex items-end justify-center font-display font-black text-amber-400 tracking-wider text-sm">
-                Anup Ghosh
+                {data.coachName || 'Havaldar Anup Kumar Mahato'}
               </div>
               <div className="w-44 border-t border-amber-500 pt-1 text-[10px] font-mono text-amber-400 font-bold uppercase mx-auto">
                 {data.coachName}
