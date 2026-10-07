@@ -1,0 +1,262 @@
+// Purulia Aim Physical Institute (AIM) - Prisma Relational Database Schema
+// Optimized for Military-Grade Physical Telemetry, Enlistment & Attendance Tracking
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// USER & RBAC AUTHENTICATION
+// -------------------------------------------------------------
+
+model User {
+  id              String       @id @default(uuid())
+  email           String       @unique
+  passwordHash    String
+  fullName        String
+  phone           String       @unique
+  role            String       @default("STUDENT") // SUPER_ADMIN, ADMIN, TRAINER, STUDENT, APPLICANT
+  status          String       @default("ACTIVE") // ACTIVE, SUSPENDED, ARCHIVED
+  totpSecret      String?
+  lastLoginAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  studentProfile  StudentProfile?
+  conductedAssessments Assessment[] @relation("ConductedAssessments")
+  markedAttendance     Attendance[] @relation("MarkedAttendance")
+  auditLogs            AuditLog[]
+
+  @@map("users")
+}
+
+// -------------------------------------------------------------
+// CADET / STUDENT INDUCTION & PROFILE
+// -------------------------------------------------------------
+
+model StudentProfile {
+  id                    String    @id @default(uuid())
+  userId                String?   @unique
+  user                  User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  dossierNumber         String    @unique // e.g. AIM-CADET-2026-4821
+  rollNumber            String?   @unique
+
+  // Step 1: Personal & Bio-Data
+  fullName              String
+  fatherName            String
+  motherName            String?
+  dob                   DateTime
+  gender                String    @default("Male")
+  maritalStatus         String    @default("Unmarried")
+  aadhaarNumber         String    // Masked or hashed in display
+  phone                 String
+  emergencyPhone        String
+  domicileDistrict      String    @default("Purulia")
+  policeStation         String
+  villageTown           String
+  postOffice            String?
+  pinCode               String
+  casteCategory         String    @default("General")
+
+  // Step 2: Educational & NCC / Sports Qualifications
+  highestEducation      String    @default("10th Matriculation")
+  matricBoard           String    @default("WBBSE")
+  matricRollNumber      String?
+  matricPassingYear     String?
+  matricAggregatePercent Float?
+  scienceMathPercent    Float?
+  nccCertificate        String    @default("None") // None, NCC_A, NCC_B, NCC_C, RDC_PARADE
+  sportsLevel           String    @default("None") // None, District, State, National
+  sportsDiscipline      String?
+
+  // Step 3: Physical Standard Test (PST) & Baseline Metrics
+  targetForce           String    @default("Indian Army Agniveer GD")
+  heightCm              Float
+  weightKg              Float
+  chestNormalCm         Float
+  chestExpandedCm       Float
+  chestExpansionCm      Float
+  current1600mTime      String?
+  currentBeamPullups    Int?
+  visionStatus          String    @default("Normal 6/6 (No Spectacles)")
+  bodyTattoo            String    @default("No Permanent Tattoos")
+
+  // Step 4: Disciplinary, Past Records & Legal Consent
+  hasCriminalRecord     String    @default("NO") // YES / NO
+  criminalRecordDetails String?
+  hasAttendedPastRally  String    @default("NO") // YES / NO
+  pastRallyDetails      String?
+  hasMedicalCondition   String    @default("NO")
+  medicalHistoryDetails String?
+  characterCertificateAvailable Boolean @default(true)
+  standToOathConsent    Boolean   @default(true)
+  noSubstanceAbuseConsent Boolean @default(true)
+  mediaConsent          Boolean   @default(true)
+
+  // Status & Batch Assignment
+  admissionStatus       String    @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED
+  batchId               String?
+  batch                 Batch?    @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  joinedDate            DateTime  @default(now())
+  
+  attendanceRecords     Attendance[]
+  assessmentResults     AssessmentResult[]
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("student_profiles")
+}
+
+// -------------------------------------------------------------
+// BATCHES & TRAINING PLATOONS
+// -------------------------------------------------------------
+
+model Batch {
+  id                String           @id @default(uuid())
+  name              String           // e.g. "Alpha Squad (05:00 - 07:00 hrs)"
+  code              String           @unique // e.g. "ALPHA-05:00am"
+  trainingGround    String           @default("J.K. College Ground, Purulia")
+  morningTime       String           @default("05:00 - 07:00")
+  targetFocus       String           @default("Army GD & Technical")
+  isActive          Boolean          @default(true)
+  maxCapacity       Int              @default(50)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  students          StudentProfile[]
+  attendanceRecords Attendance[]
+  assessments       Assessment[]
+
+  @@map("batches")
+}
+
+// -------------------------------------------------------------
+// DAILY ROLL CALL & ATTENDANCE
+// -------------------------------------------------------------
+
+model Attendance {
+  id              String         @id @default(uuid())
+  date            DateTime       @default(now())
+  studentId       String
+  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  batchId         String
+  batch           Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  status          String         @default("PRESENT") // PRESENT, ABSENT, LATE, EXCUSED
+  remarks         String?
+  markedById      String?
+  markedBy        User?          @relation("MarkedAttendance", fields: [markedById], references: [id], onDelete: SetNull)
+  createdAt       DateTime       @default(now())
+
+  @@unique([date, studentId])
+  @@map("attendance")
+}
+
+// -------------------------------------------------------------
+// PHYSICAL EFFICIENCY TEST (PET / BPET) TELEMETRY
+// -------------------------------------------------------------
+
+model Assessment {
+  id              String             @id @default(uuid())
+  title           String             // e.g. "Sunday Timed 1600m Trial & Beam Assessment"
+  date            DateTime           @default(now())
+  batchId         String?
+  batch           Batch?             @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  conductedById   String?
+  conductedBy     User?              @relation("ConductedAssessments", fields: [conductedById], references: [id], onDelete: SetNull)
+  type            String             @default("BPET_1600M") // BPET_1600M, PST, PFT_FULL
+  results         AssessmentResult[]
+  createdAt       DateTime           @default(now())
+
+  @@map("assessments")
+}
+
+model AssessmentResult {
+  id                    String         @id @default(uuid())
+  assessmentId          String
+  assessment            Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId             String
+  student               StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  // 1600m Run Telemetry
+  run1600mSeconds       Int            // e.g. 320 for 5m 20s
+  run1600mFormatted     String         // e.g. "5m 20s"
+  groupClassification   String         // "Group 1 (≤ 5m 30s)" or "Group 2 (5m 31s - 5m 45s)" or "Failed"
+  marks1600m            Int            // 60, 48, or 0
+
+  // Beam (Dead-hang Pull-ups)
+  pullupsCount          Int            // 6 to 10+
+  marksPullups          Int            // 40, 33, 27, 21, 16, 0
+
+  // Qualifying Obstacles
+  ditchJump9ftPass      Boolean        @default(true)
+  zigzagBalancePass     Boolean        @default(true)
+
+  // Total Physical Score
+  totalPhysicalMarks    Int            // max 100
+  gradeClassification   String         // "EXCELLENT", "GOOD", "NEEDS_IMPROVEMENT"
+  trainerRemarks        String?
+  createdAt             DateTime       @default(now())
+
+  @@map("assessment_results")
+}
+
+// -------------------------------------------------------------
+// INSTITUTE EVENTS & ROLL CALL RSVPs
+// -------------------------------------------------------------
+
+model InstituteEvent {
+  id              String      @id @default(uuid())
+  title           String
+  date            String
+  time            String
+  location        String
+  category        String      // "TRIAL", "SEMINAR", "RALLY_ALERT", "CAMP"
+  description     String
+  requiredKit     String
+  reportingTime   String
+  isRollCallOpen  Boolean     @default(true)
+  slotsLimit      Int         @default(150)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  rsvps           EventRsvp[]
+
+  @@map("institute_events")
+}
+
+model EventRsvp {
+  id              String         @id @default(uuid())
+  eventId         String
+  event           InstituteEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  cadetName       String
+  phone           String
+  dossierOrAadhaar String
+  targetForce     String
+  confirmed       Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+
+  @@map("event_rsvps")
+}
+
+// -------------------------------------------------------------
+// IMMUTABLE AUDIT LOG
+// -------------------------------------------------------------
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorId     String?
+  actor       User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action      String   // ADMISSION_SUBMITTED, ADMISSION_APPROVED, ATTENDANCE_MARKED, ASSESSMENT_RECORDED
+  entity      String   // StudentProfile, Attendance, Assessment
+  entityId    String?
+  ipAddress   String?
+  details     String?
+  createdAt   DateTime @default(now())
+
+  @@map("audit_logs")
+}
