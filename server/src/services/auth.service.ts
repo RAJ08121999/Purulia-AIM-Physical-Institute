@@ -15,8 +15,25 @@ export interface RegisterTrainerDto {
   email: string;
   phone: string;
   password: string;
+  fatherName?: string;
+  dob?: string;
+  gender?: string;
+  aadhaarNumber?: string;
+  emergencyPhone?: string;
+  domicileDistrict?: string;
+  policeStation?: string;
+  villageTown?: string;
+  pinCode?: string;
+  bloodGroup?: string;
+  heightCm?: string | number;
+  weightKg?: string | number;
+  chestNormalCm?: string | number;
+  chestExpandedCm?: string | number;
+  highestEducation?: string;
+  fieldExperienceYears?: string;
   regimentOrTitle?: string;
   specialization?: string;
+  pastMilitaryServiceDetails?: string;
   secretVerificationCode?: string; // Optional regimental passkey (e.g. "AIM-PURULIA-2026")
 }
 

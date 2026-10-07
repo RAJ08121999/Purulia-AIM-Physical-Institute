@@ -48,12 +48,12 @@ export default function Home() {
         {/* ===================================================================
             HERO SECTION
             =================================================================== */}
-        <section className="relative min-h-[calc(100vh-72px)] flex flex-col justify-center pt-2 sm:pt-4 pb-6 sm:pb-8 overflow-hidden">
+        <section className="relative min-h-auto sm:min-h-[calc(100vh-72px)] flex flex-col justify-start sm:justify-center pt-2 sm:pt-4 pb-6 sm:pb-8 overflow-hidden">
           {/* Background Ambient Glows */}
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-amber-500/10 blur-[140px] pointer-events-none rounded-full" />
           <div className="absolute top-1/3 left-1/4 w-[400px] h-[300px] bg-[#4B6135]/20 blur-[130px] pointer-events-none rounded-full" />
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
+          <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 relative z-10 w-full pt-1 sm:pt-0 sm:my-auto">
             <div className="max-w-4xl mx-auto text-center space-y-3 sm:space-y-4">
               {/* Military Directorate Badge */}
               <div className="flex justify-center">
@@ -63,9 +63,9 @@ export default function Home() {
               </div>
 
               {/* Main Heading - Bold Military Authority */}
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[96px] font-black font-display uppercase tracking-tight text-white leading-[1.02]">
+              <h1 className="text-[2.65rem] xs:text-5xl sm:text-6xl md:text-7xl lg:text-[96px] font-black font-display uppercase tracking-tight text-white leading-[0.98] sm:leading-[1.02] drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">
                 TRAIN HARD. <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 font-black">
                   STAY DISCIPLINED.
                 </span>{' '}
                 <br />

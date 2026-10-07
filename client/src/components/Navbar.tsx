@@ -135,34 +135,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
                 </a>
               </div>
 
-              {/* Authentication Status / Login Trigger */}
-              {currentUser ? (
-                <div className="flex items-center gap-2 bg-[#121811] border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-mono">
-                  <div className="flex items-center gap-1.5 text-amber-300">
-                    <User className="w-3.5 h-3.5" />
-                    <span className="font-bold max-w-[110px] truncate">{currentUser.name}</span>
-                    <Badge variant="saffron" size="sm" className="text-[9px] uppercase px-1 py-0">
-                      {currentUser.role === 'TRAINER' ? 'Ustad' : currentUser.role === 'SUPER_ADMIN' ? 'Admin' : 'Cadet'}
-                    </Badge>
-                  </div>
-                  <button
-                    onClick={logoutUser}
-                    title="Sign Out"
-                    className="text-gray-400 hover:text-rose-400 transition-colors ml-1 p-1 cursor-pointer"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={handleOpenLogin}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#121811] border border-[#273623] hover:border-amber-500/60 text-gray-200 hover:text-amber-400 font-mono text-xs font-bold transition-all shadow-sm cursor-pointer"
-                >
-                  <LogIn className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Login</span>
-                </button>
-              )}
-
               {/* Command Portals Dropdown Trigger */}
               <div className="relative">
                 <button
@@ -218,12 +190,33 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
                 )}
               </div>
 
-              {/* Kinetic Enlistment Trigger */}
-              <div onClick={onApplyClick}>
-                <KineticButton size="md">
-                  Enlist Cadet (₹0)
-                </KineticButton>
-              </div>
+              {/* Authentication Status / Login Trigger - Positioned at Right-Most End */}
+              {currentUser ? (
+                <div className="flex items-center gap-2 bg-[#121811] border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-mono">
+                  <div className="flex items-center gap-1.5 text-amber-300">
+                    <User className="w-3.5 h-3.5" />
+                    <span className="font-bold max-w-[110px] truncate">{currentUser.name}</span>
+                    <Badge variant="saffron" size="sm" className="text-[9px] uppercase px-1 py-0">
+                      {currentUser.role === 'TRAINER' ? 'Ustad' : currentUser.role === 'SUPER_ADMIN' ? 'Admin' : 'Cadet'}
+                    </Badge>
+                  </div>
+                  <button
+                    onClick={logoutUser}
+                    title="Sign Out"
+                    className="text-gray-400 hover:text-rose-400 transition-colors ml-1 p-1 cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleOpenLogin}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#182415] to-[#121811] border border-amber-500/60 hover:border-amber-400 text-amber-300 hover:text-white font-mono text-xs font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] cursor-pointer"
+                >
+                  <LogIn className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Login</span>
+                </button>
+              )}
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -377,17 +370,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
                   Drill Ustad Command Roster
                 </Button>
               </Link>
-              <div
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  if (onApplyClick) onApplyClick();
-                }}
-                className="pt-2"
-              >
-                <KineticButton className="w-full justify-center">
-                  Enlist Cadet (100% Free)
-                </KineticButton>
-              </div>
             </div>
           </div>
         )}

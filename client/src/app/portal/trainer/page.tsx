@@ -254,12 +254,28 @@ export default function TrainerCommandCenter() {
   });
   const [orderSuccess, setOrderSuccess] = useState(false);
 
+  // Motivational Quote State
+  const [dailyQuote, setDailyQuote] = useState(
+    'पसीने की स्याही से जो लिखते हैं अपने इरादों को, उनके मुक़द्दर के पन्ने कभी कोरे नहीं हुआ करते! 1600 meters is not a test of your legs, it is a test of your heart and hunger for the Uniform!'
+  );
+  const [quoteAuthor, setQuoteAuthor] = useState('Havaldar Anup Kumar Mahato (Head Drill Ustad)');
+  const [quoteSaved, setQuoteSaved] = useState(false);
+  const [isEditingQuote, setIsEditingQuote] = useState(false);
+
   // Load user & local stored items
   React.useEffect(() => {
     const user = getCurrentUser();
-    if (user) setCurrentUser(user);
+    if (user) {
+      setCurrentUser(user);
+      if (user.name) setQuoteAuthor(`${user.name} (Drill Ustad)`);
+    }
 
     try {
+      const storedQuote = localStorage.getItem('aim_daily_motivational_quote');
+      const storedAuthor = localStorage.getItem('aim_daily_quote_author');
+      if (storedQuote) setDailyQuote(storedQuote);
+      if (storedAuthor) setQuoteAuthor(storedAuthor);
+
       const storedEvents = localStorage.getItem('aim_trainer_events');
       if (storedEvents) setEvents(JSON.parse(storedEvents));
 
@@ -272,6 +288,17 @@ export default function TrainerCommandCenter() {
       console.warn('Failed to load stored trainer items:', e);
     }
   }, []);
+
+  const handleSaveQuote = (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      localStorage.setItem('aim_daily_motivational_quote', dailyQuote);
+      localStorage.setItem('aim_daily_quote_author', quoteAuthor);
+      setQuoteSaved(true);
+      setIsEditingQuote(false);
+      setTimeout(() => setQuoteSaved(false), 3000);
+    } catch {}
+  };
 
   // Assessment Telemetry Form State
   const [selectedCadetId, setSelectedCadetId] = useState('AIM-2026-042');
@@ -505,6 +532,112 @@ export default function TrainerCommandCenter() {
               {attendanceSaved ? 'Saved!' : 'Save Roster'}
             </Button>
           </div>
+        </div>
+
+        {/* USTAD'S DAILY MOTIVATIONAL WAR CRY BROADCASTER */}
+        <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#241706] via-[#1A1F13] to-[#0E140C] border-2 border-amber-500/70 shadow-[0_0_30px_rgba(245,158,11,0.25)] relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-500/20">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-md">
+                <Flame className="w-5 h-5 animate-pulse text-black" />
+              </div>
+              <div>
+                <h3 className="font-display font-black text-sm sm:text-base text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>Cadet Squad Daily War Cry & Ground Motivation</span>
+                  <span className="text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded uppercase">
+                    Live Broadcast
+                  </span>
+                </h3>
+                <p className="text-[11px] text-gray-400 font-mono">
+                  Reflects instantly in the header of each enrolled cadet&apos;s personal workspace.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {quoteSaved && (
+                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1 rounded-lg animate-fadeIn flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Broadcast Live!
+                </span>
+              )}
+              {!isEditingQuote ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingQuote(true)}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                >
+                  Edit War Cry
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingQuote(false)}
+                  className="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
+
+          {!isEditingQuote ? (
+            <div className="pt-3">
+              <blockquote className="text-sm sm:text-base md:text-lg font-display font-black italic uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 leading-snug drop-shadow-[0_2px_8px_rgba(245,158,11,0.4)]">
+                &ldquo;{dailyQuote}&rdquo;
+              </blockquote>
+              <div className="text-xs font-mono text-gray-400 mt-2 flex items-center gap-2">
+                <span className="text-amber-500 font-bold">Author:</span>
+                <span className="text-white font-bold">{quoteAuthor}</span>
+                <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-900">
+                  Visible to All Cadets
+                </span>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSaveQuote} className="pt-3 space-y-3">
+              <div>
+                <label className="block text-xs font-mono text-amber-400 uppercase font-bold mb-1">
+                  Today&apos;s Motivational War Cry / Rally Quote
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={dailyQuote}
+                  onChange={e => setDailyQuote(e.target.value)}
+                  placeholder="Enter high-energy motivational quote to drive cadets during 1600m and drill..."
+                  className="w-full bg-[#0B0F0A] border border-amber-500/50 rounded-xl p-3 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 text-xs sm:text-sm font-sans"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                <div>
+                  <label className="block text-xs font-mono text-gray-400 uppercase mb-1">
+                    Sign-off / Ustad Authority Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={quoteAuthor}
+                    onChange={e => setQuoteAuthor(e.target.value)}
+                    placeholder="e.g. Havaldar Anup Kumar Mahato"
+                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 text-xs font-mono"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    variant="saffron"
+                    size="sm"
+                    className="w-full justify-center"
+                    leftIcon={<Send className="w-3.5 h-3.5 text-black" />}
+                  >
+                    Broadcast to All Cadets
+                  </Button>
+                </div>
+              </div>
+            </form>
+          )}
         </div>
 
         {/* Tab Navigation */}

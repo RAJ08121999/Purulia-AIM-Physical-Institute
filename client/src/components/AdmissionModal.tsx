@@ -2081,24 +2081,24 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
               {/* STEP 4: DISCIPLINARY, PAST RECORDS & STAND-TO OATH */}
               {step === 4 && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between bg-[#121811] p-3 rounded-xl border border-[#273623] text-xs font-mono">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 bg-[#121811] p-3 rounded-xl border border-[#273623] text-xs font-mono">
                     <span className="text-amber-400 font-bold uppercase">Section 4: Legal Records, Character & Military Oath</span>
-                    <span className="text-gray-400">Strict NIL-Criminal Antecedents Mandate</span>
+                    <span className="text-gray-400 text-[11px]">Strict NIL-Criminal Antecedents Mandate</span>
                   </div>
 
                   {/* Criminal Case / FIR Declaration */}
-                  <div className="p-4 rounded-xl bg-[#121811] border border-[#273623] space-y-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-[#121811] border border-[#273623] space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
                         <h5 className="text-xs font-mono font-bold text-white uppercase flex items-center gap-1.5">
-                          <AlertOctagon className="w-4 h-4 text-rose-500" />
-                          Criminal Cases & Police FIR Declaration *
+                          <AlertOctagon className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                          <span>Criminal Cases & Police FIR Declaration *</span>
                         </h5>
                         <p className="text-xs text-gray-400 mt-0.5">
                           Has any FIR, police investigation, or criminal prosecution ever been instituted against you in any Court of Law or Police Station?
                         </p>
                       </div>
-                      <div className="flex items-center gap-3 font-mono text-xs flex-shrink-0">
+                      <div className="flex flex-wrap items-center gap-3 font-mono text-xs pt-1 sm:pt-0">
                         <label className="flex items-center gap-1.5 cursor-pointer text-emerald-400">
                           <input
                             type="radio"
@@ -2140,18 +2140,18 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                   </div>
 
                   {/* Past Rally Experience */}
-                  <div className="p-4 rounded-xl bg-[#121811] border border-[#273623] space-y-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-[#121811] border border-[#273623] space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
                         <h5 className="text-xs font-mono font-bold text-white uppercase flex items-center gap-1.5">
-                          <Award className="w-4 h-4 text-amber-400" />
-                          Past Defence / Police Rally Experience
+                          <Award className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                          <span>Past Defence / Police Rally Experience</span>
                         </h5>
                         <p className="text-xs text-gray-400 mt-0.5">
                           Have you previously appeared in any Indian Army, Police, or Paramilitary physical rally or exam?
                         </p>
                       </div>
-                      <div className="flex items-center gap-3 font-mono text-xs flex-shrink-0">
+                      <div className="flex flex-wrap items-center gap-3 font-mono text-xs pt-1 sm:pt-0">
                         <label className="flex items-center gap-1.5 cursor-pointer text-gray-300">
                           <input
                             type="radio"
@@ -2193,18 +2193,18 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                   </div>
 
                   {/* Medical History & Fracture Declaration */}
-                  <div className="p-4 rounded-xl bg-[#121811] border border-[#273623] space-y-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-[#121811] border border-[#273623] space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
                         <h5 className="text-xs font-mono font-bold text-white uppercase flex items-center gap-1.5">
-                          <Scale className="w-4 h-4 text-lime-400" />
-                          Major Surgical / Fracture / Orthopedic History
+                          <Scale className="w-4 h-4 text-lime-400 flex-shrink-0" />
+                          <span>Major Surgical / Fracture / Orthopedic History</span>
                         </h5>
                         <p className="text-xs text-gray-400 mt-0.5">
                           Any past bone fractures, joint dislocations, knock-knees, flat foot, or abdominal surgeries?
                         </p>
                       </div>
-                      <div className="flex items-center gap-3 font-mono text-xs flex-shrink-0">
+                      <div className="flex flex-wrap items-center gap-3 font-mono text-xs pt-1 sm:pt-0">
                         <label className="flex items-center gap-1.5 cursor-pointer text-emerald-400">
                           <input
                             type="radio"

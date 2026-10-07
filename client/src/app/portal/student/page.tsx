@@ -31,7 +31,10 @@ import {
   Percent,
   Edit3,
   Save,
-  LogOut
+  LogOut,
+  Megaphone,
+  ExternalLink,
+  Zap
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
 import { ParadeDrillStopwatch } from '@/components';
@@ -94,11 +97,19 @@ function ReportDossierSkeleton() {
 
 export default function StudentPortalPage() {
   const [activeTab, setActiveTab] = useState<
-    'STOPWATCH' | 'TELEMETRY' | 'ACADEMIC' | 'REPORT' | 'ATTENDANCE' | 'SCHEDULE' | 'STORY'
+    'STOPWATCH' | 'EVENTS' | 'TELEMETRY' | 'ACADEMIC' | 'REPORT' | 'ATTENDANCE' | 'SCHEDULE' | 'STORY'
   >('STOPWATCH');
   const [liveDrill, setLiveDrill] = useState<LiveDrillSession | null>(null);
   const [storySubmitted, setStorySubmitted] = useState(false);
   const [storyText, setStoryText] = useState('');
+
+  // Motivational Quote & Trainer Announcements State
+  const [dailyQuote, setDailyQuote] = useState<string>(
+    'पसीने की स्याही से जो लिखते हैं अपने इरादों को, उनके मुक़द्दर के पन्ने कभी कोरे नहीं हुआ करते! 1600 meters is not a test of your legs, it is a test of your heart and hunger for the Uniform!'
+  );
+  const [quoteAuthor, setQuoteAuthor] = useState<string>('Havaldar Anup Kumar Mahato (Head Drill Ustad)');
+  const [trainerEvents, setTrainerEvents] = useState<any[]>([]);
+  const [recruitmentOrders, setRecruitmentOrders] = useState<any[]>([]);
 
   // Cadet Profile & Passport Photo State
   const [cadetPhoto, setCadetPhoto] = useState<string | null>(null);
@@ -198,6 +209,48 @@ export default function StudentPortalPage() {
             }
           })
           .catch(() => {});
+      }
+
+      // Load Ustad's Daily War Cry Quote
+      const storedQuote = localStorage.getItem('aim_daily_motivational_quote');
+      const storedAuthor = localStorage.getItem('aim_daily_quote_author');
+      if (storedQuote) setDailyQuote(storedQuote);
+      if (storedAuthor) setQuoteAuthor(storedAuthor);
+
+      // Load Trainer's Uploaded Events & Orders
+      const storedEvents = localStorage.getItem('aim_trainer_events');
+      if (storedEvents) {
+        try { setTrainerEvents(JSON.parse(storedEvents)); } catch {}
+      } else {
+        setTrainerEvents([
+          {
+            id: 'EV-01',
+            title: 'State Level 1600m Timed Speed Simulation & PET Trial',
+            type: 'Mock Physical Rally',
+            date: '2026-10-25',
+            time: '05:00 AM IST',
+            venue: 'J.K. College Ground Synthetic & Mud Track, Purulia',
+            targetCadre: 'Indian Army Agniveer GD, WBP Constable',
+            reportingStatus: 'OPEN',
+            guidelines: 'Reporting in physical uniform with chest bib numbers. Mandatory running spikes or studs allowed on outer rim.'
+          },
+          {
+            id: 'EV-02',
+            title: 'Army Beam (10 Chin-ups) & 9ft Ditch Assessment Clinic',
+            type: 'Obstacle Drill Clinic',
+            date: '2026-11-02',
+            time: '05:30 AM IST',
+            venue: 'AIM Obstacle Ground Purulia',
+            targetCadre: 'All Enlisted Cadets',
+            reportingStatus: 'OPEN',
+            guidelines: 'Complete 10 dead-hang chin-ups under drill master inspection without body swing.'
+          }
+        ]);
+      }
+
+      const storedOrders = localStorage.getItem('aim_trainer_orders');
+      if (storedOrders) {
+        try { setRecruitmentOrders(JSON.parse(storedOrders)); } catch {}
       }
     } catch (err) {
       console.warn('Could not load cadet profile from local storage:', err);
@@ -472,7 +525,36 @@ export default function StudentPortalPage() {
       </header>
 
       {/* Main Cadet Container */}
-      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 w-full space-y-6 sm:space-y-8">
+      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 w-full space-y-5 sm:space-y-7">
+        {/* ===================================================================
+            USTAD'S DAILY WAR CRY • BATTLEFIELD INSPIRATION QUOTE FIELD
+            =================================================================== */}
+        <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#241706] via-[#1B2211] to-[#0E140C] border-2 border-amber-500/80 shadow-[0_0_35px_rgba(245,158,11,0.3)] relative overflow-hidden">
+          <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 relative z-10">
+            <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-black flex items-center justify-center font-black flex-shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.6)]">
+              <Flame className="w-6 h-6 sm:w-7 sm:h-7 animate-pulse text-black" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-widest shadow-sm">
+                  🔥 USTAD&apos;S DAILY WAR CRY
+                </span>
+                <span className="text-[10px] sm:text-xs font-mono text-amber-400 font-bold">
+                  Daily Ground Motivation & Rally Spirit
+                </span>
+              </div>
+              <p className="text-sm sm:text-base md:text-lg font-display font-black italic uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 leading-snug drop-shadow-[0_2px_10px_rgba(245,158,11,0.45)]">
+                &ldquo;{dailyQuote}&rdquo;
+              </p>
+              <div className="text-[11px] font-mono text-gray-400 mt-1 flex items-center gap-1.5">
+                <span className="text-amber-500 font-bold">Commanded by:</span>
+                <span className="text-white font-bold">{quoteAuthor}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* LIVE DRILL ALERT BANNER */}
         {liveDrill && liveDrill.status !== 'IDLE' && (
           <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-950/80 via-[#1a150c] to-[#0E140C] border-2 border-amber-500/80 shadow-[0_0_25px_rgba(245,158,11,0.3)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-pulse">
@@ -652,6 +734,7 @@ export default function StudentPortalPage() {
                 ? '🔴 Live Parade Drill Timer'
                 : '⏱️ Drill & Self-Training Stopwatch'
             },
+            { id: 'EVENTS', label: '📢 Rallies & Drill Events' },
             { id: 'TELEMETRY', label: '1600m & Category Telemetry' },
             { id: 'ACADEMIC', label: '🎓 Qualifications (10th/12th/Grad/PG)' },
             { id: 'REPORT', label: 'Official Evaluation Sheet (PDF Export)' },
@@ -682,6 +765,111 @@ export default function StudentPortalPage() {
             cadetName="Cadet Sourav Mukherjee"
             cadetRoll="AIM-2026-042"
           />
+        )}
+
+        {/* ===================================================================
+            TAB: UPCOMING RALLIES & TRAINING EVENTS (UPLOADED BY TRAINERS)
+            =================================================================== */}
+        {activeTab === 'EVENTS' && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="p-4 sm:p-6 rounded-3xl bg-[#121811] border border-[#273623] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    <Megaphone className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-display font-black text-lg sm:text-xl text-white uppercase tracking-wider">
+                    Official Rallies & Drill Announcements
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-400 font-sans mt-1">
+                  Active physical trial rallies, PET simulations, and recruitment notices uploaded live by AIM Drill Instructors.
+                </p>
+              </div>
+              <span className="text-xs font-mono text-emerald-400 bg-[#0E140C] px-3 py-1.5 rounded-xl border border-emerald-500/40">
+                ✓ Live from Ustad Command
+              </span>
+            </div>
+
+            {/* Event Cards */}
+            <div className="space-y-4">
+              <h4 className="font-display font-black text-base text-white uppercase tracking-wider flex items-center gap-2">
+                <span>Upcoming Physical Trials & PET Simulations ({trainerEvents.length})</span>
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {trainerEvents.map((evt: any) => (
+                  <div
+                    key={evt.id}
+                    className="p-5 rounded-2xl bg-[#161F15] border border-[#273623] hover:border-amber-500/50 transition-all flex flex-col justify-between space-y-3"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge variant="army" size="sm">{evt.type}</Badge>
+                        <span className="text-[10px] font-mono bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800">
+                          {evt.reportingStatus || 'OPEN'}
+                        </span>
+                      </div>
+                      <h4 className="font-display font-black text-base sm:text-lg text-white uppercase leading-snug">
+                        {evt.title}
+                      </h4>
+                      <div className="text-xs font-mono text-gray-300 space-y-1 pt-1">
+                        <div className="flex items-center gap-1.5 text-amber-400">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>{evt.date} • {evt.time}</span>
+                        </div>
+                        <div className="text-gray-400">📍 {evt.venue}</div>
+                        <div className="text-gray-400">🎯 Target: <strong className="text-white">{evt.targetCadre}</strong></div>
+                      </div>
+                      {evt.guidelines && (
+                        <p className="text-xs text-gray-400 bg-[#0E140C] p-2.5 rounded-xl border border-[#273623]">
+                          {evt.guidelines}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Official Recruitment Orders & Notices */}
+            {recruitmentOrders.length > 0 && (
+              <div className="space-y-3 pt-4 border-t border-[#273623]">
+                <h4 className="font-display font-black text-base text-white uppercase tracking-wider">
+                  Official Recruitment Circulars & Media Orders ({recruitmentOrders.length})
+                </h4>
+                <div className="space-y-2.5">
+                  {recruitmentOrders.map((ord: any) => (
+                    <div
+                      key={ord.id}
+                      className="p-4 rounded-2xl bg-[#161F15] border border-[#273623] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30 uppercase">
+                            {ord.category?.replace('_', ' ') || 'NOTICE'}
+                          </span>
+                          <span className="text-xs text-gray-400 font-mono">• {ord.authority}</span>
+                        </div>
+                        <div className="text-sm font-display font-bold text-white uppercase mt-1">
+                          {ord.title}
+                        </div>
+                      </div>
+                      <a
+                        href={ord.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-400 text-xs font-mono font-bold transition-all"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Open Document / Media</span>
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* ===================================================================
