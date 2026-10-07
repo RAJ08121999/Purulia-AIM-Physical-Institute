@@ -436,7 +436,22 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose 
       if (formData.targetForce) {
         localStorage.setItem('cadet_target_force', formData.targetForce);
       }
+      if (formData.heightCm) {
+        localStorage.setItem('cadet_height', String(formData.heightCm));
+      }
+      if (formData.weightKg) {
+        localStorage.setItem('cadet_weight', String(formData.weightKg));
+      }
+      if (formData.chestNormalCm) {
+        localStorage.setItem('cadet_chest_normal', String(formData.chestNormalCm));
+      }
+      if (formData.chestExpandedCm) {
+        localStorage.setItem('cadet_chest_expanded', String(formData.chestExpandedCm));
+      }
       localStorage.setItem('cadet_dossier_id', assignedId);
+      try {
+        localStorage.setItem('cadet_full_profile', JSON.stringify({ ...formData, dossierNumber: assignedId }));
+      } catch (e) {}
       persistQualificationsToLocal();
       setIsSubmitted(true);
     } catch (err: any) {
@@ -462,7 +477,22 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose 
       if (formData.targetForce) {
         localStorage.setItem('cadet_target_force', formData.targetForce);
       }
+      if (formData.heightCm) {
+        localStorage.setItem('cadet_height', String(formData.heightCm));
+      }
+      if (formData.weightKg) {
+        localStorage.setItem('cadet_weight', String(formData.weightKg));
+      }
+      if (formData.chestNormalCm) {
+        localStorage.setItem('cadet_chest_normal', String(formData.chestNormalCm));
+      }
+      if (formData.chestExpandedCm) {
+        localStorage.setItem('cadet_chest_expanded', String(formData.chestExpandedCm));
+      }
       localStorage.setItem('cadet_dossier_id', fallbackId);
+      try {
+        localStorage.setItem('cadet_full_profile', JSON.stringify({ ...formData, dossierNumber: fallbackId }));
+      } catch (e) {}
       persistQualificationsToLocal();
       setIsSubmitted(true);
     } finally {

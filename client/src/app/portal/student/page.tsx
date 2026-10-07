@@ -106,8 +106,102 @@ export default function StudentPortalPage() {
   const [targetForce, setTargetForce] = useState<string>('Indian Army GD');
   const [bloodGroup, setBloodGroup] = useState<string>('B+');
   const [birthMarks, setBirthMarks] = useState<string>('');
+  const [cadetHeight, setCadetHeight] = useState<number>(172.5);
+  const [cadetWeight, setCadetWeight] = useState<number>(64.0);
+  const [cadetChestNormal, setCadetChestNormal] = useState<number>(81.0);
+  const [cadetChestExpanded, setCadetChestExpanded] = useState<number>(87.0);
+  const [attendancePercent, setAttendancePercent] = useState<number>(94.2);
+  const [attendanceStreak, setAttendanceStreak] = useState<string>('18d streak');
+  const [best1600m, setBest1600m] = useState<string>('05m 24s');
+  const [isNewRecruit, setIsNewRecruit] = useState<boolean>(false);
   const [photoUploadMsg, setPhotoUploadMsg] = useState<string | null>(null);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Synchronize Cadet Profile dynamically from Registration (localStorage & Backend API)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const rawProfile = localStorage.getItem('cadet_full_profile');
+      const savedName = localStorage.getItem('cadet_name');
+      const savedRoll = localStorage.getItem('cadet_dossier_id');
+      const savedTarget = localStorage.getItem('cadet_target_force');
+      const savedBlood = localStorage.getItem('cadet_blood_group');
+      const savedBirthMarks = localStorage.getItem('cadet_birth_marks');
+      const savedPhoto = localStorage.getItem('cadet_passport_photo');
+      const savedHeight = localStorage.getItem('cadet_height');
+      const savedWeight = localStorage.getItem('cadet_weight');
+      const savedChestNormal = localStorage.getItem('cadet_chest_normal');
+      const savedChestExpanded = localStorage.getItem('cadet_chest_expanded');
+      const savedQuals = localStorage.getItem('cadet_qualifications');
+
+      if (savedName) setCadetName(savedName);
+      if (savedRoll) setCadetRoll(savedRoll);
+      if (savedTarget) setTargetForce(savedTarget);
+      if (savedBlood) setBloodGroup(savedBlood);
+      if (savedBirthMarks) setBirthMarks(savedBirthMarks);
+      if (savedPhoto) setCadetPhoto(savedPhoto);
+
+      if (savedHeight && !isNaN(Number(savedHeight))) {
+        setCadetHeight(Number(savedHeight));
+      }
+      if (savedWeight && !isNaN(Number(savedWeight))) {
+        setCadetWeight(Number(savedWeight));
+      }
+      if (savedChestNormal && !isNaN(Number(savedChestNormal))) {
+        setCadetChestNormal(Number(savedChestNormal));
+      }
+      if (savedChestExpanded && !isNaN(Number(savedChestExpanded))) {
+        setCadetChestExpanded(Number(savedChestExpanded));
+      }
+
+      if (rawProfile) {
+        try {
+          const parsed = JSON.parse(rawProfile);
+          setIsNewRecruit(true);
+          setAttendancePercent(100);
+          setAttendanceStreak('Enlisted • Day 1');
+          if (parsed.current1600mTime) setBest1600m(parsed.current1600mTime);
+        } catch (e) {}
+      }
+
+      if (savedQuals) {
+        try {
+          const parsedQ = JSON.parse(savedQuals);
+          setQualifications((prev: any) => ({
+            ...prev,
+            ...(parsedQ.tenth ? { tenth: parsedQ.tenth } : {}),
+            ...(parsedQ.twelfth ? { twelfth: parsedQ.twelfth } : {}),
+            ...(parsedQ.graduation ? { graduation: parsedQ.graduation } : {}),
+            ...(parsedQ.postGraduation ? { postGraduation: parsedQ.postGraduation } : {})
+          }));
+        } catch (e) {}
+      }
+
+      const dossierToFetch = savedRoll || (rawProfile ? JSON.parse(rawProfile).dossierNumber : null);
+      if (dossierToFetch) {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+        fetch(`${apiUrl}/admissions/${dossierToFetch}`)
+          .then(res => res.ok ? res.json() : null)
+          .then(cadet => {
+            if (cadet) {
+              if (cadet.fullName) setCadetName(cadet.fullName);
+              if (cadet.dossierNumber) setCadetRoll(cadet.dossierNumber);
+              if (cadet.targetForce) setTargetForce(cadet.targetForce);
+              if (cadet.bloodGroup) setBloodGroup(cadet.bloodGroup);
+              if (cadet.heightCm) setCadetHeight(Number(cadet.heightCm));
+              if (cadet.weightKg) setCadetWeight(Number(cadet.weightKg));
+              if (cadet.chestNormalCm) setCadetChestNormal(Number(cadet.chestNormalCm));
+              if (cadet.chestExpandedCm) setCadetChestExpanded(Number(cadet.chestExpandedCm));
+              if (cadet.current1600mTime) setBest1600m(cadet.current1600mTime);
+            }
+          })
+          .catch(() => {});
+      }
+    } catch (err) {
+      console.warn('Could not load cadet profile from local storage:', err);
+    }
+  }, []);
 
   // Previous Qualifications Records (10th, 12th, Graduation, Post-Graduation)
   const [qualifications, setQualifications] = useState<any>({
@@ -510,10 +604,10 @@ export default function StudentPortalPage() {
                 1600m PB
               </div>
               <div className="text-lg sm:text-xl font-display font-black text-amber-400">
-                05m 24s
+                {best1600m}
               </div>
               <div className="text-[9px] sm:text-[10px] text-emerald-400 font-mono font-bold truncate">
-                -1m 51s PB
+                {isNewRecruit ? 'Baseline' : '-1m 51s PB'}
               </div>
             </div>
 
@@ -522,10 +616,10 @@ export default function StudentPortalPage() {
                 Attendance
               </div>
               <div className="text-lg sm:text-xl font-display font-black text-emerald-400">
-                94.2%
+                {attendancePercent}%
               </div>
               <div className="text-[9px] sm:text-[10px] text-gray-400 font-mono truncate">
-                18d streak
+                {attendanceStreak}
               </div>
             </div>
 
@@ -1156,7 +1250,12 @@ export default function StudentPortalPage() {
                 targetForce: targetForce || DEFAULT_CADET_REPORT.targetForce,
                 bloodGroup: bloodGroup || DEFAULT_CADET_REPORT.bloodGroup,
                 birthMarks: birthMarks || undefined,
-                passportPhoto: cadetPhoto || undefined
+                passportPhoto: cadetPhoto || undefined,
+                heightCm: cadetHeight,
+                weightKg: cadetWeight,
+                chestNormalCm: cadetChestNormal,
+                chestExpandedCm: cadetChestExpanded,
+                attendancePercent: attendancePercent
               }}
               onClose={() => setActiveTab('TELEMETRY')}
             />

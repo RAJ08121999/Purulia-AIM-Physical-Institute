@@ -1,5 +1,6 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { DbService } from './db.service';
+import { PrismaService } from './prisma.service';
 import { StudentProfileEntity } from '../models';
 
 export interface CreateAdmissionDto {
@@ -98,9 +99,26 @@ export interface CreateAdmissionDto {
 
 @Injectable()
 export class AdmissionsService {
-  constructor(private readonly db: DbService) {}
+  private readonly logger = new Logger('AdmissionsService');
 
-  getAllApplications(status?: string) {
+  constructor(
+    private readonly db: DbService,
+    private readonly prisma: PrismaService
+  ) {}
+
+  async getAllApplications(status?: string) {
+    try {
+      const prismaStudents = await this.prisma.studentProfile.findMany({
+        where: status ? { admissionStatus: status.toUpperCase() } : undefined,
+        orderBy: { createdAt: 'desc' }
+      });
+      if (prismaStudents && prismaStudents.length > 0) {
+        return prismaStudents;
+      }
+    } catch (err: any) {
+      this.logger.warn(`Prisma fetch failed, using memory store: ${err.message}`);
+    }
+
     const students = this.db.getStudents();
     if (status) {
       return students.filter(s => s.admissionStatus === status.toUpperCase());
@@ -108,7 +126,21 @@ export class AdmissionsService {
     return students;
   }
 
-  getApplicationById(id: string) {
+  async getApplicationById(id: string) {
+    try {
+      const prismaStudent = await this.prisma.studentProfile.findFirst({
+        where: {
+          OR: [
+            { id },
+            { dossierNumber: id }
+          ]
+        }
+      });
+      if (prismaStudent) return prismaStudent;
+    } catch (err: any) {
+      this.logger.warn(`Prisma lookup failed: ${err.message}`);
+    }
+
     const student = this.db.findStudentById(id);
     if (!student) {
       throw new NotFoundException(`Cadet with dossier/ID "${id}" not found`);
@@ -116,7 +148,7 @@ export class AdmissionsService {
     return student;
   }
 
-  createApplication(dto: CreateAdmissionDto) {
+  async createApplication(dto: CreateAdmissionDto) {
     // 1. Validate mandatory fields
     if (!dto.fullName || !dto.fatherName || !dto.phone || !dto.dob || !dto.aadhaarNumber) {
       throw new BadRequestException('Mandatory fields missing: Full Name, Father’s Name, DOB, Phone, Aadhaar');
@@ -243,6 +275,66 @@ export class AdmissionsService {
 
     const saved = this.db.createStudent(newCadet);
 
+    // Persist directly to PostgreSQL (Supabase) via Prisma
+    try {
+      const parsedDob = new Date(newCadet.dob);
+      const validDob = isNaN(parsedDob.getTime()) ? new Date('2004-01-01') : parsedDob;
+
+      await this.prisma.studentProfile.create({
+        data: {
+          dossierNumber: newCadet.dossierNumber,
+          fullName: newCadet.fullName,
+          fatherName: newCadet.fatherName,
+          motherName: newCadet.motherName || null,
+          dob: validDob,
+          gender: newCadet.gender || 'Male',
+          maritalStatus: newCadet.maritalStatus || 'Unmarried',
+          aadhaarNumber: newCadet.aadhaarNumber,
+          phone: newCadet.phone,
+          emergencyPhone: newCadet.emergencyPhone,
+          domicileDistrict: newCadet.domicileDistrict || 'Purulia',
+          policeStation: newCadet.policeStation,
+          villageTown: newCadet.villageTown,
+          postOffice: newCadet.postOffice || null,
+          pinCode: newCadet.pinCode || '723101',
+          casteCategory: newCadet.casteCategory || 'General',
+          highestEducation: newCadet.highestEducation,
+          matricBoard: newCadet.matricBoard,
+          matricRollNumber: newCadet.matricRollNumber || null,
+          matricPassingYear: newCadet.matricPassingYear ? String(newCadet.matricPassingYear) : null,
+          matricAggregatePercent: newCadet.matricAggregatePercent ?? null,
+          scienceMathPercent: newCadet.scienceMathPercent ?? null,
+          nccCertificate: newCadet.nccCertificate || 'None',
+          sportsLevel: newCadet.sportsLevel || 'None',
+          sportsDiscipline: newCadet.sportsDiscipline || null,
+          targetForce: newCadet.targetForce,
+          heightCm: Number(newCadet.heightCm),
+          weightKg: Number(newCadet.weightKg),
+          chestNormalCm: Number(newCadet.chestNormalCm),
+          chestExpandedCm: Number(newCadet.chestExpandedCm),
+          chestExpansionCm: Number(newCadet.chestExpansionCm),
+          current1600mTime: newCadet.current1600mTime || null,
+          currentBeamPullups: newCadet.currentBeamPullups ? Number(newCadet.currentBeamPullups) : null,
+          visionStatus: newCadet.visionStatus || 'Normal 6/6 (No Spectacles)',
+          bodyTattoo: newCadet.bodyTattoo || 'No Permanent Tattoos',
+          hasCriminalRecord: newCadet.hasCriminalRecord || 'NO',
+          criminalRecordDetails: newCadet.criminalRecordDetails || null,
+          hasAttendedPastRally: newCadet.hasAttendedPastRally || 'NO',
+          pastRallyDetails: newCadet.pastRallyDetails || null,
+          hasMedicalCondition: newCadet.hasMedicalCondition || 'NO',
+          medicalHistoryDetails: newCadet.medicalHistoryDetails || null,
+          characterCertificateAvailable: newCadet.characterCertificateAvailable ?? true,
+          standToOathConsent: newCadet.standToOathConsent ?? true,
+          noSubstanceAbuseConsent: newCadet.noSubstanceAbuseConsent ?? true,
+          mediaConsent: newCadet.mediaConsent ?? true,
+          admissionStatus: newCadet.admissionStatus || 'PENDING'
+        }
+      });
+      this.logger.log(`Enlistment successfully saved into Supabase: ${newCadet.dossierNumber} (${newCadet.fullName})`);
+    } catch (prismaErr: any) {
+      this.logger.error(`Error saving cadet to Supabase via Prisma: ${prismaErr.message}`);
+    }
+
     this.db.createAuditLog({
       id: `audit-${Date.now()}`,
       action: 'ENLISTMENT_DOSSIER_SUBMITTED',
@@ -260,7 +352,7 @@ export class AdmissionsService {
     };
   }
 
-  updateStatus(id: string, status: 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED', batchId?: string) {
+  async updateStatus(id: string, status: 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED', batchId?: string) {
     const student = this.db.findStudentById(id);
     if (!student) {
       throw new NotFoundException(`Cadet with ID ${id} not found`);
@@ -279,6 +371,24 @@ export class AdmissionsService {
     }
 
     const updated = this.db.updateStudent(id, updates);
+
+    try {
+      await this.prisma.studentProfile.updateMany({
+        where: {
+          OR: [
+            { id },
+            { dossierNumber: id }
+          ]
+        },
+        data: {
+          admissionStatus: status,
+          batchId: batchId || undefined,
+          ...(status === 'APPROVED' && updates.rollNumber ? { rollNumber: updates.rollNumber } : {})
+        }
+      });
+    } catch (e: any) {
+      this.logger.warn(`Could not update status in Prisma: ${e.message}`);
+    }
 
     this.db.createAuditLog({
       id: `audit-${Date.now()}`,

@@ -15,6 +15,7 @@ import { AuthApiController } from './api/auth.api.controller';
 import { AuditApiController } from './api/audit.api.controller';
 
 // Domain Services
+import { PrismaService } from './services/prisma.service';
 import { DbService } from './services/db.service';
 import { AdmissionsService } from './services/admissions.service';
 import { EventsService } from './services/events.service';
@@ -43,12 +44,14 @@ import { AuthService } from './services/auth.service';
     AuditApiController
   ],
   providers: [
+    PrismaService,
     DbService,
     AdmissionsService,
     EventsService,
     TelemetryService,
     AttendanceService,
     AuthService
-  ]
+  ],
+  exports: [PrismaService]
 })
 export class AppModule {}
