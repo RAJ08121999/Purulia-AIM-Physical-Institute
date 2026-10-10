@@ -27,7 +27,8 @@ import {
   BookOpen,
   Calculator,
   Percent,
-  Layers
+  Layers,
+  Lock
 } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
 import { submitCadetAdmission } from '@/lib/api';
@@ -73,13 +74,8 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
 
     // Step 2: Comprehensive Qualifications (10th, 12th, Graduation, Post-Graduation)
     highestEducation: '10th Matriculation',
-    matricBoard: 'WBBSE (West Bengal Board)',
-    matricRollNumber: '',
-    matricPassingYear: '2024',
-    matricAggregatePercent: '',
-    scienceMathPercent: '',
 
-    // 10th Qualification Record
+    // Unified 10th / Matriculation Qualification Record
     tenthBoard: 'WBBSE (West Bengal Board of Secondary Education)',
     tenthStream: 'General (Secondary)',
     tenthSpecialization: 'All Compulsory Secondary Subjects',
@@ -88,6 +84,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
     tenthMarksObtained: '',
     tenthFullMarks: '700',
     tenthPercentage: '',
+    scienceMathPercent: '',
 
     // 12th Qualification Record
     hasTwelfth: false,
@@ -160,17 +157,33 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
+      let sanitizedValue = value;
+      // Strictly enforce numeric values for phone, Aadhaar, PIN, and passing years
+      if (name === 'aadhaarNumber') {
+        sanitizedValue = value.replace(/\D/g, '').slice(0, 12);
+      } else if (name === 'phone' || name === 'emergencyPhone') {
+        sanitizedValue = value.replace(/\D/g, '').slice(0, 10);
+      } else if (name === 'pinCode') {
+        sanitizedValue = value.replace(/\D/g, '').slice(0, 6);
+      } else if (
+        name === 'tenthPassingYear' ||
+        name === 'twelfthPassingYear' ||
+        name === 'gradPassingYear' ||
+        name === 'pgPassingYear'
+      ) {
+        sanitizedValue = value.replace(/\D/g, '').slice(0, 4);
+      }
+
       setFormData(prev => {
-        const next: any = { ...prev, [name]: value };
+        const next: any = { ...prev, [name]: sanitizedValue };
 
         // Automatically calculate 10th percentage
         if (name === 'tenthMarksObtained' || name === 'tenthFullMarks') {
-          const obtained = Number(name === 'tenthMarksObtained' ? value : prev.tenthMarksObtained);
-          const total = Number(name === 'tenthFullMarks' ? value : prev.tenthFullMarks);
+          const obtained = Number(name === 'tenthMarksObtained' ? sanitizedValue : prev.tenthMarksObtained);
+          const total = Number(name === 'tenthFullMarks' ? sanitizedValue : prev.tenthFullMarks);
           if (total > 0 && !isNaN(obtained) && obtained >= 0) {
             const pct = ((obtained / total) * 100).toFixed(2);
             next.tenthPercentage = pct;
-            next.matricAggregatePercent = pct;
           } else {
             next.tenthPercentage = '';
           }
@@ -233,8 +246,16 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
         alert('Please complete all mandatory fields: Full Name, Father’s Name, DOB, Phone, and Aadhaar.');
         return;
       }
-      if (formData.aadhaarNumber.replace(/\s+/g, '').length !== 12) {
-        alert('Please enter a valid 12-digit Aadhaar Card Number.');
+      if (formData.aadhaarNumber.replace(/\D/g, '').length !== 12) {
+        alert('Please enter a valid 12-digit numeric Aadhaar Card Number.');
+        return;
+      }
+      if (formData.phone.replace(/\D/g, '').length !== 10) {
+        alert('Please enter a valid 10-digit primary mobile number.');
+        return;
+      }
+      if (formData.pinCode && formData.pinCode.replace(/\D/g, '').length !== 6) {
+        alert('Please enter a valid 6-digit postal PIN Code.');
         return;
       }
       if (formData.passportPhoto) {
@@ -557,7 +578,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                     <span className="text-amber-400 font-bold text-base">{dossierId}</span>
                   </div>
                   <Badge variant="saffron" size="sm">
-                    Status: Enlisted For First Light Drill
+                    Status: Pending Trainer Verification
                   </Badge>
                 </div>
 
@@ -644,8 +665,8 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                   href="/portal/student"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-display font-black text-xs uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
                 >
-                  <User className="w-4 h-4" />
-                  Go to Cadet Profile →
+                  <Lock className="w-4 h-4" />
+                  Check Verification Status Gate →
                 </a>
                 <a
                   href={`http://localhost:4000/api/v1/mvc/cadet-card/${dossierId}`}
@@ -945,12 +966,14 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                       </label>
                       <input
                         type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]{12}"
                         name="aadhaarNumber"
                         required
-                        maxLength={14}
+                        maxLength={12}
                         value={formData.aadhaarNumber}
                         onChange={handleChange}
-                        placeholder="XXXX XXXX XXXX"
+                        placeholder="12-digit UIDAI number (e.g. 438647461291)"
                         className="w-full bg-[#121811] border border-[#273623] rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 text-sm font-mono"
                       />
                     </div>
@@ -994,29 +1017,35 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
-                        Primary Mobile & WhatsApp *
+                        Primary Mobile & WhatsApp (10 Digits) *
                       </label>
                       <input
                         type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]{10}"
+                        maxLength={10}
                         name="phone"
                         required
                         value={formData.phone}
                         onChange={handleChange}
-                        placeholder="10-digit number"
-                        className="w-full bg-[#121811] border border-[#273623] rounded-lg px-4 py-2.5 text-white text-sm"
+                        placeholder="10-digit primary number"
+                        className="w-full bg-[#121811] border border-[#273623] rounded-lg px-4 py-2.5 text-white text-sm font-mono"
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
-                        Emergency Contact / Parent Phone *
+                        Emergency Contact / Parent Phone (10 Digits) *
                       </label>
                       <input
                         type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]{10}"
+                        maxLength={10}
                         name="emergencyPhone"
                         value={formData.emergencyPhone}
                         onChange={handleChange}
-                        placeholder="Alternate phone number"
-                        className="w-full bg-[#121811] border border-[#273623] rounded-lg px-4 py-2.5 text-white text-sm"
+                        placeholder="10-digit alternate phone number"
+                        className="w-full bg-[#121811] border border-[#273623] rounded-lg px-4 py-2.5 text-white text-sm font-mono"
                       />
                     </div>
                   </div>
@@ -1064,8 +1093,8 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                     </div>
                   </div>
 
-                  {/* Address Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  {/* Address Grid with Domicile, PS, Post Office, Village/Street, and 6-Digit PIN */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
                     <div>
                       <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
                         Domicile District *
@@ -1094,24 +1123,59 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                       <input
                         type="text"
                         name="policeStation"
+                        required
                         value={formData.policeStation}
                         onChange={handleChange}
                         placeholder="e.g. Purulia Town / Hura"
-                        className="w-full bg-[#121811] border border-[#273623] rounded-lg px-3 py-2 text-white text-xs"
+                        className="w-full bg-[#121811] border border-[#273623] rounded-lg px-3 py-2 text-white text-xs placeholder-gray-600 focus:outline-none focus:border-amber-500"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
-                        Village / Street & PIN *
+                        Post Office (डाकघर) *
+                      </label>
+                      <input
+                        type="text"
+                        name="postOffice"
+                        required
+                        value={formData.postOffice}
+                        onChange={handleChange}
+                        placeholder="e.g. Purulia Head Post Office"
+                        className="w-full bg-[#121811] border border-[#273623] rounded-lg px-3 py-2 text-white text-xs placeholder-gray-600 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
+                        Village / Town / Street / Mohalla *
                       </label>
                       <input
                         type="text"
                         name="villageTown"
+                        required
                         value={formData.villageTown}
                         onChange={handleChange}
-                        placeholder="e.g. Manbazar, 723101"
-                        className="w-full bg-[#121811] border border-[#273623] rounded-lg px-3 py-2 text-white text-xs"
+                        placeholder="e.g. Gaushala More, Reny Road, Ward 21"
+                        className="w-full bg-[#121811] border border-[#273623] rounded-lg px-3 py-2 text-white text-xs placeholder-gray-600 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono text-gray-300 uppercase mb-1">
+                        Postal PIN Code (6 Digits) *
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]{6}"
+                        maxLength={6}
+                        name="pinCode"
+                        required
+                        value={formData.pinCode}
+                        onChange={handleChange}
+                        placeholder="e.g. 723101"
+                        className="w-full bg-[#121811] border border-[#273623] rounded-lg px-3 py-2 text-white text-xs placeholder-gray-600 focus:outline-none focus:border-amber-500 font-mono"
                       />
                     </div>
                   </div>

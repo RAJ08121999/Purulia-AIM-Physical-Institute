@@ -27,10 +27,15 @@ import {
   Video,
   Megaphone,
   Sparkles,
-  Upload
+  Upload,
+  UserCheck,
+  UserX,
+  Eye,
+  RefreshCw,
+  Lock
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
-import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications } from '@/lib/api';
+import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications, updateCadetStatus } from '@/lib/api';
 import { ParadeDrillStopwatch } from '@/components';
 
 interface CadetAttendance {
@@ -161,12 +166,70 @@ const initialOrders: RecruitmentOrder[] = [
 
 export default function TrainerCommandCenter() {
   const [activeTab, setActiveTab] = useState<
-    'STOPWATCH' | 'ATTENDANCE' | 'TELEMETRY' | 'DEFAULTERS' | 'EVENTS' | 'HONOUR' | 'ORDERS'
+    'STOPWATCH' | 'VERIFICATION' | 'ATTENDANCE' | 'TELEMETRY' | 'DEFAULTERS' | 'EVENTS' | 'HONOUR' | 'ORDERS'
   >('STOPWATCH');
   const [cadets, setCadets] = useState<CadetAttendance[]>(initialCadets);
   const [attendanceSaved, setAttendanceSaved] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Admissions & Enlistment Verification Directorate
+  const [allApplications, setAllApplications] = useState<any[]>([]);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [verificationFilter, setVerificationFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING');
+  const [verificationSearch, setVerificationSearch] = useState<string>('');
+  const [verificationNotice, setVerificationNotice] = useState<{ type: 'success' | 'danger'; message: string } | null>(null);
+
+  const handleVerificationAction = async (app: any, newStatus: 'APPROVED' | 'REJECTED') => {
+    const idToUpdate = app.id || app.dossierNumber;
+    setVerifyingId(idToUpdate);
+    setVerificationNotice(null);
+    try {
+      await updateCadetStatus(idToUpdate, newStatus);
+      // Update local applications list
+      setAllApplications(prev =>
+        prev.map(item =>
+          (item.id === app.id || item.dossierNumber === app.dossierNumber)
+            ? { ...item, admissionStatus: newStatus }
+            : item
+        )
+      );
+
+      if (newStatus === 'APPROVED') {
+        // Enlist cadet into active attendance roster
+        const newCadetEntry: CadetAttendance = {
+          id: app.id || app.dossierNumber,
+          roll: app.dossierNumber || app.rollNumber || 'AIM-CADET',
+          name: app.fullName,
+          batch: app.targetForce ? `${app.targetForce} Platoon` : 'Morning Alfa (Army GD)',
+          target: app.targetForce || 'Army GD (5m30s)',
+          consecutiveAbsences: 0,
+          last1600m: app.current1600mTime || 'Not Tested',
+          status: 'PRESENT'
+        };
+        setCadets(prev => {
+          if (prev.some(c => c.roll === newCadetEntry.roll)) return prev;
+          return [newCadetEntry, ...prev];
+        });
+        setVerificationNotice({
+          type: 'success',
+          message: `✓ Cadet ${app.fullName} (${app.dossierNumber}) has been officially VERIFIED & APPROVED! Cadet profile access is now UNLOCKED.`
+        });
+      } else {
+        // Remove from active attendance roster
+        setCadets(prev => prev.filter(c => c.roll !== app.dossierNumber));
+        setVerificationNotice({
+          type: 'danger',
+          message: `Cadet ${app.fullName} (${app.dossierNumber}) admission has been DISAPPROVED / REJECTED.`
+        });
+      }
+    } catch (err: any) {
+      alert(`Failed to update admission status: ${err.message}`);
+    } finally {
+      setVerifyingId(null);
+      setTimeout(() => setVerificationNotice(null), 6000);
+    }
+  };
 
   // Management State
   const [events, setEvents] = useState<DrillEvent[]>(initialEvents);
@@ -221,8 +284,11 @@ export default function TrainerCommandCenter() {
 
     // Load authentic registered cadets from database
     fetchCadetApplications().then(apps => {
-      if (Array.isArray(apps) && apps.length > 0) {
-        const mapped: CadetAttendance[] = apps.map((a: any, idx: number) => ({
+      if (Array.isArray(apps)) {
+        setAllApplications(apps);
+        // Only APPROVED cadets enter the active attendance and defaulters muster roll
+        const approvedApps = apps.filter((a: any) => a.admissionStatus === 'APPROVED');
+        const mapped: CadetAttendance[] = approvedApps.map((a: any, idx: number) => ({
           id: a.id || String(idx + 1),
           roll: a.dossierNumber || a.rollNumber || `AIM-2026-${String(idx + 1).padStart(3, '0')}`,
           name: a.fullName || 'Enlisted Cadet',
@@ -233,7 +299,7 @@ export default function TrainerCommandCenter() {
           status: 'PRESENT'
         }));
         setCadets(mapped);
-        setSelectedCadetId(mapped[0].roll);
+        if (mapped.length > 0) setSelectedCadetId(mapped[0].roll);
       }
     }).catch(err => {
       console.warn('Failed to load authentic cadets for trainer:', err);
@@ -613,6 +679,14 @@ export default function TrainerCommandCenter() {
         <div className="flex items-center gap-1.5 sm:gap-2 border-b border-[#273623] pb-2 font-display uppercase tracking-wider text-xs font-bold overflow-x-auto no-scrollbar touch-pan-x w-full">
           {[
             { id: 'STOPWATCH', label: '⏱️ Drill Stopwatch' },
+            {
+              id: 'VERIFICATION',
+              label: `🎖️ Verify Admissions ${
+                allApplications.filter(a => a.admissionStatus === 'PENDING' || a.admissionStatus === 'UNDER_REVIEW' || !a.admissionStatus).length > 0
+                  ? `(${allApplications.filter(a => a.admissionStatus === 'PENDING' || a.admissionStatus === 'UNDER_REVIEW' || !a.admissionStatus).length})`
+                  : ''
+              }`
+            },
             { id: 'ATTENDANCE', label: '📋 Batch Attendance' },
             { id: 'TELEMETRY', label: '⚡ Telemetry Scoring' },
             { id: 'DEFAULTERS', label: '⚠️ Defaulters & Alerts' },
@@ -636,6 +710,318 @@ export default function TrainerCommandCenter() {
         {/* TAB 0: PARADE DRILL STOPWATCH & BROADCAST */}
         {activeTab === 'STOPWATCH' && (
           <ParadeDrillStopwatch mode="TRAINER_CONTROLLER" />
+        )}
+
+        {/* TAB 0.5: ADMISSIONS & ENLISTMENT VERIFICATION QUEUE */}
+        {activeTab === 'VERIFICATION' && (
+          <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#121811] border border-[#273623] space-y-5">
+            {/* Header Banner */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-[#273623]">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="saffron" size="sm">
+                    Chief Drill Directorate Gatekeeper
+                  </Badge>
+                  <span className="text-[10px] font-mono text-gray-400">UIDAI & Academic Check</span>
+                </div>
+                <h3 className="font-display font-black text-lg sm:text-xl text-white uppercase tracking-wider mt-1">
+                  Cadet Enlistment Verification Queue
+                </h3>
+                <p className="text-xs text-gray-400 font-mono">
+                  Cadets can enter their profile ONLY after a trainer verifies their identity and approves their admission.
+                </p>
+              </div>
+
+              {/* Status Counters */}
+              <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+                <span className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                  Pending: <strong>{allApplications.filter(a => a.admissionStatus === 'PENDING' || a.admissionStatus === 'UNDER_REVIEW' || !a.admissionStatus).length}</strong>
+                </span>
+                <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                  Approved: <strong>{allApplications.filter(a => a.admissionStatus === 'APPROVED').length}</strong>
+                </span>
+                <span className="px-3 py-1.5 rounded-xl bg-red-500/20 text-red-400 border border-red-500/40">
+                  Rejected: <strong>{allApplications.filter(a => a.admissionStatus === 'REJECTED').length}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Notification Banner */}
+            {verificationNotice && (
+              <div className={`p-4 rounded-xl border text-xs font-mono flex items-center justify-between gap-3 ${
+                verificationNotice.type === 'success'
+                  ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300'
+                  : 'bg-red-950/60 border-red-500/50 text-red-300'
+              }`}>
+                <div className="flex items-center gap-2">
+                  {verificationNotice.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                  )}
+                  <span>{verificationNotice.message}</span>
+                </div>
+                <button
+                  onClick={() => setVerificationNotice(null)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Filter and Search Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar font-mono text-xs">
+                {(['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as const).map(flt => (
+                  <button
+                    key={flt}
+                    onClick={() => setVerificationFilter(flt)}
+                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      verificationFilter === flt
+                        ? 'bg-amber-500 text-black border-amber-400'
+                        : 'bg-[#0B0F0A] text-gray-400 border-[#273623] hover:text-white'
+                    }`}
+                  >
+                    {flt === 'PENDING' ? 'Pending Review' : flt === 'APPROVED' ? 'Approved Cadets' : flt === 'REJECTED' ? 'Rejected' : 'All Applications'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative w-full sm:w-72">
+                <Search className="w-4 h-4 text-gray-500 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search name, dossier, Aadhaar..."
+                  value={verificationSearch}
+                  onChange={e => setVerificationSearch(e.target.value)}
+                  className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Applications List */}
+            {(() => {
+              const list = allApplications.filter(app => {
+                if (verificationFilter === 'PENDING') {
+                  if (app.admissionStatus === 'APPROVED' || app.admissionStatus === 'REJECTED') return false;
+                } else if (verificationFilter === 'APPROVED') {
+                  if (app.admissionStatus !== 'APPROVED') return false;
+                } else if (verificationFilter === 'REJECTED') {
+                  if (app.admissionStatus !== 'REJECTED') return false;
+                }
+
+                if (verificationSearch.trim()) {
+                  const q = verificationSearch.toLowerCase().trim();
+                  const n = (app.fullName || '').toLowerCase();
+                  const d = (app.dossierNumber || '').toLowerCase();
+                  const p = (app.phone || '').toLowerCase();
+                  const a = (app.aadhaarNumber || '').toLowerCase();
+                  const f = (app.targetForce || '').toLowerCase();
+                  return n.includes(q) || d.includes(q) || p.includes(q) || a.includes(q) || f.includes(q);
+                }
+                return true;
+              });
+
+              if (list.length === 0) {
+                return (
+                  <div className="py-16 text-center space-y-3 border border-dashed border-[#273623] rounded-2xl">
+                    <Shield className="w-12 h-12 text-gray-600 mx-auto" />
+                    <p className="text-gray-400 text-xs font-mono">
+                      No applications found for the selected filter ({verificationFilter}).
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-4">
+                  {list.map(app => {
+                    const isAppApproved = app.admissionStatus === 'APPROVED';
+                    const isAppRejected = app.admissionStatus === 'REJECTED';
+                    const isPending = !isAppApproved && !isAppRejected;
+                    const expansion = Number(app.chestExpandedCm || 0) - Number(app.chestNormalCm || 0);
+
+                    return (
+                      <div
+                        key={app.id || app.dossierNumber}
+                        className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+                          isPending
+                            ? 'bg-gradient-to-r from-[#171D12] via-[#121811] to-[#0E140C] border-amber-500/50 shadow-lg'
+                            : isAppApproved
+                            ? 'bg-[#121811] border-emerald-500/40'
+                            : 'bg-[#140E0E] border-red-900/50'
+                        }`}
+                      >
+                        <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
+                          {/* Cadet Profile & Bio */}
+                          <div className="flex items-start gap-4">
+                            {app.passportPhoto ? (
+                              <div className="w-16 h-20 sm:w-20 sm:h-24 rounded-xl border-2 border-amber-500/60 overflow-hidden bg-black flex-shrink-0 relative shadow-md">
+                                <img
+                                  src={app.passportPhoto}
+                                  alt={app.fullName}
+                                  className="w-full h-full object-cover"
+                                />
+                                <span className="absolute bottom-0 inset-x-0 bg-black/85 text-[8px] font-mono text-amber-400 text-center py-0.5 font-bold uppercase">
+                                  ATTESTED
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="w-16 h-20 sm:w-20 sm:h-24 rounded-xl border-2 border-amber-500/40 bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold text-lg flex-shrink-0">
+                                {app.fullName?.slice(0, 2).toUpperCase() || 'CD'}
+                              </div>
+                            )}
+
+                            <div className="space-y-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="font-display font-black text-base sm:text-lg text-white uppercase truncate">
+                                  {app.fullName}
+                                </h4>
+                                {isPending && (
+                                  <Badge variant="saffron" size="sm">
+                                    Pending Review
+                                  </Badge>
+                                )}
+                                {isAppApproved && (
+                                  <Badge variant="army" size="sm">
+                                    ✓ Admission Approved
+                                  </Badge>
+                                )}
+                                {isAppRejected && (
+                                  <Badge variant="danger" size="sm">
+                                    Disapproved
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <div className="text-xs font-mono text-amber-400 font-bold flex flex-wrap items-center gap-2">
+                                <span>Dossier: {app.dossierNumber}</span>
+                                <span className="text-gray-600">•</span>
+                                <span className="text-gray-300">Target: {app.targetForce || 'Army GD'}</span>
+                              </div>
+
+                              <div className="text-[11px] font-mono text-gray-400 space-y-0.5 pt-1">
+                                <div>
+                                  <strong className="text-gray-300">Father:</strong> {app.fatherName}
+                                  {app.motherName ? ` • Mother: ${app.motherName}` : ''}
+                                </div>
+                                <div>
+                                  <strong className="text-gray-300">DOB:</strong> {app.dob ? app.dob.split('T')[0] : '—'} • {app.gender} • Category: {app.casteCategory || 'General'}
+                                </div>
+                                <div>
+                                  <strong className="text-gray-300">Address:</strong> {app.villageTown}, PS: {app.policeStation}, Dist: {app.domicileDistrict} ({app.pinCode})
+                                </div>
+                                <div className="text-amber-300">
+                                  <strong>Aadhaar UIDAI:</strong> {app.aadhaarNumber} (Duplicate Protection Checked)
+                                </div>
+                                <div>
+                                  <strong className="text-gray-300">Mobile:</strong> <a href={`tel:${app.phone}`} className="text-emerald-400 hover:underline">{app.phone}</a> | Emergency: {app.emergencyPhone}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action Controls */}
+                          <div className="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end gap-2 w-full lg:w-auto flex-shrink-0 pt-2 lg:pt-0">
+                            {isPending && (
+                              <Button
+                                variant="saffron"
+                                size="sm"
+                                className="justify-center"
+                                disabled={verifyingId === (app.id || app.dossierNumber)}
+                                leftIcon={<UserCheck className="w-4 h-4 text-black" />}
+                                onClick={() => handleVerificationAction(app, 'APPROVED')}
+                              >
+                                {verifyingId === (app.id || app.dossierNumber) ? 'Authorizing...' : 'Verify & Approve Admission'}
+                              </Button>
+                            )}
+
+                            {isPending && (
+                              <button
+                                onClick={() => handleVerificationAction(app, 'REJECTED')}
+                                disabled={verifyingId === (app.id || app.dossierNumber)}
+                                className="px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-300 hover:text-white text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                              >
+                                <UserX className="w-3.5 h-3.5" />
+                                <span>Reject Admission</span>
+                              </button>
+                            )}
+
+                            {isAppApproved && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-emerald-400 text-xs font-mono font-bold flex items-center gap-1">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                                  Profile Access Unlocked
+                                </span>
+                                <button
+                                  onClick={() => handleVerificationAction(app, 'REJECTED')}
+                                  title="Revoke / Set Disapproved"
+                                  className="text-[10px] text-gray-500 hover:text-red-400 underline font-mono ml-2"
+                                >
+                                  Revoke
+                                </button>
+                              </div>
+                            )}
+
+                            {isAppRejected && (
+                              <button
+                                onClick={() => handleVerificationAction(app, 'APPROVED')}
+                                className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5"
+                              >
+                                <UserCheck className="w-3.5 h-3.5" />
+                                <span>Reconsider & Approve</span>
+                              </button>
+                            )}
+
+                            <a
+                              href={`http://localhost:4000/api/v1/mvc/cadet-card/${app.dossierNumber}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 rounded-xl bg-[#1A2415] hover:bg-[#273623] border border-[#273623] text-gray-300 hover:text-white text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
+                              <span>View Official Admit Card</span>
+                            </a>
+                          </div>
+                        </div>
+
+                        {/* Physical Standard & Academic Metrics Strip */}
+                        <div className="mt-4 pt-3 border-t border-[#1F2B1A] grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 text-xs font-mono">
+                          <div className="bg-[#0B0F0A] p-2 rounded-lg border border-[#273623]">
+                            <span className="text-[10px] text-gray-500 block uppercase">Height (PST)</span>
+                            <span className="text-white font-bold">{app.heightCm} cm</span>
+                          </div>
+                          <div className="bg-[#0B0F0A] p-2 rounded-lg border border-[#273623]">
+                            <span className="text-[10px] text-gray-500 block uppercase">Weight</span>
+                            <span className="text-white font-bold">{app.weightKg} kg</span>
+                          </div>
+                          <div className="bg-[#0B0F0A] p-2 rounded-lg border border-[#273623]">
+                            <span className="text-[10px] text-gray-500 block uppercase">Chest (N/Exp)</span>
+                            <span className="text-white font-bold">{app.chestNormalCm} / {app.chestExpandedCm} cm (+{expansion}cm)</span>
+                          </div>
+                          <div className="bg-[#0B0F0A] p-2 rounded-lg border border-[#273623]">
+                            <span className="text-[10px] text-gray-500 block uppercase">1600m Self PB</span>
+                            <span className="text-amber-400 font-bold">{app.current1600mTime || 'Not Tested'}</span>
+                          </div>
+                          <div className="bg-[#0B0F0A] p-2 rounded-lg border border-[#273623]">
+                            <span className="text-[10px] text-gray-500 block uppercase">Chin-ups</span>
+                            <span className="text-lime-400 font-bold">{app.currentBeamPullups ?? '—'}</span>
+                          </div>
+                          <div className="bg-[#0B0F0A] p-2 rounded-lg border border-[#273623]">
+                            <span className="text-[10px] text-gray-500 block uppercase">10th Academic</span>
+                            <span className="text-blue-400 font-bold truncate block">
+                              {app.tenthPercentage || app.matricAggregatePercent ? `${app.tenthPercentage || app.matricAggregatePercent}%` : 'Recorded'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
         )}
 
         {/* TAB 1: BATCH ATTENDANCE MARKER */}

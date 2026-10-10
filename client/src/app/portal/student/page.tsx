@@ -34,7 +34,11 @@ import {
   LogOut,
   Megaphone,
   ExternalLink,
-  Zap
+  Zap,
+  Lock,
+  ShieldAlert,
+  RefreshCw,
+  FileQuestion
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
 import { ParadeDrillStopwatch } from '@/components';
@@ -129,6 +133,49 @@ export default function StudentPortalPage() {
   const [photoUploadMsg, setPhotoUploadMsg] = useState<string | null>(null);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
 
+  // Admission Gatekeeping & Trainer Verification State
+  const [admissionStatus, setAdmissionStatus] = useState<
+    'LOADING' | 'APPROVED' | 'PENDING' | 'UNDER_REVIEW' | 'REJECTED' | 'NO_RECORD'
+  >('LOADING');
+  const [cadetRecord, setCadetRecord] = useState<any>(null);
+  const [isRefreshingStatus, setIsRefreshingStatus] = useState<boolean>(false);
+  const [statusNotice, setStatusNotice] = useState<string | null>(null);
+
+  // Function to re-query backend for live trainer verification status
+  const handleCheckStatus = async () => {
+    setIsRefreshingStatus(true);
+    setStatusNotice(null);
+    try {
+      const rollToFetch = cadetRoll || localStorage.getItem('cadet_dossier_id');
+      if (!rollToFetch) {
+        setAdmissionStatus('NO_RECORD');
+        return;
+      }
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+      const res = await fetch(`${apiUrl}/admissions/${encodeURIComponent(rollToFetch)}`, { cache: 'no-store' });
+      if (!res.ok) {
+        setStatusNotice('No updated dossier record found on the military server. Please verify your Dossier ID.');
+        return;
+      }
+      const cadet = await res.json();
+      setCadetRecord(cadet);
+      if (cadet.admissionStatus === 'APPROVED') {
+        setAdmissionStatus('APPROVED');
+        setStatusNotice('Admitted & Verified! The Drill Trainer has approved your admission. Welcome to AIM Cadet Portal!');
+      } else if (cadet.admissionStatus === 'REJECTED') {
+        setAdmissionStatus('REJECTED');
+        setStatusNotice('Your admission dossier was rejected by the Training Directorate.');
+      } else {
+        setAdmissionStatus(cadet.admissionStatus || 'PENDING');
+        setStatusNotice('Your admission is still PENDING verification. Please report to morning muster at 05:00 AM IST with your documents.');
+      }
+    } catch (err: any) {
+      setStatusNotice('Network error: Unable to verify admission status at this moment.');
+    } finally {
+      setIsRefreshingStatus(false);
+    }
+  };
+
   // Synchronize Cadet Profile dynamically from Registration (localStorage & Backend API)
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -199,10 +246,12 @@ export default function StudentPortalPage() {
       const dossierToFetch = savedRoll || (rawProfile ? JSON.parse(rawProfile).dossierNumber : null);
       if (dossierToFetch) {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-        fetch(`${apiUrl}/admissions/${dossierToFetch}`)
+        fetch(`${apiUrl}/admissions/${encodeURIComponent(dossierToFetch)}`, { cache: 'no-store' })
           .then(res => res.ok ? res.json() : null)
           .then(cadet => {
             if (cadet) {
+              setCadetRecord(cadet);
+              setAdmissionStatus(cadet.admissionStatus || 'PENDING');
               if (cadet.fullName) setCadetName(cadet.fullName);
               if (cadet.dossierNumber) setCadetRoll(cadet.dossierNumber);
               if (cadet.targetForce) setTargetForce(cadet.targetForce);
@@ -268,9 +317,15 @@ export default function StudentPortalPage() {
               if (Object.keys(backendQuals).length > 0) {
                 setQualifications((prev: any) => ({ ...prev, ...backendQuals }));
               }
+            } else {
+              setAdmissionStatus('NO_RECORD');
             }
           })
-          .catch(() => {});
+          .catch(() => {
+            setAdmissionStatus('PENDING');
+          });
+      } else {
+        setAdmissionStatus('NO_RECORD');
       }
 
       // Load Ustad's Daily War Cry Quote
@@ -482,18 +537,34 @@ export default function StudentPortalPage() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            <button
-              onClick={() => setActiveTab('REPORT')}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#161F15] hover:bg-amber-500/10 border border-amber-500/40 text-amber-400 text-xs font-display font-bold uppercase tracking-wider transition-all cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print Dossier</span>
-            </button>
+            {admissionStatus === 'APPROVED' && (
+              <button
+                onClick={() => setActiveTab('REPORT')}
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#161F15] hover:bg-amber-500/10 border border-amber-500/40 text-amber-400 text-xs font-display font-bold uppercase tracking-wider transition-all cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Dossier</span>
+              </button>
+            )}
 
-            <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-mono bg-[#161F15] px-2.5 py-1 sm:py-1.5 rounded-lg border border-[#273623]">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-              <span className="text-emerald-400 font-bold">Good Standing</span>
-            </div>
+            {admissionStatus === 'APPROVED' && (
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-mono bg-[#161F15] px-2.5 py-1 sm:py-1.5 rounded-lg border border-[#273623]">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                <span className="text-emerald-400 font-bold">Good Standing</span>
+              </div>
+            )}
+            {(admissionStatus === 'PENDING' || admissionStatus === 'UNDER_REVIEW') && (
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-mono bg-amber-950/60 px-2.5 py-1 sm:py-1.5 rounded-lg border border-amber-500/50">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+                <span className="text-amber-400 font-bold">Verification Pending</span>
+              </div>
+            )}
+            {admissionStatus === 'REJECTED' && (
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-mono bg-red-950/60 px-2.5 py-1 sm:py-1.5 rounded-lg border border-red-500/50">
+                <span className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                <span className="text-red-400 font-bold">Admission Disapproved</span>
+              </div>
+            )}
 
             <div className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-[#273623]">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center font-bold text-xs flex-shrink-0 overflow-hidden relative shadow-sm">
@@ -532,19 +603,261 @@ export default function StudentPortalPage() {
       {/* Main Cadet Container */}
       <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 w-full space-y-5 sm:space-y-7">
         {/* ===================================================================
-            USTAD'S DAILY WAR CRY • BATTLEFIELD INSPIRATION QUOTE FIELD
+            GATE 1: LOADING STATE
             =================================================================== */}
-        <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#241706] via-[#1B2211] to-[#0E140C] border-2 border-amber-500/80 shadow-[0_0_35px_rgba(245,158,11,0.3)] relative overflow-hidden">
-          <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 relative z-10">
-            <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-black flex items-center justify-center font-black flex-shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.6)]">
-              <Flame className="w-6 h-6 sm:w-7 sm:h-7 animate-pulse text-black" />
+        {admissionStatus === 'LOADING' && (
+          <div className="py-20 text-center space-y-6 max-w-xl mx-auto">
+            <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-500/10 border-2 border-amber-500/40 flex items-center justify-center text-amber-400 animate-pulse shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+              <Shield className="w-10 h-10 animate-spin" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="text-[10px] sm:text-[11px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-widest shadow-sm">
-                  🔥 USTAD&apos;S DAILY WAR CRY
-                </span>
+            <div className="space-y-2">
+              <h3 className="font-display font-black text-xl text-white uppercase tracking-wider">
+                Authenticating Regimental Dossier
+              </h3>
+              <p className="text-xs font-mono text-gray-400">
+                Scanning military intake database for credentials and trainer authorization...
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            GATE 2: NO RECORD DETECTED
+            =================================================================== */}
+        {admissionStatus === 'NO_RECORD' && (
+          <div className="py-12 max-w-2xl mx-auto space-y-6">
+            <div className="p-6 sm:p-8 rounded-3xl bg-[#121811] border-2 border-[#273623] text-center space-y-6 shadow-2xl">
+              <div className="w-20 h-20 mx-auto rounded-2xl bg-gray-800/60 border border-gray-700 flex items-center justify-center text-gray-400">
+                <FileQuestion className="w-10 h-10" />
+              </div>
+              <div className="space-y-2">
+                <Badge variant="outline" size="md">No Active Enlistment Dossier Found</Badge>
+                <h2 className="font-display font-black text-2xl text-white uppercase tracking-wider">
+                  Cadet Profile Locked
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-400 font-mono max-w-md mx-auto">
+                  No registered cadet application was detected in your current session. Cadet profiles are reserved exclusively for candidates enrolled at Purulia AIM Physical Institute.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+                <Link
+                  href="/"
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-display font-black text-xs uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] text-center"
+                >
+                  Return to Home & Enlist
+                </Link>
+                <button
+                  onClick={() => logoutUser()}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl bg-[#1A2415] hover:bg-[#273623] text-gray-300 font-mono text-xs uppercase tracking-wider transition-all border border-[#273623]"
+                >
+                  Switch Account / Log In
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            GATE 3: PENDING TRAINER VERIFICATION
+            =================================================================== */}
+        {(admissionStatus === 'PENDING' || admissionStatus === 'UNDER_REVIEW') && (
+          <div className="max-w-3xl mx-auto space-y-6 py-4">
+            {/* Status Notice after refresh */}
+            {statusNotice && (
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-300 text-xs font-mono flex items-center gap-2">
+                <Clock className="w-4 h-4 flex-shrink-0" />
+                <span>{statusNotice}</span>
+              </div>
+            )}
+
+            {/* Main Security Gate Card */}
+            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-[#161F13] via-[#121811] to-[#0E140C] border-2 border-amber-500/70 shadow-[0_0_50px_rgba(245,158,11,0.25)] relative overflow-hidden space-y-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 pb-6 border-b border-[#273623]">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-amber-500/20 border-2 border-amber-500 text-amber-400 flex items-center justify-center shadow-[0_0_25px_rgba(245,158,11,0.4)] flex-shrink-0 relative">
+                  <Lock className="w-10 h-10 sm:w-12 sm:h-12" />
+                  <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-amber-500 text-black text-[9px] font-mono font-black uppercase tracking-wider animate-pulse">
+                    LOCKED
+                  </span>
+                </div>
+
+                <div className="text-center sm:text-left flex-1 space-y-2">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <Badge variant="saffron" size="sm">
+                      Security Gate: Clearance Required
+                    </Badge>
+                    <span className="text-[10px] font-mono text-amber-400 bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded">
+                      Protocol Form R-01 § 4
+                    </span>
+                  </div>
+                  <h1 className="font-display font-black text-2xl sm:text-3xl text-white uppercase tracking-wide">
+                    Admission Pending Trainer Verification
+                  </h1>
+                  <p className="text-xs sm:text-sm text-gray-300 font-mono leading-relaxed">
+                    Jai Hind, <strong className="text-amber-400">{cadetName || 'Cadet'}</strong>. Your enlistment dossier has been registered, but full profile access and physical telemetry are <strong className="text-white">strictly locked</strong> until an authorized Drill Ustad physically verifies your credentials and formally approves your admission.
+                  </p>
+                </div>
+              </div>
+
+              {/* Cadet Identification Snapshot */}
+              <div className="bg-[#0B0F0A] p-4 sm:p-5 rounded-2xl border border-[#273623] grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+                <div className="flex items-center gap-3">
+                  {cadetPhoto ? (
+                    <img
+                      src={cadetPhoto}
+                      alt={cadetName}
+                      className="w-14 h-16 rounded-xl object-cover border-2 border-amber-500/60 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-14 h-16 rounded-xl bg-amber-500/10 border-2 border-amber-500/40 text-amber-400 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                      {cadetInitials}
+                    </div>
+                  )}
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="text-gray-400 text-[10px] uppercase">Enlisted Candidate</div>
+                    <div className="font-display font-bold text-sm text-white uppercase truncate">{cadetName}</div>
+                    <div className="text-amber-400 text-[11px] font-bold">Dossier: {cadetRoll || 'AIM-CADET'}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 justify-self-start sm:justify-self-end text-left sm:text-right">
+                  <div>
+                    <span className="text-gray-500 text-[10px] block uppercase">Target Wing</span>
+                    <span className="font-bold text-white text-xs">{targetForce}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-[10px] block uppercase">Verification Status</span>
+                    <span className="inline-flex items-center gap-1 text-amber-400 font-bold bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/60">
+                      <Clock className="w-3 h-3" />
+                      Pending Ustad Approval
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3-Step Military Onboarding Protocol */}
+              <div className="space-y-3 pt-2">
+                <h4 className="font-display font-bold text-xs uppercase text-gray-400 tracking-wider">
+                  Mandatory Intake Clearance Protocol:
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-3.5 rounded-xl bg-[#0B0F0A] border border-emerald-500/40 text-xs font-mono space-y-1.5">
+                    <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                      <span>1. Dossier Logged</span>
+                    </div>
+                    <p className="text-[11px] text-gray-400">
+                      Bio-data, UIDAI Aadhaar, & qualifications submitted.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-[#0B0F0A] border-2 border-amber-500/60 text-xs font-mono space-y-1.5 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                    <div className="flex items-center gap-2 text-amber-400 font-bold">
+                      <Clock className="w-4 h-4 animate-spin text-amber-500 flex-shrink-0" />
+                      <span>2. Physical Muster</span>
+                    </div>
+                    <p className="text-[11px] text-gray-300">
+                      Report at 05:00 AM IST at J.K. College Field with original Aadhaar & marksheet.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-[#0B0F0A] border border-[#273623] text-xs font-mono space-y-1.5 text-gray-500">
+                    <div className="flex items-center gap-2 font-bold">
+                      <Lock className="w-4 h-4 flex-shrink-0" />
+                      <span>3. Profile Unlocks</span>
+                    </div>
+                    <p className="text-[11px] text-gray-500">
+                      Drill Ustad verifies your physical & academic records to approve admission.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Action Controls */}
+              <div className="pt-4 border-t border-[#273623] flex flex-col sm:flex-row flex-wrap items-center justify-between gap-3">
+                <Button
+                  variant="saffron"
+                  size="md"
+                  className="w-full sm:w-auto justify-center"
+                  onClick={handleCheckStatus}
+                  disabled={isRefreshingStatus}
+                  leftIcon={<RefreshCw className={`w-4 h-4 text-black ${isRefreshingStatus ? 'animate-spin' : ''}`} />}
+                >
+                  {isRefreshingStatus ? 'Checking Verification...' : 'Check Status / Refresh Clearance'}
+                </Button>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <a
+                    href={`http://localhost:4000/api/v1/mvc/cadet-card/${cadetRoll}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30 text-xs font-mono font-bold transition-all"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>View Admit Card</span>
+                  </a>
+
+                  <button
+                    onClick={() => logoutUser()}
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#1A2415] hover:bg-[#273623] text-gray-400 hover:text-white border border-[#273623] text-xs font-mono transition-all cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            GATE 4: REJECTED STATE
+            =================================================================== */}
+        {admissionStatus === 'REJECTED' && (
+          <div className="max-w-2xl mx-auto py-8">
+            <div className="p-6 sm:p-8 rounded-3xl bg-red-950/20 border-2 border-red-600/60 text-center space-y-6 shadow-2xl">
+              <div className="w-20 h-20 mx-auto rounded-2xl bg-red-500/20 border-2 border-red-500 text-red-400 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.3)]">
+                <AlertTriangle className="w-10 h-10" />
+              </div>
+              <div className="space-y-2">
+                <Badge variant="danger" size="md">Admission Application Disapproved</Badge>
+                <h2 className="font-display font-black text-2xl text-white uppercase tracking-wider">
+                  Intake Dossier Rejected
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-300 font-mono max-w-lg mx-auto">
+                  Your enlistment dossier ({cadetRoll}) was reviewed and disapproved by the Training Directorate. Please visit the academy office at J.K. College Ground pavilion to resolve any eligibility discrepancy.
+                </p>
+              </div>
+
+              <div className="pt-4 flex justify-center gap-3">
+                <button
+                  onClick={() => logoutUser()}
+                  className="px-6 py-2.5 rounded-xl bg-red-900/40 hover:bg-red-800/60 text-red-200 border border-red-700/50 text-xs font-mono uppercase tracking-wider"
+                >
+                  Exit / Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            FULL CADET PORTAL (ACCESSIBLE ONLY ONCE APPROVED)
+            =================================================================== */}
+        {admissionStatus === 'APPROVED' && (
+          <>
+            {/* USTAD'S DAILY WAR CRY • BATTLEFIELD INSPIRATION QUOTE FIELD */}
+            <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#241706] via-[#1B2211] to-[#0E140C] border-2 border-amber-500/80 shadow-[0_0_35px_rgba(245,158,11,0.3)] relative overflow-hidden">
+              <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 relative z-10">
+                <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-black flex items-center justify-center font-black flex-shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.6)]">
+                  <Flame className="w-6 h-6 sm:w-7 sm:h-7 animate-pulse text-black" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-widest shadow-sm">
+                      🔥 USTAD&apos;S DAILY WAR CRY
+                    </span>
                 <span className="text-[10px] sm:text-xs font-mono text-amber-400 font-bold">
                   Daily Ground Motivation & Rally Spirit
                 </span>
@@ -1709,7 +2022,9 @@ export default function StudentPortalPage() {
             )}
           </div>
         )}
-      </main>
+      </>
+    )}
+  </main>
     </div>
   );
 }

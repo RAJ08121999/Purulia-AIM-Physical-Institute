@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, ForbiddenException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { DbService } from './db.service';
 import { PrismaService } from './prisma.service';
@@ -60,7 +60,8 @@ export class AuthService {
         where: {
           OR: [
             { email: cleanId },
-            { phone: identifier.trim() }
+            { phone: identifier.trim() },
+            { studentProfile: { dossierNumber: identifier.trim() } }
           ]
         },
         include: {
@@ -73,6 +74,32 @@ export class AuthService {
           const isPasswordValid = await argon2.verify(user.passwordHash, password);
           if (!isPasswordValid) {
             throw new UnauthorizedException('Invalid credentials. Please verify your password.');
+          }
+        }
+
+        // Cadet access control: Must be verified and approved by a trainer
+        if (user.role === 'STUDENT' || role === 'STUDENT') {
+          const profile = user.studentProfile || await this.prisma.studentProfile.findFirst({
+            where: {
+              OR: [
+                { userId: user.id },
+                { phone: user.phone },
+                { dossierNumber: identifier.trim() }
+              ]
+            }
+          }) || this.db.getStudents().find(s => s.phone === user.phone || s.dossierNumber === identifier.trim());
+
+          if (profile) {
+            if (profile.admissionStatus === 'REJECTED') {
+              throw new ForbiddenException(
+                'Your admission application was rejected by the Drill Ustad. Please visit the academy office at J.K. College Ground for assistance.'
+              );
+            }
+            if (profile.admissionStatus !== 'APPROVED') {
+              throw new ForbiddenException(
+                `Your admission dossier (${profile.dossierNumber}) is currently PENDING verification by the Drill Ustad / Trainer. Profile access will be granted once your admission is verified and approved.`
+              );
+            }
           }
         }
 
@@ -101,7 +128,7 @@ export class AuthService {
         };
       }
     } catch (err: any) {
-      if (err instanceof UnauthorizedException) throw err;
+      if (err instanceof UnauthorizedException || err instanceof ForbiddenException) throw err;
       this.logger.warn(`Prisma user lookup note: ${err.message}`);
     }
 
@@ -140,6 +167,17 @@ export class AuthService {
     // 3. Check registered cadet in memory/local store by dossier or phone
     const cadet = this.db.findStudentById(identifier.trim()) || this.db.getStudents().find(s => s.phone === identifier.trim());
     if (cadet) {
+      if (cadet.admissionStatus === 'REJECTED') {
+        throw new ForbiddenException(
+          'Your admission application was rejected by the Drill Ustad. Please visit the academy office at J.K. College Ground for assistance.'
+        );
+      }
+      if (cadet.admissionStatus !== 'APPROVED') {
+        throw new ForbiddenException(
+          `Your admission dossier (${cadet.dossierNumber}) is currently PENDING verification by the Drill Ustad / Trainer. Profile access will be granted once your admission is verified and approved.`
+        );
+      }
+
       const payload = {
         sub: cadet.id,
         name: cadet.fullName,
@@ -162,23 +200,8 @@ export class AuthService {
       };
     }
 
-    // 4. Fallback fast-pass authentication for easy evaluation
-    const fallbackPayload = {
-      sub: `user-${Date.now()}`,
-      name: identifier.trim() || 'Cadet',
-      role: role || 'STUDENT'
-    };
-    const token = this.jwtService.sign(fallbackPayload);
-
-    return {
-      success: true,
-      token,
-      user: {
-        id: fallbackPayload.sub,
-        name: fallbackPayload.name,
-        role: fallbackPayload.role
-      }
-    };
+    // 4. No valid account found
+    throw new UnauthorizedException('Invalid credentials. Cadet or Trainer account not found.');
   }
 
   async registerTrainer(dto: RegisterTrainerDto) {

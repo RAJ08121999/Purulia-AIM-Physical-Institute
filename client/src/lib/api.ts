@@ -6,19 +6,19 @@ export interface AdmissionFormData {
   fullName: string;
   fatherName: string;
   motherName?: string;
-  dob: string;
+  dob: Date | string;
   gender: string;
   maritalStatus: string;
-  aadhaarNumber: string;
-  phone: string;
-  emergencyPhone: string;
+  aadhaarNumber: number | string;
+  phone: number | string;
+  emergencyPhone: number | string;
   email?: string;
   password?: string;
   domicileDistrict: string;
   policeStation: string;
-  villageTown: string;
   postOffice?: string;
-  pinCode: string;
+  villageTown: string;
+  pinCode: number | string;
   casteCategory: string;
   passportPhoto?: string;
   bloodGroup?: string;
@@ -27,63 +27,62 @@ export interface AdmissionFormData {
   physicalMentalIssues?: string;
 
   highestEducation: string;
-  matricBoard: string;
-  matricRollNumber?: string;
-  matricPassingYear?: string;
-  matricAggregatePercent?: string | number;
-  scienceMathPercent?: string | number;
 
-  // Detailed 10th, 12th, Graduation, and Post Graduation Qualification Records
-  tenthBoard?: string;
+  // Unified 10th / Matriculation Qualification Record
+  tenthBoard: string;
   tenthStream?: string;
   tenthSpecialization?: string;
-  tenthPassingYear?: string;
+  tenthPassingYear?: number | string;
   tenthRollNumber?: string;
-  tenthMarksObtained?: string | number;
-  tenthFullMarks?: string | number;
-  tenthPercentage?: string | number;
+  tenthMarksObtained?: number | string;
+  tenthFullMarks?: number | string;
+  tenthPercentage?: number | string;
+  scienceMathPercent?: number | string;
 
+  // Optional 12th Intermediate Record
   hasTwelfth?: boolean;
   twelfthBoard?: string;
   twelfthStream?: string;
   twelfthSpecialization?: string;
-  twelfthPassingYear?: string;
+  twelfthPassingYear?: number | string;
   twelfthRollNumber?: string;
-  twelfthMarksObtained?: string | number;
-  twelfthFullMarks?: string | number;
-  twelfthPercentage?: string | number;
+  twelfthMarksObtained?: number | string;
+  twelfthFullMarks?: number | string;
+  twelfthPercentage?: number | string;
 
+  // Optional Graduation Record
   hasGraduation?: boolean;
   gradUniversity?: string;
   gradStream?: string;
   gradSpecialization?: string;
-  gradPassingYear?: string;
+  gradPassingYear?: number | string;
   gradRollNumber?: string;
-  gradMarksObtained?: string | number;
-  gradFullMarks?: string | number;
-  gradPercentage?: string | number;
+  gradMarksObtained?: number | string;
+  gradFullMarks?: number | string;
+  gradPercentage?: number | string;
 
+  // Optional Post Graduation Record
   hasPostGraduation?: boolean;
   pgUniversity?: string;
   pgStream?: string;
   pgSpecialization?: string;
-  pgPassingYear?: string;
+  pgPassingYear?: number | string;
   pgRollNumber?: string;
-  pgMarksObtained?: string | number;
-  pgFullMarks?: string | number;
-  pgPercentage?: string | number;
+  pgMarksObtained?: number | string;
+  pgFullMarks?: number | string;
+  pgPercentage?: number | string;
 
   nccCertificate: string;
   sportsLevel: string;
   sportsDiscipline?: string;
 
   targetForce: string;
-  heightCm: string | number;
-  weightKg: string | number;
-  chestNormalCm: string | number;
-  chestExpandedCm: string | number;
+  heightCm: number | string;
+  weightKg: number | string;
+  chestNormalCm: number | string;
+  chestExpandedCm: number | string;
   current1600mTime?: string;
-  currentBeamPullups?: string | number;
+  currentBeamPullups?: number | string;
   visionStatus?: string;
   bodyTattoo?: string;
 
@@ -143,14 +142,37 @@ export interface AssessmentPayload {
 // -------------------------------------------------------------
 
 export async function submitCadetAdmission(data: AdmissionFormData) {
+  const cleanAadhaar = String(data.aadhaarNumber).replace(/\D/g, '');
+  const cleanPhone = String(data.phone).replace(/\D/g, '');
+  const cleanEmergency = String(data.emergencyPhone).replace(/\D/g, '');
+  const cleanPin = String(data.pinCode).replace(/\D/g, '');
+
   const payload = {
     ...data,
+    aadhaarNumber: cleanAadhaar,
+    phone: cleanPhone,
+    emergencyPhone: cleanEmergency,
+    pinCode: cleanPin,
     heightCm: Number(data.heightCm),
     weightKg: Number(data.weightKg),
     chestNormalCm: Number(data.chestNormalCm),
     chestExpandedCm: Number(data.chestExpandedCm),
-    matricAggregatePercent: data.matricAggregatePercent ? Number(data.matricAggregatePercent) : undefined,
-    scienceMathPercent: data.scienceMathPercent ? Number(data.scienceMathPercent) : undefined,
+    tenthPassingYear: data.tenthPassingYear ? Number(data.tenthPassingYear) : undefined,
+    tenthMarksObtained: data.tenthMarksObtained ? Number(data.tenthMarksObtained) : undefined,
+    tenthFullMarks: data.tenthFullMarks ? Number(data.tenthFullMarks) : undefined,
+    tenthPercentage: data.tenthPercentage ? Number(data.tenthPercentage) : undefined,
+    twelfthPassingYear: data.twelfthPassingYear ? Number(data.twelfthPassingYear) : undefined,
+    twelfthMarksObtained: data.twelfthMarksObtained ? Number(data.twelfthMarksObtained) : undefined,
+    twelfthFullMarks: data.twelfthFullMarks ? Number(data.twelfthFullMarks) : undefined,
+    twelfthPercentage: data.twelfthPercentage ? Number(data.twelfthPercentage) : undefined,
+    gradPassingYear: data.gradPassingYear ? Number(data.gradPassingYear) : undefined,
+    gradMarksObtained: data.gradMarksObtained ? Number(data.gradMarksObtained) : undefined,
+    gradFullMarks: data.gradFullMarks ? Number(data.gradFullMarks) : undefined,
+    gradPercentage: data.gradPercentage ? Number(data.gradPercentage) : undefined,
+    pgPassingYear: data.pgPassingYear ? Number(data.pgPassingYear) : undefined,
+    pgMarksObtained: data.pgMarksObtained ? Number(data.pgMarksObtained) : undefined,
+    pgFullMarks: data.pgFullMarks ? Number(data.pgFullMarks) : undefined,
+    pgPercentage: data.pgPercentage ? Number(data.pgPercentage) : undefined,
     currentBeamPullups: data.currentBeamPullups ? Number(data.currentBeamPullups) : undefined,
     hasMedicalCondition: data.hasMedicalConditionOrSurgery || 'NO'
   };

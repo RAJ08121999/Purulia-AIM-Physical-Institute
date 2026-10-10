@@ -9,19 +9,19 @@ export interface CreateAdmissionDto {
   fullName: string;
   fatherName: string;
   motherName?: string;
-  dob: string;
+  dob: Date | string;
   gender?: 'Male' | 'Female' | 'Other';
   maritalStatus?: string;
-  aadhaarNumber: string;
-  phone: string;
-  emergencyPhone: string;
+  aadhaarNumber: number | string;
+  phone: number | string;
+  emergencyPhone: number | string;
   email?: string;
   password?: string;
   domicileDistrict?: string;
   policeStation: string;
   villageTown: string;
   postOffice?: string;
-  pinCode: string;
+  pinCode: number | string;
   casteCategory?: string;
   passportPhoto?: string;
   bloodGroup?: string;
@@ -30,16 +30,12 @@ export interface CreateAdmissionDto {
   physicalMentalIssues?: string;
 
   highestEducation?: string;
-  matricBoard?: string;
-  matricRollNumber?: string;
-  matricPassingYear?: string;
-  matricAggregatePercent?: number;
-  scienceMathPercent?: number;
 
+  // Unified 10th / Matriculation Qualification Record
   tenthBoard?: string;
   tenthStream?: string;
   tenthSpecialization?: string;
-  tenthPassingYear?: string;
+  tenthPassingYear?: number | string;
   tenthRollNumber?: string;
   tenthMarksObtained?: number;
   tenthFullMarks?: number;
@@ -49,7 +45,7 @@ export interface CreateAdmissionDto {
   twelfthBoard?: string;
   twelfthStream?: string;
   twelfthSpecialization?: string;
-  twelfthPassingYear?: string;
+  twelfthPassingYear?: number | string;
   twelfthRollNumber?: string;
   twelfthMarksObtained?: number;
   twelfthFullMarks?: number;
@@ -59,7 +55,7 @@ export interface CreateAdmissionDto {
   gradUniversity?: string;
   gradStream?: string;
   gradSpecialization?: string;
-  gradPassingYear?: string;
+  gradPassingYear?: number | string;
   gradRollNumber?: string;
   gradMarksObtained?: number;
   gradFullMarks?: number;
@@ -69,7 +65,7 @@ export interface CreateAdmissionDto {
   pgUniversity?: string;
   pgStream?: string;
   pgSpecialization?: string;
-  pgPassingYear?: string;
+  pgPassingYear?: number | string;
   pgRollNumber?: string;
   pgMarksObtained?: number;
   pgFullMarks?: number;
@@ -158,9 +154,43 @@ export class AdmissionsService {
       throw new BadRequestException('Mandatory fields missing: Full Name, Father’s Name, DOB, Phone, Aadhaar');
     }
 
-    const cleanAadhaar = dto.aadhaarNumber.replace(/\D/g, '');
+    const cleanAadhaar = String(dto.aadhaarNumber).replace(/\D/g, '');
     if (cleanAadhaar.length !== 12) {
       throw new BadRequestException('Aadhaar must be a valid 12-digit UIDAI number');
+    }
+
+    const cleanPhone = String(dto.phone).replace(/\D/g, '');
+    const cleanEmergencyPhone = dto.emergencyPhone ? String(dto.emergencyPhone).replace(/\D/g, '') : cleanPhone;
+    const cleanPinCode = dto.pinCode ? String(dto.pinCode).replace(/\D/g, '') : '723101';
+
+    // 1.1 Strictly prevent duplicate registrations with same Aadhaar
+    try {
+      const existingInPrisma = await this.prisma.studentProfile.findFirst({
+        where: {
+          OR: [
+            { aadhaarNumber: cleanAadhaar },
+            { aadhaarNumber: `XXXX-XXXX-${cleanAadhaar.slice(-4)}` }
+          ]
+        }
+      });
+      if (existingInPrisma) {
+        throw new BadRequestException(
+          `A cadet with Aadhaar number ending in ${cleanAadhaar.slice(-4)} is already registered (${existingInPrisma.fullName}, Dossier: ${existingInPrisma.dossierNumber}). Duplicate registrations with the same Aadhaar number are strictly prohibited.`
+        );
+      }
+    } catch (e: any) {
+      if (e instanceof BadRequestException) throw e;
+      this.logger.warn(`Could not verify Aadhaar in Prisma: ${e.message}`);
+    }
+
+    const existingInLocal = this.db.getStudents().find(s => {
+      const stored = s.aadhaarNumber ? s.aadhaarNumber.replace(/\D/g, '') : '';
+      return stored === cleanAadhaar || (s.aadhaarNumber && s.aadhaarNumber.endsWith(cleanAadhaar.slice(-4)));
+    });
+    if (existingInLocal) {
+      throw new BadRequestException(
+        `A cadet with Aadhaar number ending in ${cleanAadhaar.slice(-4)} is already registered (${existingInLocal.fullName}, Dossier: ${existingInLocal.dossierNumber}). Duplicate registrations with the same Aadhaar number are strictly prohibited.`
+      );
     }
 
     // 2. Validate Physical Standard Test measurements
@@ -190,38 +220,39 @@ export class AdmissionsService {
     // Generate or use provided Army Cadet Dossier ID
     const dossierNumber = dto.dossierNumber?.trim() || `AIM-CADET-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    const formattedDob = dto.dob instanceof Date ? dto.dob.toISOString().split('T')[0] : String(dto.dob);
+
     const newCadet: StudentProfileEntity = {
       id: `cadet-${Date.now()}`,
       dossierNumber,
       fullName: dto.fullName.trim(),
       fatherName: dto.fatherName.trim(),
       motherName: dto.motherName?.trim() || '',
-      dob: dto.dob,
+      dob: formattedDob,
       gender: dto.gender || 'Male',
       maritalStatus: dto.maritalStatus || 'Unmarried',
-      aadhaarNumber: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
-      phone: dto.phone.trim(),
-      emergencyPhone: dto.emergencyPhone?.trim() || dto.phone.trim(),
+      aadhaarNumber: cleanAadhaar,
+      phone: cleanPhone,
+      emergencyPhone: cleanEmergencyPhone,
       domicileDistrict: dto.domicileDistrict || 'Purulia',
       policeStation: dto.policeStation?.trim() || 'Purulia Sadar',
       villageTown: dto.villageTown?.trim() || 'Purulia',
       postOffice: dto.postOffice?.trim() || '',
-      pinCode: dto.pinCode?.trim() || '723101',
+      pinCode: cleanPinCode,
       casteCategory: dto.casteCategory || 'General',
       passportPhoto: dto.passportPhoto || '',
 
       highestEducation: dto.highestEducation || '10th Matriculation',
-      matricBoard: dto.matricBoard || dto.tenthBoard || 'WBBSE',
-      matricRollNumber: dto.matricRollNumber?.trim() || dto.tenthRollNumber?.trim(),
-      matricPassingYear: dto.matricPassingYear || dto.tenthPassingYear,
-      matricAggregatePercent: dto.matricAggregatePercent ? Number(dto.matricAggregatePercent) : dto.tenthPercentage ? Number(dto.tenthPercentage) : undefined,
-      scienceMathPercent: dto.scienceMathPercent ? Number(dto.scienceMathPercent) : undefined,
+      matricBoard: dto.tenthBoard || 'WBBSE',
+      matricRollNumber: dto.tenthRollNumber?.trim(),
+      matricPassingYear: dto.tenthPassingYear ? String(dto.tenthPassingYear) : undefined,
+      matricAggregatePercent: dto.tenthPercentage ? Number(dto.tenthPercentage) : undefined,
 
-      tenthBoard: dto.tenthBoard || dto.matricBoard || 'WBBSE',
+      tenthBoard: dto.tenthBoard || 'WBBSE',
       tenthStream: dto.tenthStream || 'General',
       tenthSpecialization: dto.tenthSpecialization || '',
-      tenthPassingYear: dto.tenthPassingYear || dto.matricPassingYear,
-      tenthRollNumber: dto.tenthRollNumber || dto.matricRollNumber,
+      tenthPassingYear: dto.tenthPassingYear ? String(dto.tenthPassingYear) : undefined,
+      tenthRollNumber: dto.tenthRollNumber?.trim(),
       tenthMarksObtained: dto.tenthMarksObtained ? Number(dto.tenthMarksObtained) : undefined,
       tenthFullMarks: dto.tenthFullMarks ? Number(dto.tenthFullMarks) : undefined,
       tenthPercentage: dto.tenthPercentage ? Number(dto.tenthPercentage) : undefined,
@@ -230,7 +261,7 @@ export class AdmissionsService {
       twelfthBoard: dto.twelfthBoard,
       twelfthStream: dto.twelfthStream,
       twelfthSpecialization: dto.twelfthSpecialization,
-      twelfthPassingYear: dto.twelfthPassingYear,
+      twelfthPassingYear: dto.twelfthPassingYear ? String(dto.twelfthPassingYear) : undefined,
       twelfthRollNumber: dto.twelfthRollNumber,
       twelfthMarksObtained: dto.twelfthMarksObtained ? Number(dto.twelfthMarksObtained) : undefined,
       twelfthFullMarks: dto.twelfthFullMarks ? Number(dto.twelfthFullMarks) : undefined,
@@ -240,7 +271,7 @@ export class AdmissionsService {
       gradUniversity: dto.gradUniversity,
       gradStream: dto.gradStream,
       gradSpecialization: dto.gradSpecialization,
-      gradPassingYear: dto.gradPassingYear,
+      gradPassingYear: dto.gradPassingYear ? String(dto.gradPassingYear) : undefined,
       gradRollNumber: dto.gradRollNumber,
       gradMarksObtained: dto.gradMarksObtained ? Number(dto.gradMarksObtained) : undefined,
       gradFullMarks: dto.gradFullMarks ? Number(dto.gradFullMarks) : undefined,
@@ -250,7 +281,7 @@ export class AdmissionsService {
       pgUniversity: dto.pgUniversity,
       pgStream: dto.pgStream,
       pgSpecialization: dto.pgSpecialization,
-      pgPassingYear: dto.pgPassingYear,
+      pgPassingYear: dto.pgPassingYear ? String(dto.pgPassingYear) : undefined,
       pgRollNumber: dto.pgRollNumber,
       pgMarksObtained: dto.pgMarksObtained ? Number(dto.pgMarksObtained) : undefined,
       pgFullMarks: dto.pgFullMarks ? Number(dto.pgFullMarks) : undefined,
@@ -407,9 +438,27 @@ export class AdmissionsService {
   }
 
   async updateStatus(id: string, status: 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED', batchId?: string) {
-    const student = this.db.findStudentById(id);
-    if (!student) {
-      throw new NotFoundException(`Cadet with ID ${id} not found`);
+    let student = this.db.findStudentById(id);
+    let prismaStudent: any = null;
+
+    try {
+      prismaStudent = await this.prisma.studentProfile.findFirst({
+        where: {
+          OR: [
+            { id },
+            { dossierNumber: id }
+          ]
+        }
+      });
+      if (prismaStudent && !student) {
+        student = this.db.findStudentById(prismaStudent.dossierNumber);
+      }
+    } catch (e: any) {
+      this.logger.warn(`Prisma student lookup warning: ${e.message}`);
+    }
+
+    if (!student && !prismaStudent) {
+      throw new NotFoundException(`Cadet with ID/Dossier "${id}" not found`);
     }
 
     const updates: Partial<StudentProfileEntity> = {
@@ -420,18 +469,21 @@ export class AdmissionsService {
       updates.batchId = batchId;
     }
 
-    if (status === 'APPROVED' && !student.rollNumber) {
+    if (status === 'APPROVED' && (!student?.rollNumber && !prismaStudent?.rollNumber)) {
       updates.rollNumber = `AIM-CADET-${Math.floor(100 + Math.random() * 900)}`;
     }
 
-    const updated = this.db.updateStudent(id, updates);
+    if (student) {
+      this.db.updateStudent(student.id, updates);
+    }
 
     try {
       await this.prisma.studentProfile.updateMany({
         where: {
           OR: [
             { id },
-            { dossierNumber: id }
+            { dossierNumber: id },
+            ...(student ? [{ dossierNumber: student.dossierNumber }, { id: student.id }] : [])
           ]
         },
         data: {
@@ -440,6 +492,7 @@ export class AdmissionsService {
           ...(status === 'APPROVED' && updates.rollNumber ? { rollNumber: updates.rollNumber } : {})
         }
       });
+      this.logger.log(`Updated cadet status in Supabase to ${status} for ${id}`);
     } catch (e: any) {
       this.logger.warn(`Could not update status in Prisma: ${e.message}`);
     }
@@ -456,7 +509,7 @@ export class AdmissionsService {
     return {
       success: true,
       message: `Cadet status updated to ${status}`,
-      cadet: updated
+      cadet: student || prismaStudent || updates
     };
   }
 }

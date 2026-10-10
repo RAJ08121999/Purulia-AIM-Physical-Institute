@@ -10,7 +10,7 @@
       "dob": "1999-12-08",
       "gender": "Male",
       "maritalStatus": "Unmarried",
-      "aadhaarNumber": "XXXX-XXXX-1291",
+      "aadhaarNumber": "438647461291",
       "phone": "9476373607",
       "emergencyPhone": "9002871216",
       "domicileDistrict": "Purulia",
@@ -89,7 +89,8 @@
       "admissionStatus": "PENDING",
       "joinedDate": "2026-10-10T16:47:41.890Z",
       "createdAt": "2026-10-10T16:47:41.891Z",
-      "updatedAt": "2026-10-10T16:47:41.891Z"
+      "updatedAt": "2026-10-10T17:15:46.069Z",
+      "rollNumber": "AIM-CADET-322"
     }
   ],
   "batches": [
@@ -150,6 +151,22 @@
   "events": [],
   "rsvps": [],
   "auditLogs": [
+    {
+      "id": "audit-1791652546420",
+      "action": "CADET_STATUS_PENDING",
+      "entity": "StudentProfile",
+      "entityId": "AIM-CADET-2026-1220",
+      "details": "Cadet status changed to PENDING",
+      "createdAt": "2026-10-10T17:15:46.420Z"
+    },
+    {
+      "id": "audit-1791652518914",
+      "action": "CADET_STATUS_APPROVED",
+      "entity": "StudentProfile",
+      "entityId": "AIM-CADET-2026-1220",
+      "details": "Cadet status changed to APPROVED",
+      "createdAt": "2026-10-10T17:15:18.914Z"
+    },
     {
       "id": "audit-1791650862466",
       "action": "ENLISTMENT_DOSSIER_SUBMITTED",
