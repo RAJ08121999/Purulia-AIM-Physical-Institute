@@ -11,11 +11,13 @@ import {
   EventRsvpEntity,
   AuditLogEntity,
   RunTrialEntity,
-  LiveDrillSessionEntity
+  LiveDrillSessionEntity,
+  TrainerProfileEntity
 } from '../models';
 
 interface DatabaseSchema {
   users: UserEntity[];
+  trainers: TrainerProfileEntity[];
   students: StudentProfileEntity[];
   batches: BatchEntity[];
   attendance: AttendanceEntity[];
@@ -35,6 +37,31 @@ export class DbService implements OnModuleInit {
 
   private data: DatabaseSchema = {
     users: [],
+    trainers: [
+      {
+        id: 'trainer-anup-kumar-mahato',
+        userId: 'user-havaldar-anup',
+        instructorId: 'AIM-USTAD-01',
+        fullName: 'Havaldar Anup Kumar Mahato',
+        rank: 'Ex-Army Havaldar (Infantry Veteran)',
+        regimentOrUnit: 'Indian Army (Infantry / Rajputana Rifles)',
+        yearsOfService: 16,
+        specialization: 'Chief Drill Instructor & 1600m Telemetry Master',
+        designation: 'Head Drill Ustad & Founder',
+        phone: '9876543210',
+        email: 'havaldar.anup@aiminstitute.org',
+        bloodGroup: 'B+',
+        domicileDistrict: 'Purulia',
+        bio: 'Ex-Indian Army Havaldar with 16+ years of frontline military drill and physical efficiency training experience. Chief Instructor and Founder of Purulia AIM Physical Institute.',
+        heightCm: 178,
+        weightKg: 74,
+        chestNormalCm: 84,
+        chestExpandedCm: 90,
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z'
+      }
+    ],
     students: [],
     batches: [],
     attendance: [],
@@ -85,6 +112,33 @@ export class DbService implements OnModuleInit {
           ...this.data,
           ...parsed
         };
+        if (!this.data.trainers || this.data.trainers.length === 0) {
+          this.data.trainers = [
+            {
+              id: 'trainer-anup-kumar-mahato',
+              userId: 'user-havaldar-anup',
+              instructorId: 'AIM-USTAD-01',
+              fullName: 'Havaldar Anup Kumar Mahato',
+              rank: 'Ex-Army Havaldar (Infantry Veteran)',
+              regimentOrUnit: 'Indian Army (Infantry / Rajputana Rifles)',
+              yearsOfService: 16,
+              specialization: 'Chief Drill Instructor & 1600m Telemetry Master',
+              designation: 'Head Drill Ustad & Founder',
+              phone: '9876543210',
+              email: 'havaldar.anup@aiminstitute.org',
+              bloodGroup: 'B+',
+              domicileDistrict: 'Purulia',
+              bio: 'Ex-Indian Army Havaldar with 16+ years of frontline military drill and physical efficiency training experience. Chief Instructor and Founder of Purulia AIM Physical Institute.',
+              heightCm: 178,
+              weightKg: 74,
+              chestNormalCm: 84,
+              chestExpandedCm: 90,
+              isActive: true,
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: new Date().toISOString()
+            }
+          ];
+        }
         if (!this.data.runTrials) this.data.runTrials = [];
         if (!this.data.activeDrill) {
           this.data.activeDrill = {
@@ -105,7 +159,7 @@ export class DbService implements OnModuleInit {
             updatedAt: Date.now()
           };
         }
-        this.logger.log(`Database loaded: ${this.data.students.length} cadets, ${this.data.events.length} events, ${this.data.runTrials.length} run trials.`);
+        this.logger.log(`Database loaded: ${this.data.trainers.length} trainers, ${this.data.students.length} cadets, ${this.data.events.length} events, ${this.data.runTrials.length} run trials.`);
       }
     } catch (err: any) {
       this.logger.warn(`Could not parse data file, initializing fresh store: ${err.message}`);
@@ -123,6 +177,29 @@ export class DbService implements OnModuleInit {
   // --------------------------------------------------------------------------
   // REPOSITORY ACCESSORS
   // --------------------------------------------------------------------------
+
+  // Trainers / Drill Ustads
+  getTrainers() {
+    return this.data.trainers || [];
+  }
+
+  findTrainerById(id: string) {
+    return (this.data.trainers || []).find(
+      t => t.id === id || t.instructorId === id || t.email === id || t.phone === id
+    );
+  }
+
+  saveTrainer(trainer: TrainerProfileEntity) {
+    if (!this.data.trainers) this.data.trainers = [];
+    const idx = this.data.trainers.findIndex(t => t.id === trainer.id || t.instructorId === trainer.instructorId);
+    if (idx !== -1) {
+      this.data.trainers[idx] = { ...this.data.trainers[idx], ...trainer, updatedAt: new Date().toISOString() };
+    } else {
+      this.data.trainers.push(trainer);
+    }
+    this.saveData();
+    return trainer;
+  }
 
   // Students / Cadets
   getStudents() {

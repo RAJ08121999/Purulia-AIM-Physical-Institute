@@ -276,11 +276,20 @@ export default function TrainerCommandCenter() {
 
   // Load user, live database cadets & local stored items
   React.useEffect(() => {
+    // Strict Route Guard: Without login, nobody can enter the trainer command center
     const user = getCurrentUser();
-    if (user) {
-      setCurrentUser(user);
-      if (user.name) setQuoteAuthor(`${user.name} (Drill Ustad)`);
+    if (!user) {
+      window.location.href = '/?authError=unauthorized&msg=' + encodeURIComponent('Authentication Required: Drill Ustad credentials required to enter Trainer Command Center.');
+      return;
     }
+
+    if (user.role !== 'TRAINER' && user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
+      window.location.href = '/?authError=forbidden&msg=' + encodeURIComponent('Access Denied: Only authorized Drill Ustads and Trainers can access this command portal.');
+      return;
+    }
+
+    setCurrentUser(user);
+    if (user.name) setQuoteAuthor(`${user.name} (Drill Ustad)`);
 
     // Load authentic registered cadets from database
     fetchCadetApplications().then(apps => {

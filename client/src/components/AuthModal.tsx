@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import {
   X,
   Shield,
@@ -104,7 +105,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         }
       }, 700);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Login failed. Please verify your credentials.');
+      const msg = err.message || 'Wrong credentials. Invalid identifier or password.';
+      setErrorMsg(msg);
+      // Automatically redirect to homepage with toast message as requested
+      setTimeout(() => {
+        onClose();
+        window.location.href = '/?authError=invalid_credentials&msg=' + encodeURIComponent(msg);
+      }, 900);
     } finally {
       setIsLoading(false);
     }
@@ -234,15 +241,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* TAB 1 & 2: CADET OR TRAINER LOGIN */}
           {(activeTab === 'CADET_LOGIN' || activeTab === 'TRAINER_LOGIN') && (
             <form onSubmit={handleLogin} className="space-y-4">
-              <div className="p-3 rounded-xl bg-[#121811] border border-[#273623] text-xs text-gray-300">
-                <span className="text-amber-400 font-bold block mb-0.5">
-                  {activeTab === 'CADET_LOGIN' ? 'Cadet Access' : 'Drill Ustad / Trainer Access'}
-                </span>
-                {activeTab === 'CADET_LOGIN' ? (
-                  <span>Log in with your Registered Email, 10-digit Phone, or Dossier ID (e.g. AIM-CADET-2026-XXXX).</span>
-                ) : (
-                  <span>Log in with your registered Ustad email or phone. Demo: <code>havaldar.anup@aiminstitute.org</code></span>
-                )}
+              {/* Center Top Circular Profile Image & Bold Energetic Jai Hind Jawaan Heading */}
+              <div className="flex flex-col items-center justify-center pt-1 pb-1 text-center">
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.55)] ring-4 ring-emerald-500/30 bg-[#0B0F0A] flex items-center justify-center">
+                  <Image
+                    src="/assets/images/RegistrationWelcome.png"
+                    alt="Jai Hind Jawaan - Indian Army Kit"
+                    fill
+                    sizes="112px"
+                    className="object-cover object-center scale-110"
+                    priority
+                  />
+                  <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/20 pointer-events-none" />
+                </div>
+
+                <h4 className="mt-3 font-display font-black text-2xl sm:text-3xl uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 drop-shadow-[0_2px_14px_rgba(245,158,11,0.5)] leading-tight">
+                  Jai Hind Jawaan
+                </h4>
               </div>
 
               <div>
@@ -320,13 +335,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* TAB 3: COMPREHENSIVE USTAD / TRAINER REGISTRATION */}
           {activeTab === 'TRAINER_REGISTER' && (
             <form onSubmit={handleTrainerRegister} className="space-y-4">
-              <div className="p-3.5 rounded-xl bg-[#121811] border border-blue-500/30 text-xs text-gray-300">
-                <span className="text-blue-400 font-bold block mb-0.5 text-sm font-display uppercase tracking-wider">
-                  Official Ustad & Drill Instructor Enlistment
-                </span>
-                <span>
-                  Authorized registration for Physical Training Instructors (PTI), ex-servicemen, and athletics coaches to take attendance, manage 1600m timings, broadcast daily war cries, and publish recruitment orders.
-                </span>
+              {/* Center Top Circular Profile Image & Bold Energetic Jai Hind Jawaan Heading */}
+              <div className="flex flex-col items-center justify-center pt-1 pb-1 text-center">
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.55)] ring-4 ring-blue-500/30 bg-[#0B0F0A] flex items-center justify-center">
+                  <Image
+                    src="/assets/images/RegistrationWelcome.png"
+                    alt="Jai Hind Jawaan - Indian Army Kit"
+                    fill
+                    sizes="112px"
+                    className="object-cover object-center scale-110"
+                    priority
+                  />
+                  <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/20 pointer-events-none" />
+                </div>
+
+                <h4 className="mt-3 font-display font-black text-2xl sm:text-3xl uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 drop-shadow-[0_2px_14px_rgba(245,158,11,0.5)] leading-tight">
+                  Jai Hind Jawaan
+                </h4>
               </div>
 
               {/* SECTION 1: PERSONAL & CONTACT BIO-DATA */}

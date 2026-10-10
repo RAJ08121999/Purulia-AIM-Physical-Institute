@@ -12,6 +12,31 @@ export interface UserEntity {
   updatedAt: string;
 }
 
+export interface TrainerProfileEntity {
+  id: string;
+  userId?: string;
+  instructorId: string;
+  fullName: string;
+  rank: string;
+  regimentOrUnit: string;
+  yearsOfService: number;
+  specialization: string;
+  designation: string;
+  phone: string;
+  email: string;
+  aadhaarNumber?: string;
+  bloodGroup: string;
+  domicileDistrict: string;
+  bio?: string;
+  heightCm?: number;
+  weightKg?: number;
+  chestNormalCm?: number;
+  chestExpandedCm?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface StudentProfileEntity {
   id: string;
   userId?: string;

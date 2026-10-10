@@ -113,17 +113,27 @@ export class AdmissionsService {
         orderBy: { createdAt: 'desc' }
       });
       if (prismaStudents) {
-        return prismaStudents;
+        return prismaStudents.map(s => this.maskPrivateCadetData(s));
       }
     } catch (err: any) {
       this.logger.warn(`Prisma fetch failed, using fallback store: ${err.message}`);
     }
 
     const students = this.db.getStudents();
-    if (status) {
-      return students.filter(s => s.admissionStatus === status.toUpperCase());
-    }
-    return students;
+    const list = status ? students.filter(s => s.admissionStatus === status.toUpperCase()) : students;
+    return list.map(s => this.maskPrivateCadetData(s));
+  }
+
+  private maskPrivateCadetData(cadet: any) {
+    if (!cadet) return cadet;
+    const cleanAadhaar = cadet.aadhaarNumber ? String(cadet.aadhaarNumber).replace(/\D/g, '') : '';
+    const maskedAadhaar = cleanAadhaar.length >= 4 ? `XXXX-XXXX-${cleanAadhaar.slice(-4)}` : 'XXXX-XXXX-XXXX';
+    
+    const sanitized = { ...cadet };
+    sanitized.aadhaarNumber = maskedAadhaar;
+    delete sanitized.password;
+    delete sanitized.passwordHash;
+    return sanitized;
   }
 
   async getApplicationById(id: string) {

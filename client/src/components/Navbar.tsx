@@ -28,13 +28,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [portalDropdownOpen, setPortalDropdownOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<'CADET_LOGIN' | 'TRAINER_LOGIN'>('CADET_LOGIN');
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     setCurrentUser(getCurrentUser());
   }, []);
 
-  const handleOpenLogin = () => {
+  const handleOpenLogin = (tabOrEvent?: 'CADET_LOGIN' | 'TRAINER_LOGIN' | React.MouseEvent) => {
+    const tab = typeof tabOrEvent === 'string' ? tabOrEvent : 'CADET_LOGIN';
+    setAuthModalTab(tab);
     if (onLoginClick) {
       onLoginClick();
     } else {
@@ -151,29 +154,41 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
                     onMouseLeave={() => setPortalDropdownOpen(false)}
                     className="absolute right-0 mt-2 w-60 bg-[#0E140C] border border-[#273623] rounded-xl shadow-2xl p-2 z-50 font-mono text-xs space-y-1"
                   >
-                    <Link
-                      href="/portal/student"
-                      onClick={() => setPortalDropdownOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-lg text-gray-300 hover:text-amber-400 hover:bg-[#161F15] transition-colors"
+                    <button
+                      onClick={() => {
+                        setPortalDropdownOpen(false);
+                        if (!currentUser) {
+                          handleOpenLogin('CADET_LOGIN');
+                        } else {
+                          window.location.href = '/portal/student';
+                        }
+                      }}
+                      className="w-full text-left flex items-center gap-2.5 p-2 rounded-lg text-gray-300 hover:text-amber-400 hover:bg-[#161F15] transition-colors"
                     >
                       <UserCheck className="w-4 h-4 text-amber-400" />
                       <div>
                         <div className="font-bold text-white uppercase">Cadet Service Dossier</div>
                         <div className="text-[10px] text-gray-500">Stopwatch & Evaluation Report</div>
                       </div>
-                    </Link>
+                    </button>
 
-                    <Link
-                      href="/portal/trainer"
-                      onClick={() => setPortalDropdownOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-lg text-gray-300 hover:text-amber-400 hover:bg-[#161F15] transition-colors"
+                    <button
+                      onClick={() => {
+                        setPortalDropdownOpen(false);
+                        if (!currentUser) {
+                          handleOpenLogin('TRAINER_LOGIN');
+                        } else {
+                          window.location.href = '/portal/trainer';
+                        }
+                      }}
+                      className="w-full text-left flex items-center gap-2.5 p-2 rounded-lg text-gray-300 hover:text-amber-400 hover:bg-[#161F15] transition-colors"
                     >
                       <Shield className="w-4 h-4 text-lime-400" />
                       <div>
                         <div className="font-bold text-white uppercase">Drill Ustad Roster</div>
                         <div className="text-[10px] text-gray-500">Attendance, Events & Media</div>
                       </div>
-                    </Link>
+                    </button>
 
                     <Link
                       href="/portal/admin"
@@ -352,24 +367,37 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
             </Link>
 
             <div className="pt-4 flex flex-col gap-2.5 font-mono text-xs">
-              <Link
-                href="/portal/student"
-                onClick={() => setMobileMenuOpen(false)}
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (!currentUser) {
+                    handleOpenLogin('CADET_LOGIN');
+                  } else {
+                    window.location.href = '/portal/student';
+                  }
+                }}
                 className="w-full"
               >
                 <Button variant="outline" className="w-full justify-center">
                   Cadet Service Dossier (Telemetry)
                 </Button>
-              </Link>
-              <Link
-                href="/portal/trainer"
-                onClick={() => setMobileMenuOpen(false)}
+              </button>
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (!currentUser) {
+                    handleOpenLogin('TRAINER_LOGIN');
+                  } else {
+                    window.location.href = '/portal/trainer';
+                  }
+                }}
                 className="w-full"
               >
                 <Button variant="outline" className="w-full justify-center text-xs">
                   Drill Ustad Command Roster
                 </Button>
-              </Link>
+              </button>
             </div>
           </div>
         )}
@@ -379,6 +407,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
+        defaultTab={authModalTab}
         onOpenAdmission={() => {
           setAuthModalOpen(false);
           if (onApplyClick) onApplyClick();

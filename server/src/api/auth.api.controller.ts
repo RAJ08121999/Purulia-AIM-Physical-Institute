@@ -15,6 +15,11 @@ export class AuthApiController {
     return this.authService.registerTrainer(dto);
   }
 
+  @Get('trainer-profile')
+  getChiefTrainer() {
+    return this.authService.getChiefInstructorProfile();
+  }
+
   @Get('me')
   getProfile() {
     return {

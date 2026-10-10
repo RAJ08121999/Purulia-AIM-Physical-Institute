@@ -43,7 +43,7 @@ import {
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
 import { ParadeDrillStopwatch } from '@/components';
 import { DEFAULT_CADET_REPORT } from '@/components/ProgressReportPDFView';
-import { fetchLiveDrillSession, LiveDrillSession, logoutUser } from '@/lib/api';
+import { fetchLiveDrillSession, LiveDrillSession, logoutUser, getCurrentUser } from '@/lib/api';
 
 // Performance Optimization: Dynamic imports with React Suspense & Skeletons (LCP < 2.5s)
 const DynamicStudentProgressVisualizer = dynamic(
@@ -180,11 +180,19 @@ export default function StudentPortalPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // Strict Route Guard: Without login, nobody can enter the cadet portal
+    const loggedInUser = getCurrentUser();
+    if (!loggedInUser) {
+      window.location.href = '/?authError=unauthorized&msg=' + encodeURIComponent('Authentication Required: Please login to access your Cadet Profile.');
+      return;
+    }
+
     try {
       const rawProfile = localStorage.getItem('cadet_full_profile');
-      const savedName = localStorage.getItem('cadet_name');
-      const savedRoll = localStorage.getItem('cadet_dossier_id');
-      const savedTarget = localStorage.getItem('cadet_target_force');
+      const savedName = loggedInUser.name || localStorage.getItem('cadet_name');
+      // Strictly enforce that cadet only accesses their own dossier
+      const savedRoll = loggedInUser.dossierNumber || localStorage.getItem('cadet_dossier_id');
+      const savedTarget = loggedInUser.targetForce || localStorage.getItem('cadet_target_force');
       const savedBlood = localStorage.getItem('cadet_blood_group');
       const savedBirthMarks = localStorage.getItem('cadet_birth_marks');
       const savedPhoto = localStorage.getItem('cadet_passport_photo');

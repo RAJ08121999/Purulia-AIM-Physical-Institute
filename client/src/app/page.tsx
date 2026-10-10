@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Shield,
@@ -21,7 +21,9 @@ import {
   ChevronRight,
   Radio,
   FileText,
-  UserCheck
+  UserCheck,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import {
   Button,
@@ -35,14 +37,84 @@ import {
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { AdmissionModal } from '@/components/AdmissionModal';
+import { AuthModal } from '@/components/AuthModal';
 
 export default function Home() {
   const [admissionModalOpen, setAdmissionModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<'CADET_LOGIN' | 'TRAINER_LOGIN'>('CADET_LOGIN');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'error' | 'warning'>('error');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('authError');
+    const msg = params.get('msg');
+    if (err || msg) {
+      setToastMessage(msg || (err === 'invalid_credentials' ? 'Wrong credentials. Please check your credentials.' : 'Authentication required to enter portals.'));
+      setToastType(err === 'forbidden' ? 'warning' : 'error');
+      // Clean query string from browser bar without refresh
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0B0F0A] text-slate-100 flex flex-col font-sans">
+      {/* Dynamic Security & Authentication Alert Toast */}
+      {toastMessage && (
+        <div className="fixed top-20 right-3 sm:right-6 z-50 max-w-md w-[calc(100%-24px)] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className={`p-4 rounded-2xl border shadow-2xl backdrop-blur-xl flex items-start gap-3 ${
+            toastType === 'error'
+              ? 'bg-[#180A0A]/95 border-red-500/50 text-red-100 shadow-[0_0_35px_rgba(239,68,68,0.35)]'
+              : 'bg-[#18140A]/95 border-amber-500/50 text-amber-100 shadow-[0_0_35px_rgba(245,158,11,0.35)]'
+          }`}>
+            <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${toastType === 'error' ? 'text-red-400' : 'text-amber-400'}`} />
+            <div className="flex-1 text-xs">
+              <div className="font-bold uppercase tracking-wider font-mono text-white">
+                {toastType === 'error' ? 'Access Alert: Wrong Credentials' : 'Access Restricted'}
+              </div>
+              <p className="mt-1 text-gray-300 leading-relaxed font-sans">{toastMessage}</p>
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setAuthModalTab('CADET_LOGIN');
+                    setAuthModalOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold font-mono text-[11px] uppercase transition-colors shadow-sm"
+                >
+                  Cadet Login
+                </button>
+                <button
+                  onClick={() => {
+                    setAuthModalTab('TRAINER_LOGIN');
+                    setAuthModalOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-[#273623] hover:bg-[#34491E] text-white border border-[#3E5529] font-bold font-mono text-[11px] uppercase transition-colors"
+                >
+                  Drill Ustad Login
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+              aria-label="Dismiss Alert"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Top Navbar */}
-      <Navbar onApplyClick={() => setAdmissionModalOpen(true)} />
+      <Navbar
+        onApplyClick={() => setAdmissionModalOpen(true)}
+        onLoginClick={() => {
+          setAuthModalTab('CADET_LOGIN');
+          setAuthModalOpen(true);
+        }}
+      />
 
       <main className="flex-1">
         {/* ===================================================================
@@ -399,6 +471,17 @@ export default function Home() {
       <AdmissionModal
         isOpen={admissionModalOpen}
         onClose={() => setAdmissionModalOpen(false)}
+      />
+
+      {/* Military Auth & Verification Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultTab={authModalTab}
+        onOpenAdmission={() => {
+          setAuthModalOpen(false);
+          setAdmissionModalOpen(true);
+        }}
       />
     </div>
   );

@@ -1,5 +1,30 @@
 {
   "users": [],
+  "trainers": [
+    {
+      "id": "trainer-anup-kumar-mahato",
+      "userId": "user-havaldar-anup",
+      "instructorId": "AIM-USTAD-01",
+      "fullName": "Havaldar Anup Kumar Mahato",
+      "rank": "Ex-Army Havaldar (Infantry Veteran)",
+      "regimentOrUnit": "Indian Army (Infantry / Rajputana Rifles)",
+      "yearsOfService": 16,
+      "specialization": "Chief Drill Instructor & 1600m Telemetry Master",
+      "designation": "Head Drill Ustad & Founder",
+      "phone": "9876543210",
+      "email": "havaldar.anup@aiminstitute.org",
+      "bloodGroup": "B+",
+      "domicileDistrict": "Purulia",
+      "bio": "Ex-Indian Army Havaldar with 16+ years of frontline military drill and physical efficiency training experience. Chief Instructor and Founder of Purulia AIM Physical Institute.",
+      "heightCm": 178,
+      "weightKg": 74,
+      "chestNormalCm": 84,
+      "chestExpandedCm": 90,
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
   "students": [
     {
       "id": "cadet-1791650861890",
@@ -86,10 +111,10 @@
       "standToOathConsent": true,
       "noSubstanceAbuseConsent": true,
       "mediaConsent": true,
-      "admissionStatus": "PENDING",
+      "admissionStatus": "APPROVED",
       "joinedDate": "2026-10-10T16:47:41.890Z",
       "createdAt": "2026-10-10T16:47:41.891Z",
-      "updatedAt": "2026-10-10T17:15:46.069Z",
+      "updatedAt": "2026-10-10T18:14:35.824Z",
       "rollNumber": "AIM-CADET-322"
     }
   ],
@@ -151,6 +176,14 @@
   "events": [],
   "rsvps": [],
   "auditLogs": [
+    {
+      "id": "audit-1791656076059",
+      "action": "CADET_STATUS_APPROVED",
+      "entity": "StudentProfile",
+      "entityId": "2a300075-5d5a-49c9-89e8-741cb5ac9d29",
+      "details": "Cadet status changed to APPROVED",
+      "createdAt": "2026-10-10T18:14:36.059Z"
+    },
     {
       "id": "audit-1791652546420",
       "action": "CADET_STATUS_PENDING",

@@ -28,11 +28,44 @@ model User {
   updatedAt       DateTime     @updatedAt
 
   studentProfile  StudentProfile?
+  trainerProfile  TrainerProfile?
   conductedAssessments Assessment[] @relation("ConductedAssessments")
   markedAttendance     Attendance[] @relation("MarkedAttendance")
   auditLogs            AuditLog[]
 
   @@map("users")
+}
+
+// -------------------------------------------------------------
+// DRILL INSTRUCTOR & TRAINER PROFILE
+// -------------------------------------------------------------
+
+model TrainerProfile {
+  id                    String    @id @default(uuid())
+  userId                String?   @unique
+  user                  User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instructorId          String    @unique // e.g. AIM-USTAD-01
+  fullName              String
+  rank                  String    @default("Havaldar (Veteran)") // e.g. "Ex-Army Havaldar"
+  regimentOrUnit        String    @default("Indian Army")
+  yearsOfService        Int       @default(15)
+  specialization        String    @default("Chief Drill Instructor & BPET Master")
+  designation           String    @default("Chief Instructor & Founder")
+  phone                 String    @unique
+  email                 String    @unique
+  aadhaarNumber         String?
+  bloodGroup            String    @default("B+")
+  domicileDistrict      String    @default("Purulia")
+  bio                   String?
+  heightCm              Float?
+  weightKg              Float?
+  chestNormalCm         Float?
+  chestExpandedCm       Float?
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("trainer_profiles")
 }
 
 // -------------------------------------------------------------

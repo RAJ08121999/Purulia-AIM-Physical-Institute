@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException, ForbiddenException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, ForbiddenException, Logger, OnModuleInit } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { DbService } from './db.service';
 import { PrismaService } from './prisma.service';
@@ -38,7 +38,7 @@ export interface RegisterTrainerDto {
 }
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   private readonly logger = new Logger('AuthService');
 
   constructor(
@@ -47,14 +47,168 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
+  async onModuleInit() {
+    await this.seedChiefInstructor();
+  }
+
+  /**
+   * Seed demo data for Havaldar Anup Kumar Mahato Sir (Chief Instructor & Founder)
+   * into Supabase PostgreSQL (Prisma) and local datastore.
+   */
+  async seedChiefInstructor() {
+    try {
+      const email = 'havaldar.anup@aiminstitute.org';
+      const phone = '9876543210';
+      const defaultPassword = 'Ustad@AIM2026';
+      const passwordHash = await argon2.hash(defaultPassword);
+
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          OR: [{ email }, { phone }]
+        }
+      });
+
+      if (!existingUser) {
+        const user = await this.prisma.user.create({
+          data: {
+            id: 'user-havaldar-anup',
+            email,
+            phone,
+            fullName: 'Havaldar Anup Kumar Mahato',
+            passwordHash,
+            role: 'SUPER_ADMIN',
+            status: 'ACTIVE'
+          }
+        });
+
+        try {
+          await (this.prisma as any).trainerProfile?.create({
+            data: {
+              userId: user.id,
+              instructorId: 'AIM-USTAD-01',
+              fullName: 'Havaldar Anup Kumar Mahato',
+              rank: 'Ex-Army Havaldar (Infantry Veteran)',
+              regimentOrUnit: 'Indian Army (Infantry / Rajputana Rifles)',
+              yearsOfService: 16,
+              specialization: 'Chief Drill Instructor & 1600m Telemetry Master',
+              designation: 'Head Drill Ustad & Founder',
+              phone,
+              email,
+              bloodGroup: 'B+',
+              domicileDistrict: 'Purulia',
+              bio: 'Ex-Indian Army Havaldar with 16+ years of military drill discipline and physical efficiency training expertise. Founder & Chief Training Master at Purulia AIM Physical Institute.',
+              heightCm: 178,
+              weightKg: 74,
+              chestNormalCm: 84,
+              chestExpandedCm: 90,
+              isActive: true
+            }
+          });
+        } catch (tpErr: any) {
+          this.logger.warn(`TrainerProfile note: ${tpErr.message}`);
+        }
+
+        this.logger.log('Chief Instructor Havaldar Anup Kumar Mahato successfully seeded into Supabase.');
+      } else {
+        // Ensure role is SUPER_ADMIN and passwordHash is updated to Ustad@AIM2026
+        await this.prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            passwordHash,
+            role: 'SUPER_ADMIN'
+          }
+        });
+        this.logger.log('Chief Instructor credentials verified in Supabase.');
+      }
+    } catch (err: any) {
+      this.logger.warn(`Could not seed Chief Instructor to Prisma: ${err.message}`);
+    }
+  }
+
+  async getChiefInstructorProfile() {
+    const fromLocal = this.db.findTrainerById('AIM-USTAD-01') || this.db.getTrainers()[0];
+    try {
+      const fromPrisma = await (this.prisma as any).trainerProfile?.findFirst({
+        where: { instructorId: 'AIM-USTAD-01' }
+      });
+      if (fromPrisma) return fromPrisma;
+    } catch (e: any) {}
+    return fromLocal;
+  }
+
   async validateAndLogin(dto: LoginDto) {
     const { identifier, password, role } = dto;
     if (!identifier) {
-      throw new BadRequestException('Identifier (Email / Phone / Dossier) is required');
+      throw new BadRequestException('Identifier (Email / Phone / Dossier ID) is required');
     }
-    const cleanId = identifier.trim().toLowerCase();
+    if (!password) {
+      throw new UnauthorizedException('Wrong credentials. Password is required to enter profile.');
+    }
 
-    // 1. Try finding in PostgreSQL User table via Prisma
+    const cleanId = identifier.trim().toLowerCase();
+    const isAnupIdentifier =
+      cleanId === 'havaldar.anup@aiminstitute.org' ||
+      cleanId === 'anup.mahato@aiminstitute.org' ||
+      cleanId === 'aim-ustad-01' ||
+      identifier.trim() === '9876543210' ||
+      identifier.trim() === '918699261094' ||
+      cleanId === 'havaldar' ||
+      cleanId === 'ustad' ||
+      cleanId === 'admin';
+
+    // 1. Strict Chief Instructor (Havaldar Anup Sir) Verification
+    if (isAnupIdentifier) {
+      let isMatch = password === 'Ustad@AIM2026';
+      if (!isMatch) {
+        try {
+          const user = await this.prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: 'havaldar.anup@aiminstitute.org' },
+                { phone: '9876543210' }
+              ]
+            }
+          });
+          if (user && user.passwordHash) {
+            isMatch = await argon2.verify(user.passwordHash, password);
+          }
+        } catch (e: any) {}
+      }
+
+      if (!isMatch) {
+        throw new UnauthorizedException('Wrong credentials. Invalid identifier or password.');
+      }
+
+      const payload = {
+        sub: 'user-havaldar-anup',
+        name: 'Havaldar Anup Kumar Mahato',
+        email: 'havaldar.anup@aiminstitute.org',
+        role: role || 'SUPER_ADMIN',
+        regiment: 'Indian Army Veteran (Head Drill Ustad)',
+        designation: 'Chief Instructor & Founder'
+      };
+
+      const token = this.jwtService.sign(payload);
+      return {
+        success: true,
+        message: 'Welcome Drill Ustad Havaldar Anup Kumar Mahato Sir!',
+        token,
+        user: {
+          id: payload.sub,
+          name: payload.name,
+          email: payload.email,
+          phone: '9876543210',
+          role: 'TRAINER',
+          rank: 'Ex-Army Havaldar',
+          regiment: payload.regiment,
+          designation: payload.designation,
+          instructorId: 'AIM-USTAD-01',
+          specialization: 'Chief Drill Instructor & BPET Master'
+        }
+      };
+    }
+
+    // 2. Database User Lookup (Students & Registered Trainers) via Prisma
     try {
       const user = await this.prisma.user.findFirst({
         where: {
@@ -70,11 +224,12 @@ export class AuthService {
       });
 
       if (user) {
-        if (password && user.passwordHash) {
-          const isPasswordValid = await argon2.verify(user.passwordHash, password);
-          if (!isPasswordValid) {
-            throw new UnauthorizedException('Invalid credentials. Please verify your password.');
-          }
+        if (!user.passwordHash) {
+          throw new UnauthorizedException('Wrong credentials. Please reset your password.');
+        }
+        const isPasswordValid = await argon2.verify(user.passwordHash, password);
+        if (!isPasswordValid) {
+          throw new UnauthorizedException('Wrong credentials. Invalid identifier or password.');
         }
 
         // Cadet access control: Must be verified and approved by a trainer
@@ -132,41 +287,24 @@ export class AuthService {
       this.logger.warn(`Prisma user lookup note: ${err.message}`);
     }
 
-    // 2. Check if matching default Havaldar Anup Ustad credentials
-    if (
-      cleanId === 'admin' ||
-      cleanId === 'havaldar' ||
-      cleanId.includes('aiminstitute') ||
-      cleanId === 'havaldar.anup@aiminstitute.org' ||
-      identifier.trim() === '918699261094' ||
-      cleanId === 'ustad'
-    ) {
-      const payload = {
-        sub: 'user-havaldar-anup',
-        name: 'Havaldar Anup Kumar Mahato',
-        email: 'havaldar.anup@aiminstitute.org',
-        role: role || 'SUPER_ADMIN',
-        regiment: 'Indian Army Veteran (Head Drill Ustad)'
-      };
+    // 3. Fallback: Check registered cadet in local store by dossier, phone, or email
+    const cadet = this.db.findStudentById(identifier.trim()) ||
+      this.db.getStudents().find(s => s.phone === identifier.trim() || (s as any).email === cleanId);
 
-      const token = this.jwtService.sign(payload);
-      return {
-        success: true,
-        token,
-        user: {
-          id: payload.sub,
-          name: payload.name,
-          email: payload.email,
-          role: payload.role,
-          regiment: payload.regiment,
-          designation: 'Head Drill Ustad & Founder'
-        }
-      };
-    }
-
-    // 3. Check registered cadet in memory/local store by dossier or phone
-    const cadet = this.db.findStudentById(identifier.trim()) || this.db.getStudents().find(s => s.phone === identifier.trim());
     if (cadet) {
+      if ((cadet as any).password) {
+        const storedPwd = (cadet as any).password;
+        let isMatch = false;
+        if (storedPwd.startsWith('$argon2')) {
+          isMatch = await argon2.verify(storedPwd, password);
+        } else {
+          isMatch = storedPwd === password;
+        }
+        if (!isMatch) {
+          throw new UnauthorizedException('Wrong credentials. Invalid identifier or password.');
+        }
+      }
+
       if (cadet.admissionStatus === 'REJECTED') {
         throw new ForbiddenException(
           'Your admission application was rejected by the Drill Ustad. Please visit the academy office at J.K. College Ground for assistance.'
@@ -200,8 +338,8 @@ export class AuthService {
       };
     }
 
-    // 4. No valid account found
-    throw new UnauthorizedException('Invalid credentials. Cadet or Trainer account not found.');
+    // 4. No valid account found or wrong credentials
+    throw new UnauthorizedException('Wrong credentials. Cadet or Trainer account not found.');
   }
 
   async registerTrainer(dto: RegisterTrainerDto) {
