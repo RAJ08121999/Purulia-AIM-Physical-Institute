@@ -417,9 +417,12 @@ export default function StudentPortalPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setPhotoUploadMsg('Photo exceeds 5MB limit.');
-      setTimeout(() => setPhotoUploadMsg(null), 3500);
+    const MAX_PHOTO_BYTES = 100 * 1024; // Strictly 100 KB
+    if (file.size >= MAX_PHOTO_BYTES) {
+      const sizeInKb = (file.size / 1024).toFixed(1);
+      setPhotoUploadMsg(`Photo is ${sizeInKb} KB. Photos must strictly be lower than 100 KB.`);
+      setTimeout(() => setPhotoUploadMsg(null), 4000);
+      e.target.value = '';
       return;
     }
 
@@ -435,7 +438,8 @@ export default function StudentPortalPage() {
       setCadetPhoto(base64);
       try {
         localStorage.setItem('cadet_passport_photo', base64);
-        setPhotoUploadMsg('✓ Passport photo successfully updated!');
+        const sizeInKb = (file.size / 1024).toFixed(1);
+        setPhotoUploadMsg(`✓ Passport photo updated (${sizeInKb} KB < 100 KB)!`);
         setTimeout(() => setPhotoUploadMsg(null), 3500);
       } catch (err) {
         console.warn('Failed to persist photo to localStorage:', err);

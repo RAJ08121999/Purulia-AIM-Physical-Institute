@@ -39,6 +39,41 @@
   "attendance": [],
   "assessments": [],
   "runTrials": [],
+  "activeDrill": {
+    "id": "drill-session-regimental-01",
+    "trainerId": "trainer-anup",
+    "trainerName": "Havaldar Anup Kumar Mahato (Ex-Army)",
+    "category": "1600M",
+    "categoryLabel": "1600m Battle Physical Efficiency (BPET) Run",
+    "distanceMeters": 1600,
+    "targetSeconds": 330,
+    "targetLabel": "Group 1 (≤ 5m 30s)",
+    "status": "IDLE",
+    "startedAt": null,
+    "pausedAt": null,
+    "elapsedMs": 0,
+    "laps": [],
+    "cadetFinishes": {},
+    "updatedAt": 1791648214188
+  },
   "events": [],
-  "rsvps": []
+  "rsvps": [],
+  "auditLogs": [
+    {
+      "id": "audit-1791650128662",
+      "action": "ENLISTMENT_DOSSIER_SUBMITTED",
+      "entity": "StudentProfile",
+      "entityId": "cadet-1791650128402",
+      "details": "New cadet enlistment submitted for Photo Test Cadet (AIM-CADET-2026-3334). Target: Indian Army Agniveer GD. Chest expansion: 5cm.",
+      "createdAt": "2026-10-10T16:35:28.662Z"
+    },
+    {
+      "id": "audit-1791649249497",
+      "action": "ENLISTMENT_DOSSIER_SUBMITTED",
+      "entity": "StudentProfile",
+      "entityId": "cadet-1791649249334",
+      "details": "New cadet enlistment submitted for Test Cadet (AIM-CADET-2026-4730). Target: Indian Army Agniveer GD. Chest expansion: 5cm.",
+      "createdAt": "2026-10-10T16:20:49.497Z"
+    }
+  ]
 }

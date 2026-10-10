@@ -171,6 +171,21 @@ export class AdmissionsService {
       throw new BadRequestException('Valid chest normal and expanded measurements are required');
     }
 
+    // 3. Strict Passport Photo size enforcement (strictly lower than 100 KB)
+    if (dto.passportPhoto && dto.passportPhoto.trim() !== '') {
+      const base64Data = dto.passportPhoto.includes(',')
+        ? dto.passportPhoto.split(',')[1]
+        : dto.passportPhoto;
+      const bufferLength = Buffer.from(base64Data, 'base64').length;
+      const MAX_PHOTO_BYTES = 100 * 1024; // 100 KB
+      if (bufferLength >= MAX_PHOTO_BYTES) {
+        const sizeInKb = (bufferLength / 1024).toFixed(1);
+        throw new BadRequestException(
+          `Passport photo exceeds strict 100 KB limit (${sizeInKb} KB). Photo must be lower than 100 KB.`
+        );
+      }
+    }
+
     // Generate unique Army Cadet Dossier ID
     const dossierNumber = `AIM-CADET-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 

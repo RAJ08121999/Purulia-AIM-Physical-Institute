@@ -45,6 +45,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
   const [dossierId, setDossierId] = useState('');
   const [serverError, setServerError] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [photoSizeKb, setPhotoSizeKb] = useState<number | null>(null);
 
   // Comprehensive Military Enlistment Form State
   const [formData, setFormData] = useState({
@@ -236,6 +237,17 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
         alert('Please enter a valid 12-digit Aadhaar Card Number.');
         return;
       }
+      if (formData.passportPhoto) {
+        const base64Data = formData.passportPhoto.includes(',')
+          ? formData.passportPhoto.split(',')[1]
+          : formData.passportPhoto;
+        const approximateBytes = Math.ceil((base64Data.length * 3) / 4);
+        if (approximateBytes >= 100 * 1024) {
+          const sizeKb = (approximateBytes / 1024).toFixed(1);
+          alert(`Passport photograph (${sizeKb} KB) exceeds the 100 KB limit. Photos must strictly be lower than 100 KB.`);
+          return;
+        }
+      }
     } else if (step === 2) {
       if (!formData.tenthMarksObtained || !formData.tenthFullMarks) {
         alert('Please enter your 10th Standard Marks Obtained and Full Marks.');
@@ -303,8 +315,12 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setPhotoError('Image size exceeds 5MB limit. Please upload a photo under 5MB.');
+    const MAX_PHOTO_BYTES = 100 * 1024; // Strictly 100 KB
+    if (file.size >= MAX_PHOTO_BYTES) {
+      const sizeInKb = (file.size / 1024).toFixed(1);
+      setPhotoError(`Photo size is ${sizeInKb} KB. Photos must strictly be lower than 100 KB.`);
+      setPhotoSizeKb(null);
+      e.target.value = '';
       return;
     }
 
@@ -314,6 +330,9 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
     }
 
     setPhotoError(null);
+    const sizeInKb = parseFloat((file.size / 1024).toFixed(1));
+    setPhotoSizeKb(sizeInKb);
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
@@ -325,6 +344,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
   const handleRemovePhoto = () => {
     setFormData(prev => ({ ...prev, passportPhoto: '' }));
     setPhotoError(null);
+    setPhotoSizeKb(null);
   };
 
   const renderDivisionBadge = (percentStr: string | number) => {
@@ -413,6 +433,19 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
       alert('Mandatory Stand-To Oath & Anti-Substance Abuse Declarations must be confirmed.');
       return;
     }
+    // Pre-dispatch strict verification: photo must be lower than 100 KB
+    if (formData.passportPhoto) {
+      const base64Data = formData.passportPhoto.includes(',')
+        ? formData.passportPhoto.split(',')[1]
+        : formData.passportPhoto;
+      const approximateBytes = Math.ceil((base64Data.length * 3) / 4);
+      if (approximateBytes >= 100 * 1024) {
+        const sizeKb = (approximateBytes / 1024).toFixed(1);
+        alert(`Passport photo exceeds strict 100 KB limit (${sizeKb} KB). Photo must be lower than 100 KB.`);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setServerError(null);
 
@@ -458,46 +491,10 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
       persistQualificationsToLocal();
       setIsSubmitted(true);
     } catch (err: any) {
-      console.warn('Backend admission failed, falling back to local registration:', err);
-      const fallbackId = `AIM-CADET-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-      setDossierId(fallbackId);
-      if (formData.passportPhoto) {
-        try {
-          localStorage.setItem('cadet_passport_photo', formData.passportPhoto);
-        } catch (e) {
-          console.warn('Could not save photo to localStorage:', e);
-        }
-      }
-      if (formData.fullName) {
-        localStorage.setItem('cadet_name', formData.fullName);
-      }
-      if (formData.bloodGroup) {
-        localStorage.setItem('cadet_blood_group', formData.bloodGroup);
-      }
-      if (formData.birthMarks) {
-        localStorage.setItem('cadet_birth_marks', formData.birthMarks);
-      }
-      if (formData.targetForce) {
-        localStorage.setItem('cadet_target_force', formData.targetForce);
-      }
-      if (formData.heightCm) {
-        localStorage.setItem('cadet_height', String(formData.heightCm));
-      }
-      if (formData.weightKg) {
-        localStorage.setItem('cadet_weight', String(formData.weightKg));
-      }
-      if (formData.chestNormalCm) {
-        localStorage.setItem('cadet_chest_normal', String(formData.chestNormalCm));
-      }
-      if (formData.chestExpandedCm) {
-        localStorage.setItem('cadet_chest_expanded', String(formData.chestExpandedCm));
-      }
-      localStorage.setItem('cadet_dossier_id', fallbackId);
-      try {
-        localStorage.setItem('cadet_full_profile', JSON.stringify({ ...formData, dossierNumber: fallbackId }));
-      } catch (e) {}
-      persistQualificationsToLocal();
-      setIsSubmitted(true);
+      console.error('Backend admission submission error:', err);
+      const errorMsg = err.message || 'Failed to submit admission dossier to server';
+      setServerError(`Submission Failed: ${errorMsg}`);
+      alert(`Admission Submission Failed:\n\n${errorMsg}\n\nPlease check your inputs (photo must be lower than 100 KB).`);
     } finally {
       setIsSubmitting(false);
     }
@@ -700,6 +697,13 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                 ))}
               </div>
 
+              {serverError && (
+                <div className="flex items-center gap-2 p-3 bg-rose-950/40 border border-rose-500/50 rounded-xl text-rose-300 text-xs font-mono mb-4">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+                  <span>{serverError}</span>
+                </div>
+              )}
+
               {/* STEP 1: PERSONAL & IDENTIFICATION BIO-DATA */}
               {step === 1 && (
                 <div className="space-y-4">
@@ -728,12 +732,12 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                           Affix Passport-Sized Photograph (35mm × 45mm)
                         </span>
                         <p className="text-[11px] text-gray-400 font-sans mt-0.5">
-                          Upload front-facing photo on light background. Appears directly on your official Cadet Profile & Evaluation Dossier.
+                          Upload front-facing photo on light background. Must strictly be lower than 100 KB.
                         </p>
                       </div>
                       {formData.passportPhoto && (
                         <Badge variant="army" size="sm" className="bg-emerald-500/20 text-emerald-400 border-emerald-500/40">
-                          ✓ Photo Affixed
+                          ✓ Photo Affixed {photoSizeKb ? `(${photoSizeKb} KB / <100 KB)` : '(<100 KB)'}
                         </Badge>
                       )}
                     </div>
@@ -810,7 +814,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                         )}
 
                         <div className="text-[11px] text-gray-400 font-sans space-y-1">
-                          <div>• Max file size: <strong>5MB</strong> (JPG, PNG, or WEBP)</div>
+                          <div>• Max file size: <strong className="text-amber-400 font-bold">Strictly lower than 100 KB</strong> (Govt / Defence Exam Standard)</div>
                           <div>• Ensure clear frontal view with both ears visible, neutral background</div>
                           <div>• Synchronizes immediately with your <strong>Cadet Profile</strong> & <strong>Admit Card</strong></div>
                         </div>
