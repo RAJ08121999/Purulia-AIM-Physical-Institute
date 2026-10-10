@@ -15,9 +15,20 @@ async function bootstrap() {
   // Security cookies
   app.use(cookieParser());
 
-  // Strict CORS for web client
+  // Enable CORS for Vercel live domain, localhost, and custom frontend
   app.enableCors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: (origin: string | undefined, callback: any) => {
+      if (!origin) return callback(null, true);
+      if (
+        origin.includes('localhost') ||
+        origin.includes('vercel.app') ||
+        origin.includes('onrender.com') ||
+        (process.env.CLIENT_URL && (process.env.CLIENT_URL === '*' || origin === process.env.CLIENT_URL))
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
   });
