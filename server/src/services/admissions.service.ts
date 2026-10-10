@@ -5,6 +5,7 @@ import { StudentProfileEntity } from '../models';
 import * as argon2 from 'argon2';
 
 export interface CreateAdmissionDto {
+  dossierNumber?: string;
   fullName: string;
   fatherName: string;
   motherName?: string;
@@ -186,8 +187,8 @@ export class AdmissionsService {
       }
     }
 
-    // Generate unique Army Cadet Dossier ID
-    const dossierNumber = `AIM-CADET-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    // Generate or use provided Army Cadet Dossier ID
+    const dossierNumber = dto.dossierNumber?.trim() || `AIM-CADET-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newCadet: StudentProfileEntity = {
       id: `cadet-${Date.now()}`,
