@@ -27,4 +27,9 @@ export class AdmissionsApiController {
   ) {
     return this.admissionsService.updateStatus(id, body.status, body.batchId);
   }
+
+  @Patch(':id')
+  updateCadetProfile(@Param('id') id: string, @Body() body: any) {
+    return this.admissionsService.updateCadetProfile(id, body);
+  }
 }

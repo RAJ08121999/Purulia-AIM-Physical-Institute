@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch } from '@nestjs/common';
 import { AuthService, LoginDto, RegisterTrainerDto } from '../services/auth.service';
 
 @Controller('auth')
@@ -18,6 +18,11 @@ export class AuthApiController {
   @Get('trainer-profile')
   getChiefTrainer() {
     return this.authService.getChiefInstructorProfile();
+  }
+
+  @Patch('trainer-profile')
+  updateTrainer(@Body() dto: any) {
+    return this.authService.updateTrainerProfile(dto);
   }
 
   @Get('me')

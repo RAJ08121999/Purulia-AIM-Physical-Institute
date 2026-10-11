@@ -41,7 +41,7 @@ import {
   FileQuestion
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
-import { ParadeDrillStopwatch } from '@/components';
+import { ParadeDrillStopwatch, EditCadetProfileModal } from '@/components';
 import { DEFAULT_CADET_REPORT } from '@/components/ProgressReportPDFView';
 import { fetchLiveDrillSession, LiveDrillSession, logoutUser, getCurrentUser, getApiBaseUrl } from '@/lib/api';
 
@@ -140,6 +140,27 @@ export default function StudentPortalPage() {
   const [cadetRecord, setCadetRecord] = useState<any>(null);
   const [isRefreshingStatus, setIsRefreshingStatus] = useState<boolean>(false);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState<boolean>(false);
+
+  const handleProfileUpdated = (updated: any) => {
+    setCadetRecord(updated);
+    if (updated.fullName) setCadetName(updated.fullName);
+    if (updated.dossierNumber) setCadetRoll(updated.dossierNumber);
+    if (updated.targetForce) setTargetForce(updated.targetForce);
+    if (updated.bloodGroup) setBloodGroup(updated.bloodGroup);
+    if (updated.birthMarks) setBirthMarks(updated.birthMarks);
+    if (updated.heightCm) setCadetHeight(Number(updated.heightCm));
+    if (updated.weightKg) setCadetWeight(Number(updated.weightKg));
+    if (updated.chestNormalCm) setCadetChestNormal(Number(updated.chestNormalCm));
+    if (updated.chestExpandedCm) setCadetChestExpanded(Number(updated.chestExpandedCm));
+    if (updated.passportPhoto) {
+      setCadetPhoto(updated.passportPhoto);
+      try { localStorage.setItem('aim_cadet_photo', updated.passportPhoto); } catch {}
+    }
+    if (updated.fullName) {
+      try { localStorage.setItem('cadet_name', updated.fullName); } catch {}
+    }
+  };
 
   // Function to re-query backend for live trainer verification status
   const handleCheckStatus = async () => {
@@ -806,6 +827,14 @@ export default function StudentPortalPage() {
                   </a>
 
                   <button
+                    onClick={() => setIsEditProfileModalOpen(true)}
+                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 text-xs font-mono font-bold transition-all cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Edit Application</span>
+                  </button>
+
+                  <button
                     onClick={() => logoutUser()}
                     className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#1A2415] hover:bg-[#273623] text-gray-400 hover:text-white border border-[#273623] text-xs font-mono transition-all cursor-pointer"
                   >
@@ -1047,6 +1076,14 @@ export default function StudentPortalPage() {
             >
               <FileText className="w-4 h-4 sm:w-5 sm:h-5 sm:mb-0.5" />
               <span>Dossier</span>
+            </button>
+
+            <button
+              onClick={() => setIsEditProfileModalOpen(true)}
+              className="col-span-2 sm:col-span-1 bg-[#1A2415] hover:bg-[#273623] border border-amber-500/50 text-amber-400 hover:text-white p-2.5 sm:p-3 rounded-xl flex sm:flex-col items-center justify-center gap-1.5 sm:gap-0 px-3.5 font-display font-bold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
+            >
+              <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 sm:mb-0.5 text-amber-400" />
+              <span>Edit Profile</span>
             </button>
           </div>
         </div>
@@ -2032,6 +2069,14 @@ export default function StudentPortalPage() {
         )}
       </>
     )}
+
+    {/* Cadet Edit Profile Modal */}
+    <EditCadetProfileModal
+      isOpen={isEditProfileModalOpen}
+      onClose={() => setIsEditProfileModalOpen(false)}
+      cadet={cadetRecord}
+      onProfileUpdated={handleProfileUpdated}
+    />
   </main>
     </div>
   );

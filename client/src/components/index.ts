@@ -8,4 +8,6 @@ export * from './RecruitmentBulletin';
 export * from './TrainingPrograms';
 export * from './WallOfFame';
 export * from './ParadeDrillStopwatch';
+export * from './EditCadetProfileModal';
+export * from './EditTrainerProfileModal';
 export * from './ui';

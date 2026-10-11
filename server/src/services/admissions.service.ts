@@ -522,4 +522,144 @@ export class AdmissionsService {
       cadet: student || prismaStudent || updates
     };
   }
+
+  async updateCadetProfile(id: string, dto: any) {
+    if (!id) throw new BadRequestException('Cadet ID or Dossier number is required');
+
+    let student = this.db.findStudentById(id);
+    let prismaStudent: any = null;
+
+    try {
+      prismaStudent = await this.prisma.studentProfile.findFirst({
+        where: {
+          OR: [{ id }, { dossierNumber: id }]
+        },
+        include: { user: true }
+      });
+    } catch (e: any) {
+      this.logger.warn(`Prisma find failed: ${e.message}`);
+    }
+
+    if (!student && !prismaStudent) {
+      throw new NotFoundException(`Cadet with ID/Dossier "${id}" not found`);
+    }
+
+    const cleanPhone = dto.phone ? String(dto.phone).replace(/\D/g, '') : undefined;
+    const cleanEmergency = dto.emergencyPhone ? String(dto.emergencyPhone).replace(/\D/g, '') : undefined;
+    const cleanPin = dto.pinCode ? String(dto.pinCode).replace(/\D/g, '') : undefined;
+
+    const height = dto.heightCm !== undefined && dto.heightCm !== '' ? Number(dto.heightCm) : undefined;
+    const weight = dto.weightKg !== undefined && dto.weightKg !== '' ? Number(dto.weightKg) : undefined;
+    const chestNormal = dto.chestNormalCm !== undefined && dto.chestNormalCm !== '' ? Number(dto.chestNormalCm) : undefined;
+    const chestExp = dto.chestExpandedCm !== undefined && dto.chestExpandedCm !== '' ? Number(dto.chestExpandedCm) : undefined;
+    const expansion = (chestNormal !== undefined && chestExp !== undefined) ? (chestExp - chestNormal) : undefined;
+
+    const dataToUpdate: any = {};
+    if (dto.fullName) dataToUpdate.fullName = dto.fullName.trim();
+    if (dto.fatherName) dataToUpdate.fatherName = dto.fatherName.trim();
+    if (dto.motherName !== undefined) dataToUpdate.motherName = dto.motherName;
+    if (cleanPhone) dataToUpdate.phone = cleanPhone;
+    if (cleanEmergency) dataToUpdate.emergencyPhone = cleanEmergency;
+    if (dto.domicileDistrict) dataToUpdate.domicileDistrict = dto.domicileDistrict;
+    if (dto.policeStation) dataToUpdate.policeStation = dto.policeStation;
+    if (dto.villageTown) dataToUpdate.villageTown = dto.villageTown;
+    if (dto.postOffice !== undefined) dataToUpdate.postOffice = dto.postOffice;
+    if (cleanPin) dataToUpdate.pinCode = cleanPin;
+    if (dto.casteCategory) dataToUpdate.casteCategory = dto.casteCategory;
+    if (dto.targetForce) dataToUpdate.targetForce = dto.targetForce;
+
+    if (height !== undefined && !isNaN(height)) dataToUpdate.heightCm = height;
+    if (weight !== undefined && !isNaN(weight)) dataToUpdate.weightKg = weight;
+    if (chestNormal !== undefined && !isNaN(chestNormal)) dataToUpdate.chestNormalCm = chestNormal;
+    if (chestExp !== undefined && !isNaN(chestExp)) dataToUpdate.chestExpandedCm = chestExp;
+    if (expansion !== undefined && !isNaN(expansion)) dataToUpdate.chestExpansionCm = expansion;
+
+    if (dto.current1600mTime !== undefined) dataToUpdate.current1600mTime = dto.current1600mTime;
+    if (dto.currentBeamPullups !== undefined && dto.currentBeamPullups !== '') dataToUpdate.currentBeamPullups = Number(dto.currentBeamPullups);
+    if (dto.visionStatus !== undefined) dataToUpdate.visionStatus = dto.visionStatus;
+    if (dto.bodyTattoo !== undefined) dataToUpdate.bodyTattoo = dto.bodyTattoo;
+
+    if (dto.highestEducation) dataToUpdate.highestEducation = dto.highestEducation;
+    if (dto.matricBoard) dataToUpdate.matricBoard = dto.matricBoard;
+    if (dto.matricPassingYear) dataToUpdate.matricPassingYear = String(dto.matricPassingYear);
+    if (dto.matricAggregatePercent !== undefined && dto.matricAggregatePercent !== '') dataToUpdate.matricAggregatePercent = Number(dto.matricAggregatePercent);
+    if (dto.nccCertificate) dataToUpdate.nccCertificate = dto.nccCertificate;
+    if (dto.sportsLevel) dataToUpdate.sportsLevel = dto.sportsLevel;
+    if (dto.sportsDiscipline !== undefined) dataToUpdate.sportsDiscipline = dto.sportsDiscipline;
+
+    // Optional password update
+    if (dto.newPassword && dto.newPassword.trim().length >= 6) {
+      const newHash = await argon2.hash(dto.newPassword.trim());
+      const userId = prismaStudent?.userId || prismaStudent?.user?.id;
+      if (userId) {
+        try {
+          await this.prisma.user.update({
+            where: { id: userId },
+            data: { passwordHash: newHash }
+          });
+          this.logger.log(`Password updated in Supabase for user ${userId}`);
+        } catch (pwErr: any) {
+          this.logger.warn(`Could not update password in Prisma: ${pwErr.message}`);
+        }
+      }
+      if (student) {
+        (student as any).password = newHash;
+      }
+    }
+
+    // Save passport photo if uploaded
+    if (dto.passportPhoto) {
+      if (student) (student as any).passportPhoto = dto.passportPhoto;
+    }
+
+    // Update in Prisma
+    try {
+      await this.prisma.studentProfile.updateMany({
+        where: {
+          OR: [
+            { id },
+            { dossierNumber: id },
+            ...(student ? [{ dossierNumber: student.dossierNumber }, { id: student.id }] : [])
+          ]
+        },
+        data: dataToUpdate
+      });
+
+      // Also update linked user's name/phone if changed
+      const userId = prismaStudent?.userId || prismaStudent?.user?.id;
+      if (userId && (dataToUpdate.fullName || dataToUpdate.phone)) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            ...(dataToUpdate.fullName ? { fullName: dataToUpdate.fullName } : {}),
+            ...(dataToUpdate.phone ? { phone: dataToUpdate.phone } : {})
+          }
+        });
+      }
+      this.logger.log(`Cadet profile updated successfully in Supabase for ${id}`);
+    } catch (pErr: any) {
+      this.logger.warn(`Prisma profile update note: ${pErr.message}`);
+    }
+
+    // Update in local DB store
+    if (student) {
+      this.db.updateStudent(student.id, { ...dataToUpdate, ...dto });
+      student = this.db.findStudentById(student.id);
+    }
+
+    this.db.createAuditLog({
+      id: `audit-${Date.now()}`,
+      action: 'CADET_PROFILE_UPDATED',
+      entity: 'StudentProfile',
+      entityId: id,
+      details: `Profile record updated for cadet ${student?.fullName || prismaStudent?.fullName || id}`,
+      createdAt: new Date().toISOString()
+    });
+
+    return {
+      success: true,
+      message: 'Cadet profile updated successfully',
+      cadet: { ...(student || prismaStudent || {}), ...dataToUpdate }
+    };
+  }
 }

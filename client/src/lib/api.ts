@@ -729,4 +729,37 @@ export function logoutUser() {
   window.location.href = '/';
 }
 
+export async function updateCadetProfile(dossierOrId: string, payload: any) {
+  const res = await fetch(`${getApiBaseUrl()}/admissions/${encodeURIComponent(dossierOrId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to update cadet profile');
+  }
+  return res.json();
+}
+
+export async function fetchTrainerProfile() {
+  const res = await fetch(`${getApiBaseUrl()}/auth/trainer-profile`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch trainer profile');
+  return res.json();
+}
+
+export async function updateTrainerProfile(payload: any) {
+  const res = await fetch(`${getApiBaseUrl()}/auth/trainer-profile`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to update trainer profile');
+  }
+  return res.json();
+}
+
+
 

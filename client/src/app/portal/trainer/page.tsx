@@ -32,11 +32,12 @@ import {
   UserX,
   Eye,
   RefreshCw,
-  Lock
+  Lock,
+  Edit3
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
-import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications, updateCadetStatus, getApiBaseUrl } from '@/lib/api';
-import { ParadeDrillStopwatch } from '@/components';
+import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications, updateCadetStatus, getApiBaseUrl, fetchTrainerProfile } from '@/lib/api';
+import { ParadeDrillStopwatch, EditTrainerProfileModal } from '@/components';
 
 interface CadetAttendance {
   id: string;
@@ -273,6 +274,16 @@ export default function TrainerCommandCenter() {
   const [quoteAuthor, setQuoteAuthor] = useState('Havaldar Anup Kumar Mahato (Head Drill Ustad)');
   const [quoteSaved, setQuoteSaved] = useState(false);
   const [isEditingQuote, setIsEditingQuote] = useState(false);
+  const [isEditTrainerModalOpen, setIsEditTrainerModalOpen] = useState(false);
+  const [trainerDetails, setTrainerDetails] = useState<any>(null);
+
+  const handleTrainerProfileUpdated = (updated: any) => {
+    setTrainerDetails(updated);
+    if (updated.fullName) {
+      setCurrentUser((prev: any) => ({ ...prev, name: updated.fullName }));
+      setQuoteAuthor(`${updated.fullName} (Head Drill Ustad)`);
+    }
+  };
 
   // Load user, live database cadets & local stored items
   React.useEffect(() => {
@@ -313,6 +324,14 @@ export default function TrainerCommandCenter() {
     }).catch(err => {
       console.warn('Failed to load authentic cadets for trainer:', err);
     });
+
+    // Load authentic trainer profile from database
+    fetchTrainerProfile().then(tp => {
+      if (tp) {
+        setTrainerDetails(tp);
+        if (tp.fullName) setQuoteAuthor(`${tp.fullName} (Head Drill Ustad)`);
+      }
+    }).catch(() => {});
 
     try {
       const storedQuote = localStorage.getItem('aim_daily_motivational_quote');
@@ -530,6 +549,15 @@ export default function TrainerCommandCenter() {
             </div>
 
             <button
+              onClick={() => setIsEditTrainerModalOpen(true)}
+              title="Edit Drill Ustad Profile & Benchmarks"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 hover:text-amber-200 text-xs font-display font-bold uppercase tracking-wider transition-all cursor-pointer"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Edit Profile</span>
+            </button>
+
+            <button
               onClick={() => logoutUser()}
               title="Sign Out of Ustad Command"
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 text-red-400 hover:text-red-200 text-xs font-display font-bold uppercase tracking-wider transition-all cursor-pointer ml-1"
@@ -557,6 +585,15 @@ export default function TrainerCommandCenter() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditTrainerModalOpen(true)}
+              leftIcon={<Edit3 className="w-4 h-4 text-amber-400" />}
+              className="flex-1 sm:flex-initial justify-center border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+            >
+              Edit Ustad Profile
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -1882,6 +1919,14 @@ export default function TrainerCommandCenter() {
           </div>
         )}
       </main>
+
+      {/* Drill Ustad Edit Profile Modal */}
+      <EditTrainerProfileModal
+        isOpen={isEditTrainerModalOpen}
+        onClose={() => setIsEditTrainerModalOpen(false)}
+        trainer={trainerDetails || currentUser}
+        onProfileUpdated={handleTrainerProfileUpdated}
+      />
     </div>
   );
 }

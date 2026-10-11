@@ -418,4 +418,134 @@ export class AuthService implements OnModuleInit {
       }
     };
   }
+
+  async updateTrainerProfile(dto: any) {
+    const instructorId = dto.instructorId || 'AIM-USTAD-01';
+    let targetUser: any = null;
+
+    try {
+      targetUser = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: 'havaldar.anup@aiminstitute.org' },
+            { id: 'user-havaldar-anup' },
+            { phone: '9876543210' },
+            ...(dto.email ? [{ email: dto.email.trim().toLowerCase() }] : []),
+            ...(dto.phone ? [{ phone: dto.phone.trim() }] : [])
+          ]
+        },
+        include: { trainerProfile: true }
+      });
+    } catch (e: any) {
+      this.logger.warn(`Prisma find trainer error: ${e.message}`);
+    }
+
+    const cleanPhone = dto.phone ? String(dto.phone).replace(/\D/g, '') : undefined;
+    const cleanEmail = dto.email ? dto.email.trim().toLowerCase() : undefined;
+
+    const trainerData: any = {};
+    if (dto.fullName) trainerData.fullName = dto.fullName.trim();
+    if (dto.rank) trainerData.rank = dto.rank.trim();
+    if (dto.regimentOrUnit) trainerData.regimentOrUnit = dto.regimentOrUnit.trim();
+    if (dto.yearsOfService !== undefined && dto.yearsOfService !== '') trainerData.yearsOfService = Number(dto.yearsOfService);
+    if (dto.specialization) trainerData.specialization = dto.specialization.trim();
+    if (dto.designation) trainerData.designation = dto.designation.trim();
+    if (cleanPhone) trainerData.phone = cleanPhone;
+    if (cleanEmail) trainerData.email = cleanEmail;
+    if (dto.bloodGroup) trainerData.bloodGroup = dto.bloodGroup;
+    if (dto.domicileDistrict) trainerData.domicileDistrict = dto.domicileDistrict;
+    if (dto.bio !== undefined) trainerData.bio = dto.bio;
+
+    if (dto.heightCm !== undefined && dto.heightCm !== '') trainerData.heightCm = Number(dto.heightCm);
+    if (dto.weightKg !== undefined && dto.weightKg !== '') trainerData.weightKg = Number(dto.weightKg);
+    if (dto.chestNormalCm !== undefined && dto.chestNormalCm !== '') trainerData.chestNormalCm = Number(dto.chestNormalCm);
+    if (dto.chestExpandedCm !== undefined && dto.chestExpandedCm !== '') trainerData.chestExpandedCm = Number(dto.chestExpandedCm);
+
+    // Optional password update
+    if (dto.newPassword && dto.newPassword.trim().length >= 6) {
+      const newHash = await argon2.hash(dto.newPassword.trim());
+      if (targetUser?.id) {
+        try {
+          await this.prisma.user.update({
+            where: { id: targetUser.id },
+            data: { passwordHash: newHash }
+          });
+          this.logger.log(`Ustad password updated in Supabase for user ${targetUser.id}`);
+        } catch (pwErr: any) {
+          this.logger.warn(`Could not update password in Prisma: ${pwErr.message}`);
+        }
+      }
+    }
+
+    // Update in Prisma
+    try {
+      if (targetUser) {
+        await this.prisma.user.update({
+          where: { id: targetUser.id },
+          data: {
+            ...(trainerData.fullName ? { fullName: trainerData.fullName } : {}),
+            ...(cleanPhone ? { phone: cleanPhone } : {}),
+            ...(cleanEmail ? { email: cleanEmail } : {})
+          }
+        });
+
+        const tp = await (this.prisma as any).trainerProfile?.findFirst({
+          where: {
+            OR: [
+              { userId: targetUser.id },
+              { instructorId },
+              { email: targetUser.email }
+            ]
+          }
+        });
+
+        if (tp) {
+          await (this.prisma as any).trainerProfile?.update({
+            where: { id: tp.id },
+            data: trainerData
+          });
+        } else {
+          await (this.prisma as any).trainerProfile?.create({
+            data: {
+              userId: targetUser.id,
+              instructorId,
+              fullName: trainerData.fullName || targetUser.fullName,
+              phone: cleanPhone || targetUser.phone,
+              email: cleanEmail || targetUser.email,
+              ...trainerData
+            }
+          });
+        }
+        this.logger.log(`TrainerProfile updated in Supabase for ${instructorId}`);
+      }
+    } catch (tpErr: any) {
+      this.logger.warn(`TrainerProfile update note: ${tpErr.message}`);
+    }
+
+    // Also update in local DB
+    const localTrainers = this.db.getTrainers();
+    if (localTrainers.length > 0) {
+      const t = localTrainers[0];
+      Object.assign(t, trainerData);
+    }
+
+    this.db.createAuditLog({
+      id: `audit-${Date.now()}`,
+      action: 'TRAINER_PROFILE_UPDATED',
+      entity: 'TrainerProfile',
+      entityId: instructorId,
+      details: `Drill Ustad profile updated for ${trainerData.fullName || 'Havaldar Anup Kumar Mahato'}`,
+      createdAt: new Date().toISOString()
+    });
+
+    return {
+      success: true,
+      message: 'Drill Ustad profile updated successfully',
+      trainer: {
+        instructorId,
+        ...(targetUser?.trainerProfile || {}),
+        ...trainerData
+      }
+    };
+  }
 }
