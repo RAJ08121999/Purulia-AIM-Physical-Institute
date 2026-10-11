@@ -43,7 +43,7 @@ import {
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
 import { ParadeDrillStopwatch, EditCadetProfileModal } from '@/components';
 import { DEFAULT_CADET_REPORT } from '@/components/ProgressReportPDFView';
-import { fetchLiveDrillSession, LiveDrillSession, logoutUser, getCurrentUser, getApiBaseUrl } from '@/lib/api';
+import { fetchLiveDrillSession, LiveDrillSession, logoutUser, getCurrentUser, getApiBaseUrl, fetchInstituteEvents, registerRollCallRsvp } from '@/lib/api';
 
 // Performance Optimization: Dynamic imports with React Suspense & Skeletons (LCP < 2.5s)
 const DynamicStudentProgressVisualizer = dynamic(
@@ -114,6 +114,10 @@ export default function StudentPortalPage() {
   const [quoteAuthor, setQuoteAuthor] = useState<string>('Havaldar Anup Kumar Mahato (Head Drill Ustad)');
   const [trainerEvents, setTrainerEvents] = useState<any[]>([]);
   const [recruitmentOrders, setRecruitmentOrders] = useState<any[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState<boolean>(false);
+  const [rsvpSubmittingId, setRsvpSubmittingId] = useState<string | null>(null);
+  const [rsvpSuccessMap, setRsvpSuccessMap] = useState<Record<string, boolean>>({});
+  const [rsvpErrorMap, setRsvpErrorMap] = useState<Record<string, string>>({});
 
   // Cadet Profile & Passport Photo State
   const [cadetPhoto, setCadetPhoto] = useState<string | null>(null);
@@ -159,6 +163,52 @@ export default function StudentPortalPage() {
     }
     if (updated.fullName) {
       try { localStorage.setItem('cadet_name', updated.fullName); } catch {}
+    }
+  };
+
+  // Function to load trainer announcements & physical events live from server
+  const loadEvents = async () => {
+    setIsLoadingEvents(true);
+    try {
+      const data = await fetchInstituteEvents();
+      if (Array.isArray(data) && data.length > 0) {
+        setTrainerEvents(data);
+        try { localStorage.setItem('aim_trainer_events', JSON.stringify(data)); } catch {}
+      } else {
+        const stored = localStorage.getItem('aim_trainer_events');
+        if (stored) {
+          try { setTrainerEvents(JSON.parse(stored)); } catch {}
+        }
+      }
+    } catch (err) {
+      const stored = localStorage.getItem('aim_trainer_events');
+      if (stored) {
+        try { setTrainerEvents(JSON.parse(stored)); } catch {}
+      }
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
+
+  // Confirm attendance / Roll call RSVP for an event
+  const handleRsvp = async (event: any) => {
+    setRsvpSubmittingId(event.id);
+    setRsvpErrorMap(prev => ({ ...prev, [event.id]: '' }));
+    try {
+      const phone = cadetRecord?.phone || localStorage.getItem('cadet_phone') || '9476373607';
+      await registerRollCallRsvp({
+        eventId: event.id,
+        cadetName: cadetName || 'Active Cadet',
+        phone: String(phone),
+        dossierOrAadhaar: cadetRoll || 'AIM-CADET',
+        targetForce: targetForce || 'All Cadets'
+      });
+      setRsvpSuccessMap(prev => ({ ...prev, [event.id]: true }));
+      await loadEvents();
+    } catch (err: any) {
+      setRsvpErrorMap(prev => ({ ...prev, [event.id]: err?.message || 'Failed to submit Roll Call RSVP' }));
+    } finally {
+      setRsvpSubmittingId(null);
     }
   };
 
@@ -363,13 +413,8 @@ export default function StudentPortalPage() {
       if (storedQuote) setDailyQuote(storedQuote);
       if (storedAuthor) setQuoteAuthor(storedAuthor);
 
-      // Load Trainer's Uploaded Events & Orders
-      const storedEvents = localStorage.getItem('aim_trainer_events');
-      if (storedEvents) {
-        try { setTrainerEvents(JSON.parse(storedEvents)); } catch {}
-      } else {
-        setTrainerEvents([]);
-      }
+      // Load Trainer's Uploaded Events & Orders from live server API
+      loadEvents();
 
       const storedOrders = localStorage.getItem('aim_trainer_orders');
       if (storedOrders) {
@@ -940,6 +985,42 @@ export default function StudentPortalPage() {
           </div>
         )}
 
+        {/* LATEST DRILL NOTIFICATION / MUSTER CALL BANNER */}
+        {trainerEvents.length > 0 && (
+          <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#1E2613] via-[#161F15] to-[#0E140C] border-2 border-amber-500/70 shadow-[0_0_35px_rgba(245,158,11,0.25)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center font-black flex-shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                <Megaphone className="w-6 h-6 animate-pulse text-amber-400" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-widest shadow-sm">
+                    📢 OFFICIAL NOTICE ({trainerEvents.length} ACTIVE)
+                  </span>
+                  <span className="text-[10px] sm:text-xs font-mono text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded">
+                    🎯 Target: {trainerEvents[0]?.targetCadre || 'All Cadets'}
+                  </span>
+                </div>
+                <h3 className="text-sm sm:text-base font-display font-black text-white uppercase tracking-wide leading-snug">
+                  {trainerEvents[0]?.title}
+                </h3>
+                <div className="text-[11px] font-mono text-gray-300 flex flex-wrap items-center gap-2">
+                  <span className="text-amber-400 font-bold">📅 {trainerEvents[0]?.date} • {trainerEvents[0]?.time}</span>
+                  <span className="text-gray-500">•</span>
+                  <span>📍 {trainerEvents[0]?.venue || trainerEvents[0]?.location}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveTab('EVENTS')}
+              className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-display font-black text-xs uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)] cursor-pointer text-center flex items-center justify-center gap-1.5 flex-shrink-0"
+            >
+              <span>View Notice & RSVP</span>
+              <ArrowLeft className="w-4 h-4 rotate-180" />
+            </button>
+          </div>
+        )}
+
         {/* Cadet Profile Banner */}
         <div className="no-print p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#161F15] via-[#121811] to-[#0E140C] border border-[#273623] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
           <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
@@ -1108,13 +1189,20 @@ export default function StudentPortalPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all whitespace-nowrap border cursor-pointer flex-shrink-0 text-[11px] sm:text-xs ${
+              className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all whitespace-nowrap border cursor-pointer flex-shrink-0 text-[11px] sm:text-xs flex items-center gap-1.5 ${
                 activeTab === tab.id
                   ? 'bg-amber-500 text-black border-amber-400 font-extrabold shadow-[0_0_15px_rgba(245,158,11,0.3)]'
                   : 'bg-[#121811] text-gray-400 border-[#273623] hover:text-white'
               }`}
             >
-              {tab.label}
+              <span>{tab.label}</span>
+              {tab.id === 'EVENTS' && trainerEvents.length > 0 && (
+                <span className={`px-1.5 py-0.5 rounded-full font-mono font-black text-[9px] ${
+                  activeTab === tab.id ? 'bg-black text-amber-400' : 'bg-amber-500 text-black'
+                }`}>
+                  {trainerEvents.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -1149,54 +1237,146 @@ export default function StudentPortalPage() {
                   Active physical trial rallies, PET simulations, and recruitment notices uploaded live by AIM Drill Instructors.
                 </p>
               </div>
-              <span className="text-xs font-mono text-emerald-400 bg-[#0E140C] px-3 py-1.5 rounded-xl border border-emerald-500/40">
-                ✓ Live from Ustad Command
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={loadEvents}
+                  disabled={isLoadingEvents}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0E140C] hover:bg-[#1A2415] border border-amber-500/40 text-amber-400 text-xs font-mono font-bold transition-all cursor-pointer"
+                  title="Check for newly uploaded trainer events"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingEvents ? 'animate-spin' : ''}`} />
+                  <span>{isLoadingEvents ? 'Syncing...' : 'Sync Live Notices'}</span>
+                </button>
+                <span className="text-xs font-mono text-emerald-400 bg-[#0E140C] px-3 py-1.5 rounded-xl border border-emerald-500/40 hidden sm:inline-block">
+                  ✓ Ustad Live Network
+                </span>
+              </div>
             </div>
 
             {/* Event Cards */}
             <div className="space-y-4">
-              <h4 className="font-display font-black text-base text-white uppercase tracking-wider flex items-center gap-2">
-                <span>Upcoming Physical Trials & PET Simulations ({trainerEvents.length})</span>
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-display font-black text-base text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>Upcoming Physical Trials & PET Simulations ({trainerEvents.length})</span>
+                </h4>
+                <span className="text-[11px] font-mono text-gray-400">
+                  Target Filter: <strong className="text-amber-400">{targetForce || 'All Forces'}</strong>
+                </span>
+              </div>
 
               {trainerEvents.length === 0 ? (
-                <div className="p-8 rounded-2xl bg-[#161F15] border border-[#273623] text-center text-gray-500 font-mono text-xs">
-                  No upcoming physical trial rallies or clinics posted yet. Official notifications uploaded by trainers will reflect here automatically.
+                <div className="p-10 rounded-2xl bg-[#161F15] border border-[#273623] text-center space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-xl bg-gray-800/60 border border-gray-700 flex items-center justify-center text-gray-400">
+                    <Megaphone className="w-6 h-6" />
+                  </div>
+                  <p className="text-gray-300 font-display font-bold text-sm uppercase">No Active Notifications At This Moment</p>
+                  <p className="text-gray-500 font-mono text-xs max-w-md mx-auto">
+                    When Havaldar Anup or academy instructors publish an event targeting &quot;All Cadets&quot; or your cadre, it will appear here in real time. Click &quot;Sync Live Notices&quot; anytime to reload.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {trainerEvents.map((evt: any) => (
-                    <div
-                      key={evt.id}
-                      className="p-5 rounded-2xl bg-[#161F15] border border-[#273623] hover:border-amber-500/50 transition-all flex flex-col justify-between space-y-3"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <Badge variant="army" size="sm">{evt.type}</Badge>
-                          <span className="text-[10px] font-mono bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800">
-                            {evt.reportingStatus || 'OPEN'}
-                          </span>
-                        </div>
-                        <h4 className="font-display font-black text-base sm:text-lg text-white uppercase leading-snug">
-                          {evt.title}
-                        </h4>
-                        <div className="text-xs font-mono text-gray-300 space-y-1 pt-1">
-                          <div className="flex items-center gap-1.5 text-amber-400">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span>{evt.date} • {evt.time}</span>
+                  {trainerEvents.map((evt: any) => {
+                    const isAllCadets = !evt.targetCadre || evt.targetCadre === 'All Cadets';
+                    const isTargetMatch = isAllCadets || (targetForce && (
+                      evt.targetCadre.toLowerCase().includes(targetForce.toLowerCase()) ||
+                      targetForce.toLowerCase().includes(evt.targetCadre.toLowerCase())
+                    ));
+                    const isConfirmed = rsvpSuccessMap[evt.id];
+                    const isSubmitting = rsvpSubmittingId === evt.id;
+                    const errorMsg = rsvpErrorMap[evt.id];
+
+                    return (
+                      <div
+                        key={evt.id}
+                        className={`p-5 rounded-2xl bg-[#161F15] border transition-all flex flex-col justify-between space-y-4 ${
+                          isTargetMatch ? 'border-amber-500/60 shadow-[0_0_20px_rgba(245,158,11,0.15)]' : 'border-[#273623]'
+                        }`}
+                      >
+                        <div className="space-y-2.5">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <Badge variant="army" size="sm">{evt.type || evt.category || 'Physical Trial'}</Badge>
+                            <div className="flex items-center gap-1.5">
+                              {isAllCadets ? (
+                                <span className="text-[10px] font-mono bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/40 font-bold">
+                                  🎯 All Cadets (Mandatory)
+                                </span>
+                              ) : isTargetMatch ? (
+                                <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/40 font-bold">
+                                  🎯 {evt.targetCadre} (Directly for You)
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-mono bg-gray-800 text-gray-400 px-2 py-0.5 rounded border border-gray-700">
+                                  🎯 {evt.targetCadre}
+                                </span>
+                              )}
+                              <span className="text-[10px] font-mono bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800">
+                                {evt.reportingStatus || 'OPEN'}
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-gray-400">📍 {evt.venue}</div>
-                          <div className="text-gray-400">🎯 Target: <strong className="text-white">{evt.targetCadre}</strong></div>
+
+                          <h4 className="font-display font-black text-base sm:text-lg text-white uppercase leading-snug">
+                            {evt.title}
+                          </h4>
+
+                          <div className="text-xs font-mono text-gray-300 space-y-1.5 pt-1 bg-[#0E140C] p-3 rounded-xl border border-[#273623]">
+                            <div className="flex items-center gap-1.5 text-amber-400 font-bold">
+                              <Calendar className="w-3.5 h-3.5" />
+                              <span>{evt.date} • {evt.time || evt.reportingTime || '05:00 AM IST'}</span>
+                            </div>
+                            <div className="text-gray-300">
+                              📍 <strong>Venue:</strong> {evt.venue || evt.location || 'J.K. College Ground, Purulia'}
+                            </div>
+                            <div className="text-gray-400 flex items-center justify-between">
+                              <span>👥 <strong>Capacity:</strong> {evt.registeredCount || 0} / {evt.slotsLimit || 100} Registered</span>
+                              <span className="text-emerald-400 font-bold">Roll Call Open</span>
+                            </div>
+                          </div>
+
+                          {(evt.guidelines || evt.requiredKit) && (
+                            <div className="text-xs text-gray-400 bg-[#121811] p-2.5 rounded-xl border border-[#273623]">
+                              <strong className="text-gray-300 uppercase font-mono text-[10px] block mb-0.5">Instructions & Required Kit:</strong>
+                              <span>{evt.guidelines || evt.requiredKit}</span>
+                            </div>
+                          )}
                         </div>
-                        {evt.guidelines && (
-                          <p className="text-xs text-gray-400 bg-[#0E140C] p-2.5 rounded-xl border border-[#273623]">
-                            {evt.guidelines}
-                          </p>
-                        )}
+
+                        {/* Interactive RSVP Action */}
+                        <div className="pt-2 border-t border-[#273623] space-y-2">
+                          {isConfirmed ? (
+                            <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 text-xs font-mono font-bold flex items-center justify-center gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                              <span>✓ Attendance Confirmed for Roll Call!</span>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="saffron"
+                              size="sm"
+                              className="w-full justify-center text-xs"
+                              onClick={() => handleRsvp(evt)}
+                              disabled={isSubmitting}
+                              leftIcon={
+                                isSubmitting ? (
+                                  <RefreshCw className="w-3.5 h-3.5 text-black animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-black" />
+                                )
+                              }
+                            >
+                              {isSubmitting ? 'Confirming Muster Attendance...' : 'Confirm Roll Call Attendance / RSVP'}
+                            </Button>
+                          )}
+
+                          {errorMsg && (
+                            <p className="text-[11px] font-mono text-rose-400 text-center">
+                              ⚠ {errorMsg}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

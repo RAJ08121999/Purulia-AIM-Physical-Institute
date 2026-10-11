@@ -317,6 +317,18 @@ export class DbService implements OnModuleInit {
     return this.data.events.find(e => e.id === id);
   }
 
+  createEvent(event: any) {
+    this.data.events.unshift(event);
+    this.saveData();
+    return event;
+  }
+
+  deleteEvent(id: string) {
+    this.data.events = this.data.events.filter(e => e.id !== id);
+    this.saveData();
+    return true;
+  }
+
   createRsvp(rsvp: EventRsvpEntity) {
     this.data.rsvps.unshift(rsvp);
     // increment event counter

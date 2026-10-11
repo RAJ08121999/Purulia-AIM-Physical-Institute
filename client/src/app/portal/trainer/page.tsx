@@ -36,7 +36,7 @@ import {
   Edit3
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
-import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications, updateCadetStatus, getApiBaseUrl, fetchTrainerProfile } from '@/lib/api';
+import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications, updateCadetStatus, getApiBaseUrl, fetchTrainerProfile, createInstituteEvent, deleteInstituteEvent, fetchInstituteEvents } from '@/lib/api';
 import { ParadeDrillStopwatch, EditTrainerProfileModal } from '@/components';
 
 interface CadetAttendance {
@@ -342,6 +342,13 @@ export default function TrainerCommandCenter() {
       const storedEvents = localStorage.getItem('aim_trainer_events');
       if (storedEvents) setEvents(JSON.parse(storedEvents));
 
+      // Fetch live events from server
+      fetchInstituteEvents().then(liveEvents => {
+        if (Array.isArray(liveEvents) && liveEvents.length > 0) {
+          setEvents(liveEvents as any);
+        }
+      }).catch(() => {});
+
       const storedHonour = localStorage.getItem('aim_trainer_honour');
       if (storedHonour) setHonourList(JSON.parse(storedHonour));
 
@@ -399,7 +406,7 @@ export default function TrainerCommandCenter() {
   };
 
   // Add Event Handler
-  const handleAddEvent = (e: React.FormEvent) => {
+  const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEvent.title || !newEvent.date) return;
     const item: DrillEvent = {
@@ -416,6 +423,18 @@ export default function TrainerCommandCenter() {
     const updated = [item, ...events];
     setEvents(updated);
     try { localStorage.setItem('aim_trainer_events', JSON.stringify(updated)); } catch {}
+
+    try {
+      await createInstituteEvent(item);
+      const live = await fetchInstituteEvents();
+      if (Array.isArray(live) && live.length > 0) {
+        setEvents(live as any);
+        try { localStorage.setItem('aim_trainer_events', JSON.stringify(live)); } catch {}
+      }
+    } catch (apiErr) {
+      console.warn('Event saved locally, API note:', apiErr);
+    }
+
     setNewEvent({
       title: '',
       type: 'Mock Physical Rally',
@@ -430,10 +449,15 @@ export default function TrainerCommandCenter() {
     setTimeout(() => setEventSuccess(false), 3000);
   };
 
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = async (id: string) => {
     const updated = events.filter(e => e.id !== id);
     setEvents(updated);
     try { localStorage.setItem('aim_trainer_events', JSON.stringify(updated)); } catch {}
+    try {
+      await deleteInstituteEvent(id);
+    } catch (apiErr) {
+      console.warn('Deleted locally, API note:', apiErr);
+    }
   };
 
   // Add Honour Handler
@@ -1462,16 +1486,48 @@ export default function TrainerCommandCenter() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
-                    Target Cadre
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-mono text-gray-400 uppercase tracking-wider">
+                      Target Cadre *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setNewEvent({ ...newEvent, targetCadre: 'All Cadets' })}
+                      className="text-[10px] font-mono text-amber-400 hover:underline cursor-pointer"
+                    >
+                      Set to &quot;All Cadets&quot;
+                    </button>
+                  </div>
                   <input
                     type="text"
-                    placeholder="Indian Army GD, WBP Constable"
+                    required
+                    placeholder="All Cadets, Indian Army GD, WBP..."
                     value={newEvent.targetCadre}
                     onChange={e => setNewEvent({ ...newEvent, targetCadre: e.target.value })}
                     className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
                   />
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {[
+                      'All Cadets',
+                      'Indian Army Agniveer GD',
+                      'WBP / KP Police Squad',
+                      'SSC GD Platoon',
+                      'Women Military Police'
+                    ].map(cadre => (
+                      <button
+                        key={cadre}
+                        type="button"
+                        onClick={() => setNewEvent({ ...newEvent, targetCadre: cadre })}
+                        className={`text-[9px] font-mono px-2 py-0.5 rounded transition-all cursor-pointer ${
+                          newEvent.targetCadre === cadre
+                            ? 'bg-amber-500 text-black font-bold'
+                            : 'bg-[#161F15] text-gray-400 hover:text-white border border-[#273623]'
+                        }`}
+                      >
+                        {cadre}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="md:col-span-2">

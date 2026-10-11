@@ -118,14 +118,20 @@ export interface InstituteEvent {
   title: string;
   date: string;
   time: string;
-  location: string;
-  category: 'TRIAL' | 'SEMINAR' | 'RALLY_ALERT' | 'CAMP';
-  description: string;
-  requiredKit: string;
-  reportingTime: string;
-  isRollCallOpen: boolean;
-  slotsLimit: number;
-  registeredCount: number;
+  location?: string;
+  venue?: string;
+  category?: 'TRIAL' | 'SEMINAR' | 'RALLY_ALERT' | 'CAMP' | string;
+  type?: string;
+  targetCadre?: string;
+  targetWing?: string;
+  reportingStatus?: 'OPEN' | 'CLOSING_SOON' | 'CLOSED' | string;
+  description?: string;
+  guidelines?: string;
+  requiredKit?: string;
+  reportingTime?: string;
+  isRollCallOpen?: boolean;
+  slotsLimit?: number;
+  registeredCount?: number;
 }
 
 export interface EventRsvpPayload {
@@ -250,6 +256,27 @@ export async function registerRollCallRsvp(payload: EventRsvpPayload) {
     throw new Error(errorData.message || 'Failed to confirm roll call RSVP');
   }
 
+  return res.json();
+}
+
+export async function createInstituteEvent(payload: any) {
+  const res = await fetch(`${getApiBaseUrl()}/events`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to publish event');
+  }
+  return res.json();
+}
+
+export async function deleteInstituteEvent(id: string) {
+  const res = await fetch(`${getApiBaseUrl()}/events/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) throw new Error('Failed to delete event');
   return res.json();
 }
 

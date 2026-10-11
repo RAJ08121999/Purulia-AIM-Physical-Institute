@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
 import { EventsService, CreateRsvpDto } from '../services/events.service';
 
 @Controller('events')
@@ -10,9 +10,19 @@ export class EventsApiController {
     return this.eventsService.getAllEvents();
   }
 
+  @Post()
+  createEvent(@Body() dto: any) {
+    return this.eventsService.createEvent(dto);
+  }
+
   @Get(':id')
   getEventById(@Param('id') id: string) {
     return this.eventsService.getEventById(id);
+  }
+
+  @Delete(':id')
+  deleteEvent(@Param('id') id: string) {
+    return this.eventsService.deleteEvent(id);
   }
 
   @Post('rsvp')
