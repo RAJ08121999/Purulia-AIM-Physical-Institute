@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { DbService } from './db.service';
-import { WarCryStoryEntity, WarCryStoryComment } from '../models';
+import { WarCryStoryEntity, WarCryStoryComment, WarCryActivityStats } from '../models';
 
 export interface CreateWarCryDto {
   authorId: string;
@@ -12,6 +12,7 @@ export interface CreateWarCryDto {
   tagLabel?: string;
   caption: string;
   mediaUrl?: string;
+  activityStats?: WarCryActivityStats;
   isPermanentHonour?: boolean;
   selectedForce?: string;
   beltNo?: string;
@@ -86,7 +87,8 @@ export class WarCryService {
       regimentOrDistrict: dto.regimentOrDistrict || '',
       selectionYear: dto.selectionYear || new Date().getFullYear().toString(),
       timing1600m: dto.timing1600m || '',
-      villageTown: dto.villageTown || ''
+      villageTown: dto.villageTown || '',
+      activityStats: dto.activityStats
     };
 
     const saved = this.db.createWarCryStory(newStory);

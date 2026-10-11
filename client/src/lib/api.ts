@@ -151,6 +151,15 @@ export interface WarCryComment {
   createdAt: string;
 }
 
+export interface WarCryActivityStats {
+  runTiming?: string;
+  beamsCount?: string;
+  pushupsCount?: string;
+  ditchJump?: string;
+  zigzagBalance?: string;
+  otherActivity?: string;
+}
+
 export interface WarCryStory {
   id: string;
   authorId: string;
@@ -167,6 +176,7 @@ export interface WarCryStory {
   likesCount: number;
   likedBy: string[];
   comments: WarCryComment[];
+  activityStats?: WarCryActivityStats;
   isPermanentHonour?: boolean;
   honourStatus?: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED' | string;
   selectedForce?: string;
@@ -356,6 +366,7 @@ export async function createWarCryStory(payload: {
   selectionYear?: string;
   timing1600m?: string;
   villageTown?: string;
+  activityStats?: WarCryActivityStats;
 }) {
   const res = await fetch(`${getApiBaseUrl()}/warcry/stories`, {
     method: 'POST',

@@ -11,12 +11,18 @@ import {
   Shield,
   Zap,
   Clock,
-  Sparkles
+  Sparkles,
+  Trophy,
+  Activity,
+  Timer,
+  Dumbbell,
+  TrendingUp
 } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
 import {
   createWarCryStory,
-  getCurrentUser
+  getCurrentUser,
+  WarCryActivityStats
 } from '@/lib/api';
 
 interface PostWarCryModalProps {
@@ -40,6 +46,15 @@ export const PostWarCryModal: React.FC<PostWarCryModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  // Drill Best / Physical Activity Metrics state
+  const [shareDrillStats, setShareDrillStats] = useState(false);
+  const [drillRunTiming, setDrillRunTiming] = useState('');
+  const [drillBeamsCount, setDrillBeamsCount] = useState('');
+  const [drillPushupsCount, setDrillPushupsCount] = useState('');
+  const [drillDitchJump, setDrillDitchJump] = useState('CLEARED (Pass)');
+  const [drillZigzagBalance, setDrillZigzagBalance] = useState('PASSED');
+  const [drillOtherActivity, setDrillOtherActivity] = useState('');
+
   // Roll of Honour Nomination state
   const [isHonourNomination, setIsHonourNomination] = useState(false);
   const [selectedForce, setSelectedForce] = useState('Indian Army Agniveer GD');
@@ -60,6 +75,7 @@ export const PostWarCryModal: React.FC<PostWarCryModalProps> = ({
   const tagOptions = [
     { id: 'WAR_CRY', label: '🔥 Daily War Cry', tagLabel: '🔥 Ground War Cry' },
     { id: '1600M_PR', label: '⚡ 1600m PR / Speed Lap', tagLabel: '⚡ 1600m Track Milestone' },
+    { id: 'DRILL_RECORD', label: '🏆 Drill PR & Best Stats', tagLabel: '🏆 Drill Record / PR' },
     { id: 'STRUGGLE_GRIT', label: '🪖 Struggle & Sweat', tagLabel: '🪖 Struggle & Ground Grit' },
     { id: 'DRILL_LOG', label: '💪 Daily Drill Win', tagLabel: '💪 Morning Muster Achievement' }
   ];
@@ -82,6 +98,24 @@ export const PostWarCryModal: React.FC<PostWarCryModalProps> = ({
     reader.readAsDataURL(file);
   };
 
+  // Auto-generate high-motivation drill War Cry caption from telemetry
+  const generateDrillCaption = () => {
+    const parts: string[] = [];
+    if (drillRunTiming) parts.push(`🏃 1600m: ${drillRunTiming}`);
+    if (drillBeamsCount) parts.push(`💪 Beams: ${drillBeamsCount}`);
+    if (drillPushupsCount) parts.push(`⚡ Pushups: ${drillPushupsCount}`);
+    if (drillDitchJump && drillDitchJump !== 'NOT ATTEMPTED') parts.push(`🕳️ 9ft Ditch: ${drillDitchJump}`);
+    if (drillZigzagBalance && drillZigzagBalance !== 'NOT ATTEMPTED') parts.push(`⚖️ Balance: ${drillZigzagBalance}`);
+    if (drillOtherActivity) parts.push(`🎯 ${drillOtherActivity}`);
+
+    const summary = parts.length > 0 ? parts.join(' | ') : 'Ground PR unlocked today!';
+    const generated = role === 'USTAD'
+      ? `🔥 SQUAD DRILL RECORD: ${summary}. Drill standard strictly maintained! Discipline is destiny. Alpha Platoon stand-to tomorrow at 05:00 AM sharp! Jai Hind!`
+      : `🔥 GROUND PR RECORDED: ${summary}. Smashed personal drill record at J.K. College Ground. Pain is temporary, Uniform is forever. Jai Hind!`;
+
+    setCaption(generated);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!caption.trim()) {
@@ -93,6 +127,18 @@ export const PostWarCryModal: React.FC<PostWarCryModalProps> = ({
     try {
       const activeTagSpec = tagOptions.find(t => t.id === selectedTag);
 
+      const activityStatsPayload: WarCryActivityStats | undefined =
+        shareDrillStats && (drillRunTiming || drillBeamsCount || drillPushupsCount || drillDitchJump || drillZigzagBalance || drillOtherActivity)
+          ? {
+              runTiming: drillRunTiming.trim() || undefined,
+              beamsCount: drillBeamsCount.trim() || undefined,
+              pushupsCount: drillPushupsCount.trim() || undefined,
+              ditchJump: drillDitchJump.trim() || undefined,
+              zigzagBalance: drillZigzagBalance.trim() || undefined,
+              otherActivity: drillOtherActivity.trim() || undefined
+            }
+          : undefined;
+
       await createWarCryStory({
         authorId,
         authorName,
@@ -103,11 +149,12 @@ export const PostWarCryModal: React.FC<PostWarCryModalProps> = ({
         tagLabel: isHonourNomination ? '🎖️ Roll of Honour Candidate' : activeTagSpec?.tagLabel,
         caption: caption.trim(),
         mediaUrl: photoBase64 || '',
+        activityStats: activityStatsPayload,
         isPermanentHonour: isHonourNomination,
         selectedForce: isHonourNomination ? selectedForce : '',
         beltNo: isHonourNomination ? beltNo : '',
         regimentOrDistrict: isHonourNomination ? regiment : '',
-        timing1600m: isHonourNomination ? timing1600m : '',
+        timing1600m: isHonourNomination ? timing1600m : (drillRunTiming || ''),
         villageTown: isHonourNomination ? villageTown : ''
       });
 
@@ -188,7 +235,12 @@ export const PostWarCryModal: React.FC<PostWarCryModalProps> = ({
                 <button
                   key={tag.id}
                   type="button"
-                  onClick={() => setSelectedTag(tag.id)}
+                  onClick={() => {
+                    setSelectedTag(tag.id);
+                    if (tag.id === 'DRILL_RECORD' || tag.id === '1600M_PR') {
+                      setShareDrillStats(true);
+                    }
+                  }}
                   className={`p-2 rounded-xl text-[11px] font-mono text-left transition-all border cursor-pointer ${
                     selectedTag === tag.id
                       ? 'bg-amber-500 text-black border-amber-400 font-bold shadow-md'
@@ -199,6 +251,211 @@ export const PostWarCryModal: React.FC<PostWarCryModalProps> = ({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* ===================================================================
+              DRILL BEST & PHYSICAL TELEMETRY PANEL (NEW FEATURE)
+              =================================================================== */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#080B07] border border-amber-500/40 space-y-3.5">
+            <div className="flex items-center justify-between">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={shareDrillStats}
+                  onChange={e => {
+                    setShareDrillStats(e.target.checked);
+                    if (e.target.checked && selectedTag === 'WAR_CRY') {
+                      setSelectedTag('DRILL_RECORD');
+                    }
+                  }}
+                  className="mt-0.5 rounded border-[#273623] text-amber-500 focus:ring-0 accent-amber-500"
+                />
+                <div>
+                  <span className="font-display font-bold text-white uppercase text-xs flex items-center gap-1.5">
+                    <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Share Daily Drill & Personal Best Telemetry</span>
+                  </span>
+                  <span className="text-gray-400 font-mono text-[10px] block mt-0.5">
+                    Attach 1600m timings, beams / pull-ups, pushups, 9-ft ditch & other activities
+                  </span>
+                </div>
+              </label>
+
+              {shareDrillStats && (
+                <button
+                  type="button"
+                  onClick={generateDrillCaption}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-mono text-[10px] font-bold cursor-pointer transition-all flex-shrink-0"
+                  title="Generate War Cry quote from these stats"
+                >
+                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span className="hidden xs:inline">Auto-Write Caption</span>
+                  <span className="xs:hidden">Auto</span>
+                </button>
+              )}
+            </div>
+
+            {shareDrillStats && (
+              <div className="pt-3 border-t border-[#273623] space-y-3 animate-fadeIn">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  
+                  {/* 1. 1600m Running Timing */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider flex items-center gap-1">
+                        <Timer className="w-3 h-3 text-amber-400" />
+                        <span>1600m / Speed Run Timing</span>
+                      </label>
+                      <span className="text-[9px] font-mono text-gray-500">e.g. 05m 18s</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="e.g. 05m 24s (Group 1)"
+                      value={drillRunTiming}
+                      onChange={e => setDrillRunTiming(e.target.value)}
+                      className="w-full bg-[#121811] border border-[#273623] rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-amber-500 placeholder-gray-600"
+                    />
+                    <div className="flex flex-wrap gap-1">
+                      {['05m 15s', '05m 30s', '05m 45s', '06m 00s'].map(quickTime => (
+                        <button
+                          key={quickTime}
+                          type="button"
+                          onClick={() => setDrillRunTiming(quickTime)}
+                          className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161F15] text-amber-400/90 border border-[#273623] hover:border-amber-500/50 cursor-pointer"
+                        >
+                          {quickTime}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 2. Beams / Pull-ups Count */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider flex items-center gap-1">
+                        <Dumbbell className="w-3 h-3 text-amber-400" />
+                        <span>Beams (Pull-ups) Count</span>
+                      </label>
+                      <span className="text-[9px] font-mono text-gray-500">Max 10 / 40 Pts</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="e.g. 10 Beams (Group 1 - 40 Pts)"
+                      value={drillBeamsCount}
+                      onChange={e => setDrillBeamsCount(e.target.value)}
+                      className="w-full bg-[#121811] border border-[#273623] rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-amber-500 placeholder-gray-600"
+                    />
+                    <div className="flex flex-wrap gap-1">
+                      {['10 (Full 40 Pts)', '9 Beams (33 Pts)', '8 Beams (27 Pts)', '6 Beams (Min Pass)'].map(quickBeam => (
+                        <button
+                          key={quickBeam}
+                          type="button"
+                          onClick={() => setDrillBeamsCount(quickBeam)}
+                          className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161F15] text-amber-400/90 border border-[#273623] hover:border-amber-500/50 cursor-pointer"
+                        >
+                          {quickBeam}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 3. Pushups Reps */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-cyan-400" />
+                        <span>Pushups Reps (1 Min)</span>
+                      </label>
+                      <span className="text-[9px] font-mono text-gray-500">e.g. 45 reps</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="e.g. 42 Reps (Strict Cadence)"
+                      value={drillPushupsCount}
+                      onChange={e => setDrillPushupsCount(e.target.value)}
+                      className="w-full bg-[#121811] border border-[#273623] rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-amber-500 placeholder-gray-600"
+                    />
+                    <div className="flex flex-wrap gap-1">
+                      {['30 Reps', '40 Reps', '50 Reps', '60 Reps'].map(quickPush => (
+                        <button
+                          key={quickPush}
+                          type="button"
+                          onClick={() => setDrillPushupsCount(quickPush)}
+                          className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161F15] text-cyan-400/90 border border-[#273623] hover:border-cyan-500/50 cursor-pointer"
+                        >
+                          {quickPush}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 4. 9-Feet Ditch Jump */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-mono text-gray-300 uppercase tracking-wider">
+                      🕳️ 9-Feet Ditch Jump
+                    </label>
+                    <select
+                      value={drillDitchJump}
+                      onChange={e => setDrillDitchJump(e.target.value)}
+                      className="w-full bg-[#121811] border border-[#273623] rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="CLEARED (Pass)">CLEARED (Pass - Clean Jump)</option>
+                      <option value="CLEARED (High Flight)">CLEARED (High Flight)</option>
+                      <option value="NOT ATTEMPTED">NOT ATTEMPTED</option>
+                      <option value="FAILED (Toe Touched)">FAILED (Toe Touched Rim)</option>
+                    </select>
+                  </div>
+
+                  {/* 5. Zig-Zag Balance */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-mono text-gray-300 uppercase tracking-wider">
+                      ⚖️ Zig-Zag Balance Beam
+                    </label>
+                    <select
+                      value={drillZigzagBalance}
+                      onChange={e => setDrillZigzagBalance(e.target.value)}
+                      className="w-full bg-[#121811] border border-[#273623] rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="PASSED">PASSED (Zero Slip)</option>
+                      <option value="PERFECT BALANCE">PERFECT BALANCE</option>
+                      <option value="NOT ATTEMPTED">NOT ATTEMPTED</option>
+                      <option value="SLIPPED">SLIPPED (Retry Needed)</option>
+                    </select>
+                  </div>
+
+                  {/* 6. Other Activity Milestone */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider flex items-center gap-1">
+                        <Activity className="w-3 h-3 text-purple-400" />
+                        <span>Other Activity Milestone</span>
+                      </label>
+                      <span className="text-[9px] font-mono text-gray-500">Optional</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="e.g. 100m Sprint: 11.8s, 5KM Ruck March: 22m"
+                      value={drillOtherActivity}
+                      onChange={e => setDrillOtherActivity(e.target.value)}
+                      className="w-full bg-[#121811] border border-[#273623] rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-amber-500 placeholder-gray-600"
+                    />
+                    <div className="flex flex-wrap gap-1">
+                      {['100m Sprint in 11.8s', '5KM Road Run: 21m 40s', '15ft Rope Climb', '50 Sit-ups in 2 min'].map(quickAct => (
+                        <button
+                          key={quickAct}
+                          type="button"
+                          onClick={() => setDrillOtherActivity(quickAct)}
+                          className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161F15] text-purple-300/90 border border-[#273623] hover:border-purple-500/50 cursor-pointer"
+                        >
+                          {quickAct}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Story Text / War Cry Quote */}

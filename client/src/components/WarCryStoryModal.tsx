@@ -16,7 +16,9 @@ import {
   Check,
   User,
   Sparkles,
-  Award
+  Award,
+  Trophy,
+  Activity
 } from 'lucide-react';
 import {
   WarCryStory,
@@ -191,7 +193,21 @@ export const WarCryStoryModal: React.FC<WarCryStoryModalProps> = ({
       ? `${window.location.origin}/wall-of-fame?storyId=${story.id}`
       : 'https://purulia-aim-physical-institute-g5g1.vercel.app/wall-of-fame';
 
-    const shareText = `🔥 Check out this War Cry ground story by ${story.authorName} (${story.authorCadre || 'AIM Institute'})!\n\n"${story.caption.slice(0, 100)}..."\n\nFree Physical Defence Training at Purulia J.K. College Ground:`;
+    let drillTelemetrySnippet = '';
+    if (story.activityStats) {
+      const parts: string[] = [];
+      if (story.activityStats.runTiming) parts.push(`🏃 1600m Run: ${story.activityStats.runTiming}`);
+      if (story.activityStats.beamsCount) parts.push(`💪 Beams: ${story.activityStats.beamsCount}`);
+      if (story.activityStats.pushupsCount) parts.push(`⚡ Pushups: ${story.activityStats.pushupsCount}`);
+      if (story.activityStats.ditchJump) parts.push(`🕳️ 9ft Ditch: ${story.activityStats.ditchJump}`);
+      if (story.activityStats.zigzagBalance) parts.push(`⚖️ Balance: ${story.activityStats.zigzagBalance}`);
+      if (story.activityStats.otherActivity) parts.push(`🎯 Activity: ${story.activityStats.otherActivity}`);
+      if (parts.length > 0) {
+        drillTelemetrySnippet = `\n\n🏆 GROUND DRILL BEST:\n` + parts.join('\n');
+      }
+    }
+
+    const shareText = `🔥 Check out this War Cry ground story by ${story.authorName} (${story.authorCadre || 'AIM Institute'})!\n\n"${story.caption.slice(0, 140)}..."${drillTelemetrySnippet}\n\nFree Physical Defence Training at Purulia J.K. College Ground:`;
 
     if (navigator.share) {
       try {
@@ -373,6 +389,59 @@ export const WarCryStoryModal: React.FC<WarCryStoryModalProps> = ({
             {story.tagLabel && (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/60 backdrop-blur-md text-amber-300 text-[11px] font-mono font-black uppercase tracking-wider shadow-md">
                 <span>{story.tagLabel}</span>
+              </div>
+            )}
+
+            {/* Ground Drill Best Performance Telemetry HUD */}
+            {story.activityStats && (story.activityStats.runTiming || story.activityStats.beamsCount || story.activityStats.pushupsCount || story.activityStats.ditchJump || story.activityStats.zigzagBalance || story.activityStats.otherActivity) && (
+              <div className="rounded-2xl bg-black/85 border border-amber-500/50 backdrop-blur-md p-3 space-y-2 shadow-[0_0_25px_rgba(245,158,11,0.2)]">
+                <div className="flex items-center justify-between border-b border-[#273623] pb-1.5">
+                  <div className="flex items-center gap-1.5 text-amber-400 font-display font-black text-xs uppercase tracking-wider">
+                    <Trophy className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                    <span>Ground Drill & Physical Record</span>
+                  </div>
+                  <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold uppercase">
+                    Verified Trial
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px] font-mono">
+                  {story.activityStats.runTiming && (
+                    <div className="bg-[#121811] p-1.5 rounded-xl border border-[#273623]">
+                      <span className="text-[9px] text-gray-400 uppercase block font-sans">🏃 1600m Run</span>
+                      <span className="text-white font-bold text-xs">{story.activityStats.runTiming}</span>
+                    </div>
+                  )}
+                  {story.activityStats.beamsCount && (
+                    <div className="bg-[#121811] p-1.5 rounded-xl border border-[#273623]">
+                      <span className="text-[9px] text-gray-400 uppercase block font-sans">💪 Beams</span>
+                      <span className="text-amber-400 font-bold text-xs">{story.activityStats.beamsCount}</span>
+                    </div>
+                  )}
+                  {story.activityStats.pushupsCount && (
+                    <div className="bg-[#121811] p-1.5 rounded-xl border border-[#273623]">
+                      <span className="text-[9px] text-gray-400 uppercase block font-sans">⚡ Push-ups</span>
+                      <span className="text-cyan-400 font-bold text-xs">{story.activityStats.pushupsCount}</span>
+                    </div>
+                  )}
+                  {story.activityStats.ditchJump && (
+                    <div className="bg-[#121811] p-1.5 rounded-xl border border-[#273623]">
+                      <span className="text-[9px] text-gray-400 uppercase block font-sans">🕳️ 9-Ft Ditch</span>
+                      <span className="text-emerald-400 font-bold text-xs">{story.activityStats.ditchJump}</span>
+                    </div>
+                  )}
+                  {story.activityStats.zigzagBalance && (
+                    <div className="bg-[#121811] p-1.5 rounded-xl border border-[#273623]">
+                      <span className="text-[9px] text-gray-400 uppercase block font-sans">⚖️ Balance</span>
+                      <span className="text-emerald-400 font-bold text-xs">{story.activityStats.zigzagBalance}</span>
+                    </div>
+                  )}
+                  {story.activityStats.otherActivity && (
+                    <div className="col-span-2 sm:col-span-1 bg-[#121811] p-1.5 rounded-xl border border-[#273623]">
+                      <span className="text-[9px] text-gray-400 uppercase block font-sans">🎯 Activity</span>
+                      <span className="text-purple-300 font-bold text-xs truncate block">{story.activityStats.otherActivity}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

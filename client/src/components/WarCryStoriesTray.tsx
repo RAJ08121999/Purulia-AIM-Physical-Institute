@@ -191,6 +191,10 @@ export const WarCryStoriesTray: React.FC<WarCryStoriesTrayProps> = ({
                     <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-emerald-500 text-black text-[8px] font-mono font-black uppercase border border-black shadow">
                       HONOUR
                     </span>
+                  ) : s.activityStats ? (
+                    <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-amber-400 text-black text-[8px] font-mono font-black uppercase border border-black shadow">
+                      PR ⚡
+                    </span>
                   ) : null}
                 </div>
 

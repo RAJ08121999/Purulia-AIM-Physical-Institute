@@ -466,6 +466,14 @@ export class DbService implements OnModuleInit {
         expiresAt: new Date(now + 22 * 3600 * 1000).toISOString(),
         likesCount: 42,
         likedBy: [],
+        activityStats: {
+          runTiming: '05m 10s',
+          beamsCount: '10 Beams (Full 40 Pts)',
+          pushupsCount: '50 Reps',
+          ditchJump: 'CLEARED (Pass)',
+          zigzagBalance: 'PASSED',
+          otherActivity: '5KM Endurance March: 21m 40s'
+        },
         comments: [
           {
             id: 'comm-1',
@@ -497,6 +505,14 @@ export class DbService implements OnModuleInit {
         expiresAt: new Date(now + 20 * 3600 * 1000).toISOString(),
         likesCount: 31,
         likedBy: [],
+        activityStats: {
+          runTiming: '05m 28s',
+          beamsCount: '10 Beams (Group 1)',
+          pushupsCount: '42 Reps',
+          ditchJump: 'CLEARED (Pass)',
+          zigzagBalance: 'PASSED',
+          otherActivity: '100m Sprint: 11.9s'
+        },
         comments: [
           {
             id: 'comm-3',

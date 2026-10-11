@@ -288,6 +288,15 @@ export interface WarCryStoryComment {
   createdAt: string;
 }
 
+export interface WarCryActivityStats {
+  runTiming?: string;
+  beamsCount?: string;
+  pushupsCount?: string;
+  ditchJump?: string;
+  zigzagBalance?: string;
+  otherActivity?: string;
+}
+
 export interface WarCryStoryEntity {
   id: string;
   authorId: string;
@@ -295,7 +304,7 @@ export interface WarCryStoryEntity {
   authorRole: 'USTAD' | 'CADET';
   authorPhoto?: string;
   authorCadre?: string;
-  tag: string; // 'WAR_CRY' | '1600M_PR' | 'STRUGGLE_GRIT' | 'DRILL_LOG' | 'SUCCESS_STORY'
+  tag: string; // 'WAR_CRY' | '1600M_PR' | 'STRUGGLE_GRIT' | 'DRILL_LOG' | 'SUCCESS_STORY' | 'DRILL_RECORD'
   tagLabel?: string;
   caption: string;
   mediaUrl?: string;
@@ -304,6 +313,8 @@ export interface WarCryStoryEntity {
   likesCount: number;
   likedBy: string[]; // tokens or IDs
   comments: WarCryStoryComment[];
+  // Drill Best / Physical Activity Metrics:
+  activityStats?: WarCryActivityStats;
   // Roll of Honour Fields:
   isPermanentHonour?: boolean;
   honourStatus?: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -317,3 +328,4 @@ export interface WarCryStoryEntity {
   verifiedAt?: string;
   verifiedBy?: string;
 }
+
