@@ -1,6 +1,21 @@
 // Purulia Aim Physical Institute (AIM) - Client API Service
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+export function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:4000/api/v1';
+    }
+    return 'https://purulia-aim-physical-institute.onrender.com/api/v1';
+  }
+  return process.env.NODE_ENV === 'production'
+    ? 'https://purulia-aim-physical-institute.onrender.com/api/v1'
+    : 'http://localhost:4000/api/v1';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface AdmissionFormData {
   fullName: string;
@@ -177,7 +192,7 @@ export async function submitCadetAdmission(data: AdmissionFormData) {
     hasMedicalCondition: data.hasMedicalConditionOrSurgery || 'NO'
   };
 
-  const res = await fetch(`${API_BASE_URL}/admissions`, {
+  const res = await fetch(`${getApiBaseUrl()}/admissions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -192,14 +207,14 @@ export async function submitCadetAdmission(data: AdmissionFormData) {
 }
 
 export async function fetchCadetApplications(status?: string) {
-  const url = status ? `${API_BASE_URL}/admissions?status=${status}` : `${API_BASE_URL}/admissions`;
+  const url = status ? `${getApiBaseUrl()}/admissions?status=${status}` : `${getApiBaseUrl()}/admissions`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch admissions');
   return res.json();
 }
 
 export async function updateCadetStatus(id: string, status: string, batchId?: string) {
-  const res = await fetch(`${API_BASE_URL}/admissions/${id}/status`, {
+  const res = await fetch(`${getApiBaseUrl()}/admissions/${id}/status`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status, batchId })
@@ -214,7 +229,7 @@ export async function updateCadetStatus(id: string, status: string, batchId?: st
 
 export async function fetchInstituteEvents(): Promise<InstituteEvent[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/events`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/events`, { cache: 'no-store' });
     if (!res.ok) throw new Error('API error');
     return res.json();
   } catch (err) {
@@ -224,7 +239,7 @@ export async function fetchInstituteEvents(): Promise<InstituteEvent[]> {
 }
 
 export async function registerRollCallRsvp(payload: EventRsvpPayload) {
-  const res = await fetch(`${API_BASE_URL}/events/rsvp`, {
+  const res = await fetch(`${getApiBaseUrl()}/events/rsvp`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -243,13 +258,13 @@ export async function registerRollCallRsvp(payload: EventRsvpPayload) {
 // -------------------------------------------------------------
 
 export async function fetchBatches() {
-  const res = await fetch(`${API_BASE_URL}/attendance/batches`, { cache: 'no-store' });
+  const res = await fetch(`${getApiBaseUrl()}/attendance/batches`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch batches');
   return res.json();
 }
 
 export async function fetchAttendance(batchId?: string, date?: string) {
-  let url = `${API_BASE_URL}/attendance`;
+  let url = `${getApiBaseUrl()}/attendance`;
   const params = new URLSearchParams();
   if (batchId) params.append('batchId', batchId);
   if (date) params.append('date', date);
@@ -261,7 +276,7 @@ export async function fetchAttendance(batchId?: string, date?: string) {
 }
 
 export async function submitBulkAttendance(records: AttendanceRecord[], markedBy?: string) {
-  const res = await fetch(`${API_BASE_URL}/attendance/bulk`, {
+  const res = await fetch(`${getApiBaseUrl()}/attendance/bulk`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ records, markedBy })
@@ -271,7 +286,7 @@ export async function submitBulkAttendance(records: AttendanceRecord[], markedBy
 }
 
 export async function fetchDefaulters() {
-  const res = await fetch(`${API_BASE_URL}/attendance/defaulters`, { cache: 'no-store' });
+  const res = await fetch(`${getApiBaseUrl()}/attendance/defaulters`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch defaulters');
   return res.json();
 }
@@ -301,14 +316,14 @@ export interface AssessmentResultItem {
 }
 
 export async function fetchTelemetryLeaderboard(): Promise<AssessmentResultItem[]> {
-  const res = await fetch(`${API_BASE_URL}/telemetry/leaderboard`, { cache: 'no-store' });
+  const res = await fetch(`${getApiBaseUrl()}/telemetry/leaderboard`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch leaderboard');
   return res.json();
 }
 
 export async function fetchStudentAssessments(studentId: string): Promise<AssessmentResultItem[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/telemetry/student/${encodeURIComponent(studentId)}`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/telemetry/student/${encodeURIComponent(studentId)}`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   } catch (err) {
@@ -318,7 +333,7 @@ export async function fetchStudentAssessments(studentId: string): Promise<Assess
 }
 
 export async function recordTrialAssessment(payload: AssessmentPayload) {
-  const res = await fetch(`${API_BASE_URL}/telemetry/assessment`, {
+  const res = await fetch(`${getApiBaseUrl()}/telemetry/assessment`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -332,7 +347,7 @@ export async function recordTrialAssessment(payload: AssessmentPayload) {
 // -------------------------------------------------------------
 
 export async function authenticateUser(identifier: string, accessPin?: string, role?: string) {
-  const res = await fetch(`${API_BASE_URL}/auth/login`, {
+  const res = await fetch(`${getApiBaseUrl()}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ identifier, accessPin, role })
@@ -342,7 +357,7 @@ export async function authenticateUser(identifier: string, accessPin?: string, r
 }
 
 export async function fetchMvcDashboard() {
-  const res = await fetch(`${API_BASE_URL}/mvc/dashboard`, { cache: 'no-store' });
+  const res = await fetch(`${getApiBaseUrl()}/mvc/dashboard`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch dashboard metrics');
   return res.json();
 }
@@ -364,7 +379,7 @@ export interface AuditLogItem {
 
 export async function fetchAuditLogs(limit: number = 50): Promise<AuditLogItem[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/audit/logs?limit=${limit}`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/audit/logs?limit=${limit}`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return data.logs || [];
@@ -376,7 +391,7 @@ export async function fetchAuditLogs(limit: number = 50): Promise<AuditLogItem[]
 
 export async function fetchCurrentSessionProfile() {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/me`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/auth/me`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   } catch (err) {
@@ -480,7 +495,7 @@ export interface RecordRunTrialPayload {
 
 export async function fetchRunCategories(): Promise<RunCategoryItem[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/telemetry/categories`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/telemetry/categories`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   } catch (err) {
@@ -546,7 +561,7 @@ export async function fetchRunCategories(): Promise<RunCategoryItem[]> {
 
 export async function fetchLiveDrillSession(): Promise<LiveDrillSession> {
   try {
-    const res = await fetch(`${API_BASE_URL}/telemetry/live-drill`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/telemetry/live-drill`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   } catch (err) {
@@ -570,7 +585,7 @@ export async function fetchLiveDrillSession(): Promise<LiveDrillSession> {
 }
 
 export async function controlLiveDrillSession(payload: ControlDrillPayload): Promise<LiveDrillSession> {
-  const res = await fetch(`${API_BASE_URL}/telemetry/live-drill/control`, {
+  const res = await fetch(`${getApiBaseUrl()}/telemetry/live-drill/control`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -585,7 +600,7 @@ export async function fetchRunTrials(studentId?: string, category?: string): Pro
     if (studentId) params.append('studentId', studentId);
     if (category && category !== 'ALL') params.append('category', category);
 
-    const res = await fetch(`${API_BASE_URL}/telemetry/trials?${params.toString()}`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/telemetry/trials?${params.toString()}`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   } catch (err) {
@@ -595,7 +610,7 @@ export async function fetchRunTrials(studentId?: string, category?: string): Pro
 }
 
 export async function saveRunTrial(payload: RecordRunTrialPayload): Promise<RunTrial> {
-  const res = await fetch(`${API_BASE_URL}/telemetry/trials`, {
+  const res = await fetch(`${getApiBaseUrl()}/telemetry/trials`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -659,7 +674,7 @@ export interface AuthResponse {
 }
 
 export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE_URL}/auth/login`, {
+  const res = await fetch(`${getApiBaseUrl()}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -680,7 +695,7 @@ export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
 }
 
 export async function registerTrainer(payload: RegisterTrainerPayload): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE_URL}/auth/register-trainer`, {
+  const res = await fetch(`${getApiBaseUrl()}/auth/register-trainer`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)

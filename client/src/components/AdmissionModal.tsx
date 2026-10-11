@@ -31,7 +31,7 @@ import {
   Lock
 } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
-import { submitCadetAdmission } from '@/lib/api';
+import { submitCadetAdmission, getApiBaseUrl } from '@/lib/api';
 
 interface AdmissionModalProps {
   isOpen: boolean;
@@ -669,7 +669,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
                   Check Verification Status Gate →
                 </a>
                 <a
-                  href={`http://localhost:4000/api/v1/mvc/cadet-card/${dossierId}`}
+                  href={`${getApiBaseUrl()}/mvc/cadet-card/${dossierId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-600/30 font-mono text-xs font-bold transition-all shadow-md"

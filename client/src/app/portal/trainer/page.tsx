@@ -35,7 +35,7 @@ import {
   Lock
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
-import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications, updateCadetStatus } from '@/lib/api';
+import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications, updateCadetStatus, getApiBaseUrl } from '@/lib/api';
 import { ParadeDrillStopwatch } from '@/components';
 
 interface CadetAttendance {
@@ -984,7 +984,7 @@ export default function TrainerCommandCenter() {
                             )}
 
                             <a
-                              href={`http://localhost:4000/api/v1/mvc/cadet-card/${app.dossierNumber}`}
+                              href={`${getApiBaseUrl()}/mvc/cadet-card/${app.dossierNumber}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="px-3 py-1.5 rounded-xl bg-[#1A2415] hover:bg-[#273623] border border-[#273623] text-gray-300 hover:text-white text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5"
