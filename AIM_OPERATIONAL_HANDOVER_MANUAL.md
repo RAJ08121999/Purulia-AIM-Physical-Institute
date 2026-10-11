@@ -1,6 +1,6 @@
 # PURULIA AIM PHYSICAL INSTITUTE (AIM)
 ## OFFICIAL REGIMENTAL SOFTWARE HANDOVER & OPERATIONAL USER MANUAL
-**Document Code:** AIM-OPS-HANDOVER-2026-V1  
+**Document Code:** AIM-OPS-HANDOVER-2026-V2 (Post-Deployment Enhanced Edition)  
 **Handover Date:** October 2026  
 **Deployment Location:** J.K. College Ground Pavilion & Academy Command, Purulia, West Bengal  
 **Lead Field Systems Engineer:** Senior Field Deployment Engineer, AIM Digital Systems  
@@ -18,6 +18,8 @@ Until today, ground operations at J.K. College ground required manual paper regi
 
 This custom-built software transforms AIM into one of India's most advanced, high-tech, and disciplined defense training institutes. It provides total transparency, tracks every split second of a cadet's 1600m sprint, automates batch attendance, and connects the Chief Ustad directly with every cadet's smartphone.
 
+Following our ground deployment, the mobile user interface has been upgraded to a **WhatsApp-style Multi-Page Application (MPA)**. Instead of a single crowded page with endless vertical scrolling, cadets and instructors now enjoy 5 isolated, distraction-free screens with dedicated bottom tab bars, haptic touch targets, and instant page transitions.
+
 This manual is written in **simple, step-by-step language** with zero complicated technical terms so that every instructor and student recruit can operate it easily.
 
 ---
@@ -28,15 +30,18 @@ This manual is written in **simple, step-by-step language** with zero complicate
 ### 1. The Challenges of Traditional Ground Operations
 | Old Ground Problem | What Happened in the Past | How the AIM Platform Solves It |
 | :--- | :--- | :--- |
+| **Crowded Single-Scroll Screens** | Endless scrolling through notices, timers, and profiles on small phones caused confusion and missed buttons. | **WhatsApp-Style Multi-Page UX:** 5 distinct tabs on mobile (War Cry, Drill, Notices, Performance, Dossier) with 1-tap persistent bottom navigation. |
 | **Paper Registers Ruined** | Roll-call books and admission files get torn, dirt-covered, or soaked in rain during monsoon training. | **100% Cloud-Protected:** Every cadet file, blood group, chest measurement, and address is stored permanently and safely. |
 | **1600m Timing Disputes** | Hand stopwatches with disputes over who clocked 5m 30s vs 5m 45s. | **Digital Telemetry Matrix:** Ustad broadcasts live sprint timer. Cadets watch the clock tick in real time on their own phones. |
 | **Missed Rally Announcements** | Instructors had to phone 100+ cadets or rely on WhatsApp groups where messages get buried. | **Instant Muster Broadcast:** Ustad posts an event for "All Cadets" or specific squads; it flashes with a high-visibility siren card on every cadet's screen. |
 | **Unverified Walk-Ins** | Candidates joining ground without verified physical or matriculation documents. | **Security Verification Gate:** Cadets are locked in "Pending Verification" until Ustad physically inspects them and hits "Approve". |
+| **Sharing Daily PRs & Milestones** | Cadets had no official platform to showcase their 1600m sprint times, beams, pushups, or 9ft ditch clearance. | **24h War Cry Ground Stories:** Cadets post daily PRs with an automatic military HUD overlay and 1-tap WhatsApp social sharing. |
 | **Admit Cards & Dossiers** | Writing physical verification cards by hand with glued photos. | **One-Click Military Dossier & Admit Card:** Official Printable PDF Dossier generated with verified photo, QR badge, and division stats. |
 
 ### 2. Operational Efficiency Gains
 - **Saves 2.5 Hours Daily:** Roll call for 100+ recruits now takes less than 60 seconds with our one-click platoon attendance.
 - **Zero Timing Delay:** When Ustad taps "Start Drill" on the pavilion stopwatch, all cadet screens synchronize in under 0.1 seconds.
+- **Zero Visual Clutter:** Clean WhatsApp-style bottom navigation gives recruits immediate access to the exact feature they need in one tap without scrolling down forever.
 - **Instant Army/Police Eligibility Auditing:** The platform automatically calculates Matriculation percentages, Science/Math criteria, and chest expansions (e.g. 5cm minimum required expansion) so instructors know instantly if a cadet qualifies for Army GD or Police Constable.
 
 ---
@@ -50,50 +55,20 @@ This manual is written in **simple, step-by-step language** with zero complicate
 
 ---
 
-### Feature 1: Ustad Profile & Service Record Management
-*Keep your official service background, operational unit, rank, and physical standards up to date.*
-
-- **How to Access:** Click the **"Edit Profile"** button located at the top-right corner of the Trainer Profile banner.
-- **What You Can Update:**
-  1. **Full Name & Regimental Rank:** e.g., *Havaldar Anup Kumar Mahato (Ex-Army Infantry Veteran)*.
-  2. **Regiment / Unit:** e.g., *Rajputana Rifles / Infantry 16 Years*.
-  3. **Official Instructor ID:** e.g., *AIM-USTAD-01*.
-  4. **Contact Phone & Email:** For academy communications.
-  5. **Physical Standard Metrics:** Instructor's Height (cm), Weight (kg), and Chest measurements.
-  6. **Instructor Biography & War Cry Philosophy:** The training ethos shown to recruits.
-- **How to Save:** Tap **"Save Trainer Dossier"**. A green confirmation badge confirms the update.
+### 📱 Mobile Multi-Page Architecture (WhatsApp Style)
+On mobile phones, the Trainer Portal functions like a native application with a **fixed bottom navigation bar** (`md:hidden`), eliminating endless vertical scrolling:
+- ⏱️ **Page 1: Drill (Stopwatch)** — Master controller stopwatch, track lap splits, and ground telemetry.
+- 🔥 **Page 2: War Cry** — Daily battlefield motivation broadcast, 24h stories tray, Cadet Success Story Verification Desk, and Roll of Honour.
+- 🛡️ **Page 3: Admissions** — Live candidate gatekeeper with real-time pending applicant counter badge.
+- 👥 **Page 4: Roll Call** — Daily platoon muster table, Defaulter Registry with one-tap guardian calls, and Sunday trial logger.
+- 📢 **Page 5: Notices** — Broadcast rally circulars, PET simulations, gazettes, and official orders.
 
 ---
 
-### Feature 2: Ustad's Daily War Cry (Ground Motivational Broadcast)
-*Inspire all 100+ cadets before morning muster with daily battlefield motivation.*
-
-- **How to Access:** Scroll to the card labeled **"🔥 Ustad's Daily War Cry • Battlefield Inspiration Field"**.
-- **How to Use:**
-  1. Type your motivational message in Hindi or English (e.g., *"1600 meters is not a test of legs; it is a test of heart and hunger for the Uniform!"*).
-  2. Check or update the Commander attribution name.
-  3. Click **"Broadcast War Cry to All Cadets"**.
-- **Ground Result:** Every cadet who opens their phone at 04:30 AM will immediately see your quote highlighted in gold with a pulsating flame icon.
-
----
-
-### Feature 3: Cadet Enlistment Verification & Gatekeeping
-*No cadet can access physical telemetry until Ustad verifies them on the ground.*
-
-- **How to Access:** Navigate to the **"Cadet Dossiers"** tab.
-- **How to Use:**
-  1. View new enlistments marked with an amber **"PENDING"** badge.
-  2. Review the cadet’s physical details: Target Force (e.g. *Indian Army GD*), Height, Weight, Chest Normal & Expanded, and Matriculation aggregate percentage.
-  3. Click **"Approve & Enlist"** once you have physically verified their original documents.
-  4. If a cadet fails physical eligibility or character requirements, click **"Disapprove / Reject"**.
-- **Ground Result:** Once approved, the cadet's security gate instantly unlocks, allowing them to use the stopwatch and download their Official Admit Card.
-
----
-
-### Feature 4: Live Synchronized Parade Drill Stopwatch (BPET 1600m Engine)
+### Page 1: Live Synchronized Parade Drill Stopwatch (BPET 1600m Engine)
 *Run official 1600m sprints, 400m track laps, or beam pull-up sessions with zero timing confusion.*
 
-- **How to Access:** Open the **"⏱️ Live Drill Stopwatch"** tab.
+- **How to Access:** Tap the **"Drill"** icon (Timer) on the bottom navigation bar (or desktop tab).
 - **Step-by-Step Drill Execution:**
   1. **Select Category:** Choose `1600M BPET Run`, `400M Sprint Lap`, `Beam Pull-ups`, or `9-Foot Ditch Drill`.
   2. **Target Benchmark:** Notice the benchmark counter (e.g., Group 1 Army Standard: $\le$ 5 minutes 30 seconds = 60 Marks).
@@ -104,45 +79,80 @@ This manual is written in **simple, step-by-step language** with zero complicate
 
 ---
 
-### Feature 5: Bulk Attendance & Platoon Muster Tracking
+### Page 2: War Cry Hub, 24-Hour Stories & Success Verification Desk
+*Inspire the squad, view ephemeral ground stories, and induct verified cadets into the Wall of Fame.*
+
+- **How to Access:** Tap the **"War Cry"** icon (Flame) on the bottom navigation bar.
+- **Section 2A: Ustad's Daily War Cry Broadcaster**
+  1. Type your daily motivational quote (e.g., *"पसीने की स्याही से जो लिखते हैं अपने इरादों को, उनके मुक़द्दर के पन्ने कभी कोरे नहीं हुआ करते!"*).
+  2. Tap **"Broadcast War Cry to All Cadets"**.
+  3. Displays instantly as an animated gold banner on every cadet's phone.
+- **Section 2B: 24-Hour Ephemeral War Cry Stories & Drill PR Sharing**
+  1. View the horizontal **WhatsApp-style stories tray** featuring circular avatar rings with `USTAD`, `HONOUR`, and `PR ⚡` badges.
+  2. Tap **"+ Your Story"** or **"Broadcast War Cry Story"** to post an update.
+  3. **Attach Drill Best & Ground Telemetry**:
+     - Check **"Share Daily Drill & Personal Best Telemetry"**.
+     - Input **1600m run timings** (e.g. `05m 10s`), **Beams** (`10 Beams - 40 Pts`), **Pushups** (`50 reps`), **9ft Ditch Jump** (`CLEARED`), **Zig-Zag Balance** (`PASSED`), or **Other activities** (`5KM Road Run: 21m 40s`).
+     - Tap **"Auto-Write Caption"** to automatically generate an authentic military war cry from the metrics.
+     - Optionally attach a ground photo (< 500 KB).
+     - Stories automatically disappear after **24 hours**.
+     - Visitors can salute (like) the story; registered cadets and trainers can post regimental comments.
+     - Tap **"Share"** to copy an elite drill scorecard for WhatsApp, Instagram, or Facebook!
+- **Section 2C: Cadet Success Story Verification Desk**
+  1. Cadets who clear recruitment rallies can nominate their story for the **Roll of Honour**.
+  2. Ustad Anup reviews the candidate's force, belt number, and physical certificate.
+  3. Click **"Verify & Induct to Roll of Honour"** to permanently enshrine them on the academy Wall of Fame (`/wall-of-fame`).
+
+---
+
+### Page 3: Chief Drill Directorate Gatekeeper (Admissions Desk)
+*No cadet can access physical telemetry until Ustad verifies them on the ground.*
+
+- **How to Access:** Tap the **"Admissions"** icon (Shield) on the bottom navigation bar. Notice the live amber counter badge showing pending recruits.
+- **How to Use:**
+  1. View new enlistments marked with an amber **"PENDING"** badge.
+  2. Filter by Platoon Cadre (Army GD, WBP, KP, SSC GD, Lady Platoon).
+  3. Review the cadet’s physical details: Target Force, Height, Weight, Chest Normal & Expanded, and Matriculation percentage.
+  4. Click **"Verify & Approve"** once you have physically verified their original documents.
+  5. If a cadet fails physical eligibility or character requirements, click **"Disapprove / Reject"**.
+- **Ground Result:** Once approved, the cadet's security gate instantly unlocks, allowing them to use the stopwatch and download their Official Admit Card.
+
+---
+
+### Page 4: Roll Call Roster, Defaulters Registry & Telemetry Logger
 *Mark daily morning roll call in seconds without pen and paper.*
 
-- **How to Access:** Go to the **"Attendance & Roll Call"** tab.
-- **How to Use:**
-  1. **Select Platoon Batch:**
-     - **Alpha Platoon:** 05:00 - 07:00 hrs (Army Agniveer GD & Tech)
-     - **Bravo Platoon:** 06:15 - 08:00 hrs (WBP / Kolkata Police Squad)
-     - **Charlie Lady Platoon:** 05:30 - 07:15 hrs (Women Military Police / Lady Constable)
-  2. Each enlisted cadet appears with one-touch toggle buttons: **[P] Present**, **[A] Absent**, **[L] Leave / Excused**.
-  3. Click **"Save Roll Call to Server"**.
-- **Ground Result:** The cadet's attendance percentage and attendance streak automatically recalculate in real-time.
+- **How to Access:** Tap the **"Roll Call"** icon (Users) on the bottom navigation bar.
+- **Sub-Tabs Available:**
+  1. **Roll Call Roster:**
+     - Select Platoon Batch (Alpha Army Platoon, Bravo Police Platoon, Charlie Lady Platoon).
+     - Use **"Mark All Present"** for lightning speed, or toggle **[P] Present**, **[A] Absent**, **[L] Leave / Excused**.
+     - Tap **"Save Roll Call to Server"**.
+  2. **Defaulters Registry:**
+     - Instantly flags recruits who missed 3+ consecutive drill sessions.
+     - Features 1-tap **"Call Guardian"** button to phone parents immediately.
+  3. **Sunday Timed Trials Logger:**
+     - Record weekly 1600m timings, beam counts, and 9-foot ditch evaluations with permanent telemetry history.
 
 ---
 
-### Feature 6: Publishing Events, Mock Rallies & Notifications
-*Broadcast upcoming physical trial rallies, PET simulations, or medical screening camps.*
+### Page 5: Bulletin Desk (Drill Events & Official Orders)
+*Broadcast upcoming physical trial rallies, PET simulations, or recruitment orders.*
 
-- **How to Access:** Open the **"📢 Rallies & Drill Events"** tab.
-- **Step-by-Step Publishing:**
-  1. **Event Title:** e.g., *Purulia Mega 1600m Speed Simulation & Beam Trial*.
-  2. **Event Type:** Select from *Mock Physical Rally*, *Obstacle Drill Clinic*, *1600m Timed Trial*, or *Pre-Medical Screening*.
-  3. **Event Date & Time:** Select ground trial date and morning reporting time (e.g., `05:00 AM IST`).
-  4. **Target Cadre:** Click the **`All Cadets`** quick button, or select *Indian Army Agniveer GD*, *WBP / KP Police Squad*, etc.
-  5. **Venue:** e.g., *J.K. College Ground Synthetic & Mud Track, Purulia*.
-  6. **Guidelines & Required Kit:** e.g., *White PT vest, running spikes, Aadhaar card, and 1L water flask*.
-  7. Tap **"Publish Drill Event / Broadcast to Cadets"**.
-- **Ground Result:** The event is permanently saved on the server and broadcasts an alert banner to every cadet's phone.
+- **How to Access:** Tap the **"Notices"** icon (Megaphone) on the bottom navigation bar.
+- **Sub-Tabs Available:**
+  1. **Rally Events:**
+     - Title, Category (Mock Physical Rally, 1600m Trial, Medical Camp), Venue, and Guidelines.
+     - Select **Target Cadre** (All Cadets or specific Platoons).
+     - Tap **"Broadcast & Publish Event"** to trigger siren alerts across all cadet devices.
+  2. **Recruitment Orders & Media Circulars:**
+     - Post official exam notices, Gazette PDF links, and YouTube drill breakdown videos.
 
 ---
 
-### Feature 7: Roll of Honour & Wall of Fame (Celebration of Success)
-*Showcase cadets who cleared physical tests and secured their military belts.*
-
-- **How to Access:** Scroll down in the **Events & Honour** section to **"Roll of Honour / Wall of Fame"**.
-- **How to Use:**
-  1. Enter Cadet Name, Belt/Roll Number, Force (e.g. *Indian Army GD / 24 Rajputana Rifles*), and Year.
-  2. Click **"Add to Roll of Honour"**.
-- **Ground Result:** Appears immediately on the public **Wall of Fame** webpage (`/wall-of-fame`) to inspire future applicants and build academy pride across Purulia district.
+### Feature 6: Ustad Profile & Service Record Management
+- Click **"Edit Profile"** in the top bar to update:
+  - Full Name, Regimental Rank, Service Unit, Height, Weight, and Chest measurements.
 
 ---
 
@@ -154,92 +164,71 @@ This manual is written in **simple, step-by-step language** with zero complicate
 
 ---
 
-### Feature 1: The Verification Gatekeeper (What New Recruits See First)
-When a candidate enlists online, they cannot browse confidential training timers until Ustad inspects them:
-- **Pending Screen:** Displays an amber shield stating: *"Admission Pending Trainer Verification"*.
-- **Admit Card Access:** Cadets can immediately view and download their **AIM Admission Slip** to bring to J.K. College ground.
-- **Refresh Clearance:** Once Ustad approves them on the ground, the cadet taps **"Check Status / Refresh Clearance"** and the entire military portal unlocks.
+### 📱 Mobile Multi-Page Architecture (WhatsApp Style)
+The Cadet Portal on mobile features a **clean 5-page bottom navigation bar** (`md:hidden`):
+- 🔥 **Page 1: War Cry** — Ustad Daily Motivational War Cry, 24h Ground Stories Tray, and Cadet Voice Hub.
+- ⏱️ **Page 2: Drill** — Live drill alert banner, synchronized stopwatch viewer, and 3-phase training timetable.
+- 📢 **Page 3: Notices** — Published trials and mock rallies with 1-tap Roll Call RSVP, plus official circulars.
+- 📊 **Page 4: Telemetry** — 1600m weekly progress chart vs Academic Qualifications with auto-division calculator.
+- 🪖 **Page 5: Dossier** — Military ID card with passport photo upload, physical vitals, attendance calendar, and PDF Evaluation Sheet.
 
 ---
 
-### Feature 2: Live Ustad War Cry & Synchronized Stopwatch Viewer
-- **Motivational Anchor:** The top of the screen displays Ustad Anup's daily war cry with the pulsating flame icon.
-- **Synchronized Parade Drill Stopwatch:** When Ustad starts a run on the ground, the cadet's stopwatch tab switches to **🔴 Live Mode**. Cadets can see the exact seconds, target pacing benchmarks, and track lap splits.
+### Page 1: War Cry Ground Stories & PR Sharing
+- **Motivational Anchor:** The top of the screen displays Ustad Anup's daily war cry with a pulsating flame icon.
+- **Post Your 24-Hour Story with Drill Telemetry**:
+  1. Tap **"+ Your Story"** in the War Cry Stories tray.
+  2. Select Story Badge (e.g. `🏆 Drill PR & Best Stats` or `⚡ 1600m Track PR`).
+  3. Check **"Share Daily Drill & Personal Best Telemetry"**:
+     - Enter your **1600m run time** (e.g. `05m 28s`), **Beams count** (e.g. `10 Beams`), **Pushups** (e.g. `42 reps`), **9-ft Ditch status** (`CLEARED`), and **Zig-Zag Balance** (`PASSED`).
+     - Tap **"✨ Auto-Write Caption"** to turn your stats into a motivating battlefield war cry.
+     - Attach a photo of yourself on J.K. College ground (< 500 KB).
+     - Tap **"Publish 24h War Cry"**.
+  4. **Watch & Share**:
+     - Fellow cadets and visitors can tap your story ring on the tray.
+     - Your metrics display as an eye-catching **Tactical HUD Card** in the story viewer.
+     - Tap **"Share"** to share your drill scorecard on WhatsApp groups!
+  5. **Roll of Honour Nomination**:
+     - Check *"Nominate as Official Roll of Honour Success Story"* if you cleared an official army/police rally. Ustad will review and permanently induct your name.
 
 ---
 
-### Feature 3: Official Drill Events & One-Click Roll Call RSVP
-- **Top Notice Alert:** Whenever a trainer uploads a new notification targeted to "All Cadets", a prominent amber banner appears at the very top of the Cadet Portal:
-  > **📢 OFFICIAL NOTICE ACTIVE:** *Purulia Mega 1600m Speed Simulation • 📅 Sunday @ 05:00 AM IST • J.K. College Ground*
+### Page 2: Synchronized Parade Drill Stopwatch & Regimental Timetable
+- **Live Alert Banner**: If Ustad is currently conducting a muster, a pulsating red siren displays at the top.
+- **Stopwatch Viewer**: Cadets watch the master ground timer synchronize in real time with Army Group 1 benchmarks ($5\text{m }30\text{s}$).
+- **3-Phase Timetable**: Detailed breakdown of Phase 1 (Aerobic Endurance), Phase 2 (Obstacle Mastery), and Phase 3 (Rally Simulations).
+
+---
+
+### Page 3: Official Drill Events & One-Click Roll Call RSVP
+- **Top Notice Alert:** Whenever Ustad uploads a notification for "All Cadets", an alert appears on this screen.
 - **How to RSVP:**
-  1. Click **"View Notice & RSVP"** or select the **"📢 Rallies & Drill Events"** tab.
+  1. Open the **Notices** tab.
   2. Read instructions, dress code, and venue.
   3. Tap **"Confirm Roll Call Attendance / RSVP"**.
-  4. The button instantly changes to a verified green badge:  
-     `✓ Attendance Confirmed for Roll Call! Report at 05:00 AM IST`.
+  4. The button instantly changes to: `✓ Attendance Confirmed for Roll Call! Report at 05:00 AM IST`.
 
 ---
 
-### Feature 4: 1600m Telemetry & Physical Efficiency Matrix
-*Track progress from recruit baseline to Army Group 1 excellence.*
-
-- **How to Access:** Open the **"1600m & Category Telemetry"** tab.
-- **Interactive Metrics:**
-  - **1600m Best Time:** Displays current personal record (e.g. `05m 28s`).
-  - **Pull-ups / Beam Counter:** Minimum 6 pull-ups (Pass), 10 pull-ups (Group 1 - 40 Marks).
-  - **9-Foot Ditch & Zig-Zag Balance:** Pass/Fail readiness status.
-  - **Visual Telemetry Graph:** Interactive graph showing sprint time reduction week-by-week.
-
----
-
-### Feature 5: Cadet Academic Qualifications & Division Calculator
-*Accurate record of 10th Matriculation, 12th Intermediate, and Degree marks.*
-
-- **How to Access:** Open the **"🎓 Qualifications (10th/12th/Grad/PG)"** tab.
-- **Automatic Calculations:**
-  - When a cadet enters Marks Obtained (e.g. `400`) and Full Marks (e.g. `700`), the platform **automatically calculates** the percentage (`57.14%`).
-  - Automatically awards the **Regimental Division Badge**:
-    - $\ge 75\%$: `✓ Distinction` (Green)
-    - $\ge 60\%$: `✓ 1st Division` (Blue)
-    - $\ge 45\%$: `✓ 2nd Division (Army GD Qualifying)` (Amber)
-    - $< 45\%$: `⚠ Pass Division` (Rose)
+### Page 4: 1600m Telemetry & Academic Qualifications
+- **Physical Telemetry Visualizer**: Displays 1600m personal record, pull-ups count, 9ft ditch clearance, and sprint time reduction week-by-week.
+- **Academic Division Calculator**:
+  - Enter Marks Obtained and Full Marks for 10th Matriculation, 12th Intermediate, or Degree.
+  - Automatically calculates percentage and awards the division badge:
+    - $\ge 75\%$: `Distinction` (Green)
+    - $\ge 60\%$: `1st Division` (Blue)
+    - $\ge 45\%$: `2nd Division (Army GD Qualifying)` (Amber)
 
 ---
 
-### Feature 6: Official Evaluation Sheet (PDF Export Dossier)
-*Printable military physical evaluation dossier for official recruitment rallies.*
-
-- **How to Access:** Open the **"Official Evaluation Sheet (PDF Export)"** tab (or click **"Print Dossier"** in the top bar).
-- **Features:**
-  - Standard Armed Forces A4 layout.
-  - Official Watermark, Cadet Photograph, Roll Number, and Physical Measurement Table.
-  - QR Code verification and Chief Instructor signature space.
-  - Click **"Print / Save PDF Dossier"** to export or print on any local printer.
-
----
-
-### Feature 7: Regimental Passport Photo Management
-*Strict 35mm $\times$ 45mm military passport format.*
-
-- **Size Safeguard:** Only photos under **100 KB** are accepted to ensure instant loading on low-bandwidth mobile connections.
-- **How to Update:**
-  1. Click the camera icon or the photo frame at the top of the portal.
-  2. Select your photo. If it is within 100 KB, it uploads and attaches directly to your dossier.
-  3. If the photo is too large, the system warns: *"Photo must strictly be lower than 100 KB"*.
-
----
-
-### Feature 8: Edit Cadet Application
-*Change mobile number, domicile address, village/town, or physical metrics.*
-
-- **How to Access:** Click **"Edit Profile"** on the Cadet Profile Card.
-- **Editable Information:**
-  - Full Name, Father's Name, Mother's Name.
-  - Mobile Number & Emergency Guardian Contact.
-  - Village/Town, Police Station, District, and PIN Code.
-  - Blood Group, Permanent Identification Birthmarks.
-  - Target Defense Force (Army GD, Technical, WBP, KP, SSC GD).
-- **How to Save:** Tap **"Save Changes"** to update your record across the institute's database.
+### Page 5: Cadet Dossier, Attendance Calendar & PDF Evaluation Sheet
+- **35x45mm Passport Photo Management**: Upload or change photo with 1-tap (< 100 KB safeguard).
+- **Physical Vitals Grid**: Height, Weight, Chest Normal, Chest Expansion, Blood Group, Identification Marks.
+- **Monthly Attendance & Defaulter Calendar**: Green dates show drills attended; red marks absences.
+- **Official Evaluation Sheet (Printable PDF)**:
+  - Standard Armed Forces A4 layout with watermark, QR verification, and instructor signature space.
+  - Click **"Print Dossier"** to generate the official printable sheet for recruitment rallies.
+- **Edit Profile**: Click **"Edit Profile"** to update mobile, emergency contact, or village address.
 
 ---
 
@@ -252,28 +241,45 @@ When a candidate enlists online, they cannot browse confidential training timers
 ================================================================================
 
 1. PROBLEM: Cadet cannot see a newly published event or notification.
-   SOLUTION: On the cadet phone, open "📢 Rallies & Drill Events" tab and 
-             tap the "Sync Live Notices" button. It pulls live announcements 
+   SOLUTION: On the cadet phone, tap the "Notices" icon on the bottom navigation 
+             bar and tap the "Sync Live Notices" button. It pulls live announcements 
              from the server immediately.
 
 2. PROBLEM: Cadet says "My portal is locked with a key icon!"
    SOLUTION: This is the Security Verification Gate. The cadet must report 
              to Ustad at the pavilion. Ustad opens the Trainer Portal, goes to 
-             "Cadet Dossiers", and clicks "Approve & Enlist".
+             "Admissions" tab, and clicks "Verify & Approve".
 
-3. PROBLEM: "Passport photo upload rejected."
+3. PROBLEM: "How do I switch screens on my mobile phone?"
+   SOLUTION: Use the WhatsApp-style bottom navigation bar pinned to the bottom 
+             of your screen. Tap between "War Cry", "Drill", "Notices", "Telemetry", 
+             and "Dossier". You do not need to scroll up and down endlessly.
+
+4. PROBLEM: "How to share today's 1600m sprint or beam score in War Cry Stories?"
+   SOLUTION: In the War Cry tab, tap "+ Your Story". Check "Share Daily Drill & 
+             Personal Best Telemetry". Fill your 1600m time (e.g. 05m 28s), beam 
+             count, or pushup reps. Tap "Auto-Write Caption" and hit "Publish". 
+             A PR ⚡ badge will light up around your story ring!
+
+5. PROBLEM: "My War Cry story vanished after yesterday's practice."
+   SOLUTION: This is normal! Daily War Cry stories are ephemeral and automatically 
+             expire after exactly 24 hours just like WhatsApp and Instagram stories. 
+             If you cleared an official rally selection, check "Nominate as Roll of 
+             Honour Success Story" so Ustad can enshrine it permanently.
+
+6. PROBLEM: "Passport photo upload rejected."
    SOLUTION: The image is larger than 100 KB. Open the photo on your phone, 
-             take a quick screenshot of it or use a free WhatsApp image 
-             compression, and upload the smaller version.
+             take a quick screenshot of it or send it via WhatsApp to compress, 
+             and upload the smaller version.
 
-4. PROBLEM: "Wrong credentials" during login.
+7. PROBLEM: "Wrong credentials" during login.
    SOLUTION: You can log in using EITHER your Email, your Phone Number, or your 
              Cadet Roll Number (e.g. AIM-CADET-2026-1220). Passwords are 
              case-sensitive.
 
-5. PROBLEM: Need to print admit cards for 50 cadets before rally.
-   SOLUTION: In the Cadet Portal, click "Print Dossier". Use browser print 
-             (Ctrl + P) and select "Save as PDF" or send directly to the printer.
+8. PROBLEM: Need to print admit cards for 50 cadets before rally.
+   SOLUTION: In the Cadet Portal, open "Dossier" and tap "Print Dossier". Use browser 
+             print (Ctrl + P) and select "Save as PDF" or send directly to printer.
 ================================================================================
 ```
 
