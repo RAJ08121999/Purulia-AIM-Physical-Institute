@@ -13,6 +13,7 @@ import { TelemetryApiController } from './api/telemetry.api.controller';
 import { AttendanceApiController } from './api/attendance.api.controller';
 import { AuthApiController } from './api/auth.api.controller';
 import { AuditApiController } from './api/audit.api.controller';
+import { WarCryApiController } from './api/warcry.api.controller';
 
 // Domain Services
 import { PrismaService } from './services/prisma.service';
@@ -22,6 +23,7 @@ import { EventsService } from './services/events.service';
 import { TelemetryService } from './services/telemetry.service';
 import { AttendanceService } from './services/attendance.service';
 import { AuthService } from './services/auth.service';
+import { WarCryService } from './services/warcry.service';
 
 @Module({
   imports: [
@@ -41,7 +43,8 @@ import { AuthService } from './services/auth.service';
     TelemetryApiController,
     AttendanceApiController,
     AuthApiController,
-    AuditApiController
+    AuditApiController,
+    WarCryApiController
   ],
   providers: [
     PrismaService,
@@ -50,7 +53,8 @@ import { AuthService } from './services/auth.service';
     EventsService,
     TelemetryService,
     AttendanceService,
-    AuthService
+    AuthService,
+    WarCryService
   ],
   exports: [PrismaService]
 })

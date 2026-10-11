@@ -142,6 +142,44 @@ export interface EventRsvpPayload {
   targetForce?: string;
 }
 
+export interface WarCryComment {
+  id: string;
+  authorName: string;
+  authorRole: 'USTAD' | 'CADET' | 'COMMUNITY' | string;
+  authorAvatar?: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface WarCryStory {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorRole: 'USTAD' | 'CADET' | string;
+  authorPhoto?: string;
+  authorCadre?: string;
+  tag: string;
+  tagLabel?: string;
+  caption: string;
+  mediaUrl?: string;
+  createdAt: string;
+  expiresAt: string;
+  likesCount: number;
+  likedBy: string[];
+  comments: WarCryComment[];
+  isPermanentHonour?: boolean;
+  honourStatus?: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED' | string;
+  selectedForce?: string;
+  beltNo?: string;
+  regimentOrDistrict?: string;
+  selectionYear?: string;
+  timing1600m?: string;
+  villageTown?: string;
+  trainerRemarks?: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+}
+
 export interface AttendanceRecord {
   studentId: string;
   batchId: string;
@@ -278,6 +316,153 @@ export async function deleteInstituteEvent(id: string) {
   });
   if (!res.ok) throw new Error('Failed to delete event');
   return res.json();
+}
+
+// -------------------------------------------------------------
+// WAR CRY STORIES & ROLL OF HONOUR API
+// -------------------------------------------------------------
+
+export async function fetchWarCryStories(): Promise<WarCryStory[]> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/warcry/stories`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to load War Cry stories');
+    const data = await res.json();
+    try { localStorage.setItem('aim_warcry_stories_cache', JSON.stringify(data)); } catch {}
+    return data;
+  } catch (err) {
+    console.warn('Fallback to local War Cry cache:', err);
+    try {
+      const stored = localStorage.getItem('aim_warcry_stories_cache');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return [];
+  }
+}
+
+export async function createWarCryStory(payload: {
+  authorId: string;
+  authorName: string;
+  authorRole: 'USTAD' | 'CADET';
+  authorPhoto?: string;
+  authorCadre?: string;
+  tag?: string;
+  tagLabel?: string;
+  caption: string;
+  mediaUrl?: string;
+  isPermanentHonour?: boolean;
+  selectedForce?: string;
+  beltNo?: string;
+  regimentOrDistrict?: string;
+  selectionYear?: string;
+  timing1600m?: string;
+  villageTown?: string;
+}) {
+  const res = await fetch(`${getApiBaseUrl()}/warcry/stories`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to post War Cry story');
+  }
+  return res.json();
+}
+
+export async function toggleLikeWarCryStory(storyId: string, clientToken?: string) {
+  const res = await fetch(`${getApiBaseUrl()}/warcry/stories/${encodeURIComponent(storyId)}/like`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clientToken })
+  });
+  if (!res.ok) throw new Error('Failed to toggle like');
+  return res.json();
+}
+
+export async function addWarCryComment(
+  storyId: string,
+  payload: {
+    authorName: string;
+    authorRole?: 'USTAD' | 'CADET' | 'COMMUNITY';
+    authorAvatar?: string;
+    text: string;
+  }
+) {
+  const res = await fetch(`${getApiBaseUrl()}/warcry/stories/${encodeURIComponent(storyId)}/comment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to add comment');
+  }
+  return res.json();
+}
+
+export async function submitHonourSuccessStory(payload: {
+  authorId: string;
+  authorName: string;
+  authorRole: 'USTAD' | 'CADET';
+  authorPhoto?: string;
+  authorCadre?: string;
+  caption: string;
+  mediaUrl?: string;
+  selectedForce: string;
+  beltNo?: string;
+  regimentOrDistrict?: string;
+  selectionYear?: string;
+  timing1600m?: string;
+  villageTown?: string;
+}) {
+  const res = await fetch(`${getApiBaseUrl()}/warcry/honour/submit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to submit success story');
+  }
+  return res.json();
+}
+
+export async function fetchPendingHonourStories(): Promise<WarCryStory[]> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/warcry/honour/pending`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('API error');
+    return res.json();
+  } catch (e) {
+    return [];
+  }
+}
+
+export async function verifyHonourStory(
+  storyId: string,
+  approved: boolean,
+  remarks?: string,
+  verifiedBy?: string
+) {
+  const res = await fetch(`${getApiBaseUrl()}/warcry/honour/${encodeURIComponent(storyId)}/verify`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ approved, remarks, verifiedBy })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to verify honour story');
+  }
+  return res.json();
+}
+
+export async function fetchApprovedHonourStories(): Promise<WarCryStory[]> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/warcry/honour`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('API error');
+    return res.json();
+  } catch (e) {
+    return [];
+  }
 }
 
 // -------------------------------------------------------------

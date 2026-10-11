@@ -10,4 +10,8 @@ export * from './WallOfFame';
 export * from './ParadeDrillStopwatch';
 export * from './EditCadetProfileModal';
 export * from './EditTrainerProfileModal';
+export * from './WarCryStoriesTray';
+export * from './WarCryStoryModal';
+export * from './PostWarCryModal';
+export * from './UstadStoryVerificationDesk';
 export * from './ui';

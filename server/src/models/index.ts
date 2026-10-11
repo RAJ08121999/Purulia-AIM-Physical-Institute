@@ -278,3 +278,42 @@ export interface LiveDrillSessionEntity {
   cadetFinishes?: Record<string, { seconds: number; formatted: string; isQualified: boolean }>;
   updatedAt: number;
 }
+
+export interface WarCryStoryComment {
+  id: string;
+  authorName: string;
+  authorRole: 'USTAD' | 'CADET' | 'COMMUNITY';
+  authorAvatar?: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface WarCryStoryEntity {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorRole: 'USTAD' | 'CADET';
+  authorPhoto?: string;
+  authorCadre?: string;
+  tag: string; // 'WAR_CRY' | '1600M_PR' | 'STRUGGLE_GRIT' | 'DRILL_LOG' | 'SUCCESS_STORY'
+  tagLabel?: string;
+  caption: string;
+  mediaUrl?: string;
+  createdAt: string;
+  expiresAt: string; // ISO string 24h from creation
+  likesCount: number;
+  likedBy: string[]; // tokens or IDs
+  comments: WarCryStoryComment[];
+  // Roll of Honour Fields:
+  isPermanentHonour?: boolean;
+  honourStatus?: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
+  selectedForce?: string;
+  beltNo?: string;
+  regimentOrDistrict?: string;
+  selectionYear?: string;
+  timing1600m?: string;
+  villageTown?: string;
+  trainerRemarks?: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+}

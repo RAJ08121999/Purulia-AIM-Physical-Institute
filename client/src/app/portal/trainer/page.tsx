@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
 import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications, updateCadetStatus, getApiBaseUrl, fetchTrainerProfile, createInstituteEvent, deleteInstituteEvent, fetchInstituteEvents } from '@/lib/api';
-import { ParadeDrillStopwatch, EditTrainerProfileModal } from '@/components';
+import { ParadeDrillStopwatch, EditTrainerProfileModal, WarCryStoriesTray, UstadStoryVerificationDesk, PostWarCryModal } from '@/components';
 
 interface CadetAttendance {
   id: string;
@@ -167,8 +167,9 @@ const initialOrders: RecruitmentOrder[] = [
 
 export default function TrainerCommandCenter() {
   const [activeTab, setActiveTab] = useState<
-    'STOPWATCH' | 'VERIFICATION' | 'ATTENDANCE' | 'TELEMETRY' | 'DEFAULTERS' | 'EVENTS' | 'HONOUR' | 'ORDERS'
+    'STOPWATCH' | 'WARCRY_HONOUR' | 'VERIFICATION' | 'ATTENDANCE' | 'TELEMETRY' | 'DEFAULTERS' | 'EVENTS' | 'HONOUR' | 'ORDERS'
   >('STOPWATCH');
+  const [isPostWarCryOpen, setIsPostWarCryOpen] = useState(false);
   const [cadets, setCadets] = useState<CadetAttendance[]>(initialCadets);
   const [attendanceSaved, setAttendanceSaved] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -745,10 +746,14 @@ export default function TrainerCommandCenter() {
           )}
         </div>
 
+        {/* 24-HOUR DISAPPEARING WAR CRY STORIES TRAY */}
+        <WarCryStoriesTray onUploadClick={() => setIsPostWarCryOpen(true)} className="mb-2" />
+
         {/* Tab Navigation */}
         <div className="flex items-center gap-1.5 sm:gap-2 border-b border-[#273623] pb-2 font-display uppercase tracking-wider text-xs font-bold overflow-x-auto no-scrollbar touch-pan-x w-full">
           {[
             { id: 'STOPWATCH', label: '⏱️ Drill Stopwatch' },
+            { id: 'WARCRY_HONOUR', label: '🔥 War Cry & Honour Review' },
             {
               id: 'VERIFICATION',
               label: `🎖️ Verify Admissions ${
@@ -780,6 +785,33 @@ export default function TrainerCommandCenter() {
         {/* TAB 0: PARADE DRILL STOPWATCH & BROADCAST */}
         {activeTab === 'STOPWATCH' && (
           <ParadeDrillStopwatch mode="TRAINER_CONTROLLER" />
+        )}
+
+        {/* TAB 0.2: WAR CRY STORIES & ROLL OF HONOUR VERIFICATION DESK */}
+        {activeTab === 'WARCRY_HONOUR' && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#1A1F13] to-[#0E140C] border border-amber-500/40">
+              <div>
+                <h3 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-amber-400" />
+                  <span>Ustad War Cry & Ground Broadcast Desk</span>
+                </h3>
+                <p className="text-xs text-gray-400 font-mono mt-0.5">
+                  Publish 24-hour drill updates or verify cadet success stories for induction onto the permanent Roll of Honour.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsPostWarCryOpen(true)}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-display font-black text-xs uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Broadcast Ustad War Cry Story</span>
+              </button>
+            </div>
+
+            <UstadStoryVerificationDesk />
+          </div>
         )}
 
         {/* TAB 0.5: ADMISSIONS & ENLISTMENT VERIFICATION QUEUE */}
@@ -1982,6 +2014,13 @@ export default function TrainerCommandCenter() {
         onClose={() => setIsEditTrainerModalOpen(false)}
         trainer={trainerDetails || currentUser}
         onProfileUpdated={handleTrainerProfileUpdated}
+      />
+
+      {/* Broadcast War Cry Story Modal */}
+      <PostWarCryModal
+        isOpen={isPostWarCryOpen}
+        onClose={() => setIsPostWarCryOpen(false)}
+        onStoryCreated={() => {}}
       />
     </div>
   );

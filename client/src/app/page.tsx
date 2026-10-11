@@ -38,6 +38,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { AdmissionModal } from '@/components/AdmissionModal';
 import { AuthModal } from '@/components/AuthModal';
+import { WarCryStoriesTray } from '@/components';
 
 export default function Home() {
   const [admissionModalOpen, setAdmissionModalOpen] = useState(false);
@@ -220,6 +221,34 @@ export default function Home() {
                 subtitle="Dedicated to Rural Bengal Youth"
               />
             </div>
+          </div>
+        </section>
+
+        {/* ===================================================================
+            24-HOUR DISAPPEARING WAR CRY STORIES TRAY
+            =================================================================== */}
+        <section className="py-6 sm:py-8 border-b border-[#273623] bg-gradient-to-b from-[#12190E] via-[#0E140C] to-[#0B0F0A]">
+          <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-amber-400 animate-pulse" />
+                <h2 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-wider">
+                  War Cry • Ground Stories & Daily PRs
+                </h2>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
+                  24h Disappearing
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 font-mono">
+                Tap any cadet or Ustad avatar to watch stories, like, comment, and share to WhatsApp!
+              </p>
+            </div>
+            <WarCryStoriesTray
+              onUploadClick={() => {
+                setAuthModalTab('CADET_LOGIN');
+                setAuthModalOpen(true);
+              }}
+            />
           </div>
         </section>
 

@@ -12,7 +12,9 @@ import {
   AuditLogEntity,
   RunTrialEntity,
   LiveDrillSessionEntity,
-  TrainerProfileEntity
+  TrainerProfileEntity,
+  WarCryStoryEntity,
+  WarCryStoryComment
 } from '../models';
 
 interface DatabaseSchema {
@@ -27,6 +29,7 @@ interface DatabaseSchema {
   events: InstituteEventEntity[];
   rsvps: EventRsvpEntity[];
   auditLogs: AuditLogEntity[];
+  warCryStories: WarCryStoryEntity[];
 }
 
 @Injectable()
@@ -86,7 +89,8 @@ export class DbService implements OnModuleInit {
     },
     events: [],
     rsvps: [],
-    auditLogs: []
+    auditLogs: [],
+    warCryStories: []
   };
 
   onModuleInit() {
@@ -159,7 +163,10 @@ export class DbService implements OnModuleInit {
             updatedAt: Date.now()
           };
         }
-        this.logger.log(`Database loaded: ${this.data.trainers.length} trainers, ${this.data.students.length} cadets, ${this.data.events.length} events, ${this.data.runTrials.length} run trials.`);
+        if (!this.data.warCryStories || this.data.warCryStories.length === 0) {
+          this.data.warCryStories = this.getDefaultWarCryStories();
+        }
+        this.logger.log(`Database loaded: ${this.data.trainers.length} trainers, ${this.data.students.length} cadets, ${this.data.events.length} events, ${this.data.warCryStories.length} war cry stories.`);
       }
     } catch (err: any) {
       this.logger.warn(`Could not parse data file, initializing fresh store: ${err.message}`);
@@ -356,6 +363,177 @@ export class DbService implements OnModuleInit {
 
   getAuditLogs(limit = 50) {
     return this.data.auditLogs.slice(0, limit);
+  }
+
+  // --------------------------------------------------------------------------
+  // WAR CRY STORIES & ROLL OF HONOUR REPOSITORY
+  // --------------------------------------------------------------------------
+  getWarCryStories() {
+    if (!this.data.warCryStories || this.data.warCryStories.length === 0) {
+      this.data.warCryStories = this.getDefaultWarCryStories();
+    }
+    const now = Date.now();
+    return this.data.warCryStories.filter(s => {
+      if (s.isPermanentHonour) return true;
+      const exp = new Date(s.expiresAt).getTime();
+      return !isNaN(exp) && exp > now;
+    });
+  }
+
+  findWarCryStoryById(id: string) {
+    return (this.data.warCryStories || []).find(s => s.id === id);
+  }
+
+  createWarCryStory(story: WarCryStoryEntity) {
+    if (!this.data.warCryStories) this.data.warCryStories = [];
+    this.data.warCryStories.unshift(story);
+    this.saveData();
+    return story;
+  }
+
+  likeWarCryStory(id: string, clientToken?: string) {
+    if (!this.data.warCryStories) this.data.warCryStories = [];
+    const story = this.data.warCryStories.find(s => s.id === id);
+    if (!story) return null;
+
+    const token = clientToken || 'anon_' + Math.random().toString(36).substring(7);
+    if (!story.likedBy) story.likedBy = [];
+
+    const idx = story.likedBy.indexOf(token);
+    if (idx === -1) {
+      story.likedBy.push(token);
+      story.likesCount = (story.likesCount || 0) + 1;
+    } else {
+      story.likedBy.splice(idx, 1);
+      story.likesCount = Math.max(0, (story.likesCount || 1) - 1);
+    }
+    this.saveData();
+    return story;
+  }
+
+  addWarCryComment(storyId: string, comment: WarCryStoryComment) {
+    if (!this.data.warCryStories) this.data.warCryStories = [];
+    const story = this.data.warCryStories.find(s => s.id === storyId);
+    if (!story) return null;
+
+    if (!story.comments) story.comments = [];
+    story.comments.push(comment);
+    this.saveData();
+    return story;
+  }
+
+  getPendingHonourStories() {
+    return (this.data.warCryStories || []).filter(s => s.honourStatus === 'PENDING');
+  }
+
+  verifyHonourStory(storyId: string, approved: boolean, remarks?: string, verifiedBy?: string) {
+    if (!this.data.warCryStories) this.data.warCryStories = [];
+    const story = this.data.warCryStories.find(s => s.id === storyId);
+    if (!story) return null;
+
+    story.honourStatus = approved ? 'APPROVED' : 'REJECTED';
+    story.isPermanentHonour = approved;
+    story.trainerRemarks = remarks || '';
+    story.verifiedAt = new Date().toISOString();
+    story.verifiedBy = verifiedBy || 'Havaldar Anup Kumar Mahato';
+
+    if (approved) {
+      story.expiresAt = new Date(Date.now() + 10 * 365 * 24 * 3600 * 1000).toISOString();
+    }
+
+    this.saveData();
+    return story;
+  }
+
+  getApprovedHonourStories() {
+    return (this.data.warCryStories || []).filter(s => s.isPermanentHonour === true && s.honourStatus === 'APPROVED');
+  }
+
+  private getDefaultWarCryStories(): WarCryStoryEntity[] {
+    const now = Date.now();
+    return [
+      {
+        id: 'warcry-ustad-01',
+        authorId: 'AIM-USTAD-01',
+        authorName: 'Havaldar Anup Kumar Mahato',
+        authorRole: 'USTAD',
+        authorCadre: 'Chief Drill Instructor & Founder',
+        tag: 'WAR_CRY',
+        tagLabel: '🔥 Ustad War Cry',
+        caption: 'पसीने की स्याही से जो लिखते हैं अपने इरादों को, उनके मुक़द्दर के पन्ने कभी कोरे नहीं हुआ करते! 1600 meters is not a test of legs; it is a test of heart and hunger for the Uniform! Alpha Platoon, assemble at 05:00 AM sharp at J.K. College Ground!',
+        mediaUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
+        createdAt: new Date(now - 2 * 3600 * 1000).toISOString(),
+        expiresAt: new Date(now + 22 * 3600 * 1000).toISOString(),
+        likesCount: 42,
+        likedBy: [],
+        comments: [
+          {
+            id: 'comm-1',
+            authorName: 'Cadet MD RAJ',
+            authorRole: 'CADET',
+            text: 'Jai Hind Ustad Ji! Squad is ready on track at 04:50 AM!',
+            createdAt: new Date(now - 1 * 3600 * 1000).toISOString()
+          },
+          {
+            id: 'comm-2',
+            authorName: 'Subrata Roy',
+            authorRole: 'CADET',
+            text: 'Ground 1 timing locked today sir!',
+            createdAt: new Date(now - 30 * 60 * 1000).toISOString()
+          }
+        ]
+      },
+      {
+        id: 'warcry-cadet-raj-01',
+        authorId: 'AIM-CADET-2026-1220',
+        authorName: 'Cadet MD RAJ',
+        authorRole: 'CADET',
+        authorCadre: 'Kolkata Police Squad',
+        tag: '1600M_PR',
+        tagLabel: '⚡ 1600m Track Milestone',
+        caption: 'Clocked 05m 28s on 1600m track trial today at J.K. College Ground! Pushed beam pull-ups from 4 to 10. The morning dew and mud only make us tougher. Pain is temporary, Uniform is forever. Jai Hind!',
+        mediaUrl: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80',
+        createdAt: new Date(now - 4 * 3600 * 1000).toISOString(),
+        expiresAt: new Date(now + 20 * 3600 * 1000).toISOString(),
+        likesCount: 31,
+        likedBy: [],
+        comments: [
+          {
+            id: 'comm-3',
+            authorName: 'Havaldar Anup Kumar Mahato',
+            authorRole: 'USTAD',
+            text: 'Shabash Raj! Maintain this sprint cadence and you will crack the police trial comfortably.',
+            createdAt: new Date(now - 3 * 3600 * 1000).toISOString()
+          }
+        ]
+      },
+      {
+        id: 'honour-subrata-01',
+        authorId: 'AIM-CADET-2024-001',
+        authorName: 'Subrata Roy',
+        authorRole: 'CADET',
+        authorCadre: '17th Kumaon Regiment (Indian Army)',
+        tag: 'SUCCESS_STORY',
+        tagLabel: '🎖️ Roll of Honour • Agniveer GD',
+        caption: 'From zero running endurance to 05m 12s under Havaldar Anup Sir. Cleared Group 1 with full 100/100 physical marks at Panagarh Army Rally. Today standing proud in Indian Army uniform!',
+        mediaUrl: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=1200&q=80',
+        createdAt: new Date(now - 20 * 3600 * 1000).toISOString(),
+        expiresAt: new Date(now + 3650 * 24 * 3600 * 1000).toISOString(),
+        likesCount: 89,
+        likedBy: [],
+        comments: [],
+        isPermanentHonour: true,
+        honourStatus: 'APPROVED',
+        selectedForce: 'Indian Army (Agniveer GD)',
+        beltNo: '24-KUMAON-892',
+        regimentOrDistrict: '17th Kumaon Regiment',
+        selectionYear: '2024',
+        timing1600m: '05m 12s (Group 1 • 60 Pts)',
+        villageTown: 'Manbazar, Purulia',
+        verifiedAt: new Date().toISOString(),
+        verifiedBy: 'Havaldar Anup Kumar Mahato'
+      }
+    ];
   }
 
   // --------------------------------------------------------------------------

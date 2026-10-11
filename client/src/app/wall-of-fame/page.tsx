@@ -15,6 +15,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { AdmissionModal } from '@/components/AdmissionModal';
 import { WallOfFame } from '@/components/WallOfFame';
+import { WarCryStoriesTray } from '@/components';
 import { SectionHeading, Badge, Button } from '@/components/ui';
 
 export default function WallOfFamePage() {
@@ -40,6 +41,29 @@ export default function WallOfFamePage() {
                 Honouring our verified cadets from Purulia, Bankura, Jhargram, and rural Bengal who drilled free of cost at AIM Physical Institute and earned the revered uniform of the Indian Armed Forces and State Police services.
               </p>
             </div>
+          </div>
+        </section>
+
+        {/* 24-HOUR DISAPPEARING WAR CRY STORIES TRAY */}
+        <section className="py-6 border-b border-[#273623] bg-gradient-to-b from-[#12190E] to-[#0E140C]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-amber-400 animate-pulse" />
+                <h2 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-wider">
+                  Live War Cry Stories & Recruits
+                </h2>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
+                  24h Live Updates
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 font-mono">
+                Tap to watch cadet training stories, like, comment, and share!
+              </p>
+            </div>
+            <WarCryStoriesTray
+              onUploadClick={() => setAdmissionModalOpen(true)}
+            />
           </div>
         </section>
 

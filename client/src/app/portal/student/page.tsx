@@ -38,10 +38,11 @@ import {
   Lock,
   ShieldAlert,
   RefreshCw,
-  FileQuestion
+  FileQuestion,
+  Heart
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
-import { ParadeDrillStopwatch, EditCadetProfileModal } from '@/components';
+import { ParadeDrillStopwatch, EditCadetProfileModal, WarCryStoriesTray, PostWarCryModal } from '@/components';
 import { DEFAULT_CADET_REPORT } from '@/components/ProgressReportPDFView';
 import { fetchLiveDrillSession, LiveDrillSession, logoutUser, getCurrentUser, getApiBaseUrl, fetchInstituteEvents, registerRollCallRsvp } from '@/lib/api';
 
@@ -145,6 +146,7 @@ export default function StudentPortalPage() {
   const [isRefreshingStatus, setIsRefreshingStatus] = useState<boolean>(false);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState<boolean>(false);
+  const [isPostWarCryOpen, setIsPostWarCryOpen] = useState<boolean>(false);
 
   const handleProfileUpdated = (updated: any) => {
     setCadetRecord(updated);
@@ -1021,6 +1023,9 @@ export default function StudentPortalPage() {
           </div>
         )}
 
+        {/* 24-HOUR GROUND WAR CRY STORIES TRAY */}
+        <WarCryStoriesTray />
+
         {/* Cadet Profile Banner */}
         <div className="no-print p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#161F15] via-[#121811] to-[#0E140C] border border-[#273623] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
           <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
@@ -1184,7 +1189,7 @@ export default function StudentPortalPage() {
             { id: 'REPORT', label: 'Official Evaluation Sheet (PDF Export)' },
             { id: 'ATTENDANCE', label: 'Attendance Calendar & Defaulter Check' },
             { id: 'SCHEDULE', label: 'Daily Drill Regimen & Timetable' },
-            { id: 'STORY', label: 'Submit Success Story' }
+            { id: 'STORY', label: '🔥 War Cry Stories & Honour' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -2177,74 +2182,106 @@ export default function StudentPortalPage() {
         )}
 
         {/* ===================================================================
-            TAB 5: SUBMIT SUCCESS STORY
+            TAB 5: WAR CRY STORIES & ROLL OF HONOUR HUB
             =================================================================== */}
         {activeTab === 'STORY' && (
-          <div className="max-w-2xl mx-auto p-8 rounded-3xl bg-[#121811] border border-[#273623] space-y-6">
-            <div className="space-y-2">
-              <Badge variant="saffron" size="sm">
-                Candidate Voice & Wall of Fame
-              </Badge>
-              <h3 className="font-display font-black text-2xl text-white uppercase tracking-wider">
-                Share Your Transformation Journey
-              </h3>
-              <p className="text-xs text-gray-400 font-sans leading-relaxed">
-                Cadets who have improved their running pace or qualified preliminary defence recruitment trials can submit their story. Approved stories appear on the AIM Wall of Fame.
-              </p>
-            </div>
-
-            {storySubmitted ? (
-              <div className="p-6 rounded-2xl bg-[#161F15] border border-emerald-500/40 text-center space-y-3">
-                <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-                <h4 className="font-display font-bold text-lg text-white uppercase">
-                  Story Submitted for Review!
-                </h4>
-                <p className="text-xs text-gray-300">
-                  Anup Sir and the editorial desk will review your submission before featuring it on the official Wall of Fame.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setStorySubmitted(false)}
-                >
-                  Submit Another Update
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-mono text-gray-400 uppercase mb-1">
-                    Your Training Journey & Remarks *
-                  </label>
-                  <textarea
-                    rows={5}
-                    value={storyText}
-                    onChange={e => setStoryText(e.target.value)}
-                    placeholder="Tell future aspirants about your training baseline, your experience under Anup Sir's coaching, and how you cleared your trial..."
-                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl p-4 text-white text-xs placeholder-gray-600 focus:outline-none focus:border-amber-500"
-                  />
+          <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
+            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#182213] via-[#121811] to-[#0A0F08] border-2 border-amber-500/70 shadow-[0_0_40px_rgba(245,158,11,0.25)] space-y-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#273623]">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-black flex-shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+                    <Flame className="w-7 h-7 text-amber-400 animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-widest">
+                        GROUND VOICE
+                      </span>
+                      <span className="text-xs font-mono text-emerald-400 font-bold">
+                        WhatsApp & Instagram Style 24h Stories
+                      </span>
+                    </div>
+                    <h3 className="font-display font-black text-xl sm:text-2xl text-white uppercase tracking-wider mt-0.5">
+                      Cadet War Cry & Roll of Honour
+                    </h3>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
-                  <span className="text-[11px] font-mono text-gray-500">
-                    Subject to moderator approval before publication.
-                  </span>
+                <div className="flex items-center gap-2.5 w-full sm:w-auto">
                   <Button
                     variant="saffron"
                     size="md"
-                    onClick={() => {
-                      if (!storyText.trim()) {
-                        alert('Please write your story before submitting.');
-                        return;
-                      }
-                      setStorySubmitted(true);
-                    }}
+                    onClick={() => setIsPostWarCryOpen(true)}
+                    className="w-full sm:w-auto font-black font-display uppercase tracking-wider text-black flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(245,158,11,0.4)]"
                   >
-                    Submit Journey
+                    <Flame className="w-4 h-4 text-black" />
+                    <span>Post War Cry Story</span>
                   </Button>
                 </div>
               </div>
-            )}
+
+              {/* Information Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs font-mono">
+                <div className="p-4 rounded-2xl bg-[#0B0F09] border border-[#273623] space-y-1.5">
+                  <div className="flex items-center gap-2 text-amber-400 font-bold">
+                    <Clock className="w-4 h-4 text-amber-400" />
+                    <span>24-Hour Ephemeral Stories</span>
+                  </div>
+                  <p className="text-gray-400 text-[11px] leading-relaxed">
+                    Share daily morning sprint timings, pull-up records, and ground struggle photos. Stories stay active for 24 hours, just like WhatsApp & Instagram.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#0B0F09] border border-[#273623] space-y-1.5">
+                  <div className="flex items-center gap-2 text-rose-400 font-bold">
+                    <Heart className="w-4 h-4 text-rose-400" />
+                    <span>Public Salutes & Sharing</span>
+                  </div>
+                  <p className="text-gray-400 text-[11px] leading-relaxed">
+                    Anyone can watch and like your War Cry story. Share your stories to WhatsApp & social media to show your dedication to family & friends!
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#0B0F09] border border-[#273623] space-y-1.5">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                    <Award className="w-4 h-4 text-emerald-400" />
+                    <span>Roll of Honour Induction</span>
+                  </div>
+                  <p className="text-gray-400 text-[11px] leading-relaxed">
+                    Cleared your physical trial or final selection? Nominate your story for Ustad Anup&apos;s verification to be permanently inducted on the Wall of Fame.
+                  </p>
+                </div>
+              </div>
+
+              {/* Direct Post Quick Action Banner */}
+              <div className="p-4 rounded-2xl bg-[#0E150B] border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="space-y-0.5 text-center sm:text-left">
+                  <h4 className="font-display font-black text-sm text-white uppercase tracking-wider">
+                    Ready to inspire fellow recruits?
+                  </h4>
+                  <p className="text-[11px] font-mono text-gray-400">
+                    Post your 1600m PR, pull-up milestone, or morning assembly motivation right now.
+                  </p>
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsPostWarCryOpen(true)}
+                  className="w-full sm:w-auto text-amber-400 border-amber-500/50 hover:bg-amber-500/10 font-bold font-mono text-xs uppercase"
+                >
+                  + Add Daily Story
+                </Button>
+              </div>
+            </div>
+
+            {/* Embedded Active Stories Showcase */}
+            <div className="space-y-3">
+              <h4 className="font-display font-black text-base text-white uppercase tracking-wider flex items-center gap-2">
+                <span>Active 24-Hour Ground Stories</span>
+              </h4>
+              <WarCryStoriesTray showPostButton={false} />
+            </div>
           </div>
         )}
       </>
@@ -2256,6 +2293,13 @@ export default function StudentPortalPage() {
       onClose={() => setIsEditProfileModalOpen(false)}
       cadet={cadetRecord}
       onProfileUpdated={handleProfileUpdated}
+    />
+
+    {/* Post War Cry Story Modal */}
+    <PostWarCryModal
+      isOpen={isPostWarCryOpen}
+      onClose={() => setIsPostWarCryOpen(false)}
+      defaultRole="CADET"
     />
   </main>
     </div>
