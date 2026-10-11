@@ -33,7 +33,10 @@ import {
   Eye,
   RefreshCw,
   Lock,
-  Edit3
+  Edit3,
+  Timer,
+  Activity,
+  Radio
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
 import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications, updateCadetStatus, getApiBaseUrl, fetchTrainerProfile, createInstituteEvent, deleteInstituteEvent, fetchInstituteEvents } from '@/lib/api';
@@ -165,10 +168,36 @@ const initialOrders: RecruitmentOrder[] = [
   }
 ];
 
+export type TrainerPortalTab =
+  | 'STOPWATCH'
+  | 'WARCRY'
+  | 'ADMISSIONS'
+  | 'ATTENDANCE'
+  | 'BULLETIN'
+  | 'WARCRY_HONOUR'
+  | 'VERIFICATION'
+  | 'TELEMETRY'
+  | 'DEFAULTERS'
+  | 'EVENTS'
+  | 'HONOUR'
+  | 'ORDERS';
+
 export default function TrainerCommandCenter() {
-  const [activeTab, setActiveTab] = useState<
-    'STOPWATCH' | 'WARCRY_HONOUR' | 'VERIFICATION' | 'ATTENDANCE' | 'TELEMETRY' | 'DEFAULTERS' | 'EVENTS' | 'HONOUR' | 'ORDERS'
-  >('STOPWATCH');
+  const [activeTab, setActiveTab] = useState<TrainerPortalTab>('STOPWATCH');
+  const [attendanceSubTab, setAttendanceSubTab] = useState<'ROSTER' | 'DEFAULTERS' | 'TELEMETRY'>('ROSTER');
+  const [bulletinSubTab, setBulletinSubTab] = useState<'EVENTS' | 'ORDERS'>('EVENTS');
+  const [warCrySubTab, setWarCrySubTab] = useState<'BROADCAST' | 'HONOUR_LIST'>('BROADCAST');
+
+  const effectiveTab: 'STOPWATCH' | 'WARCRY' | 'ADMISSIONS' | 'ATTENDANCE' | 'BULLETIN' =
+    activeTab === 'WARCRY_HONOUR' || activeTab === 'HONOUR'
+      ? 'WARCRY'
+      : activeTab === 'VERIFICATION'
+      ? 'ADMISSIONS'
+      : activeTab === 'TELEMETRY' || activeTab === 'DEFAULTERS'
+      ? 'ATTENDANCE'
+      : activeTab === 'EVENTS' || activeTab === 'ORDERS'
+      ? 'BULLETIN'
+      : (activeTab as any);
   const [isPostWarCryOpen, setIsPostWarCryOpen] = useState(false);
   const [cadets, setCadets] = useState<CadetAttendance[]>(initialCadets);
   const [attendanceSaved, setAttendanceSaved] = useState(false);
@@ -595,227 +624,425 @@ export default function TrainerCommandCenter() {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 w-full space-y-6 sm:space-y-8">
-        {/* Morning Session Command Card */}
-        <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#161F15] via-[#121811] to-[#0E140C] border border-[#273623] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <h1 className="font-display font-black text-xl sm:text-2xl lg:text-3xl text-white uppercase tracking-wider leading-snug">
-                Ustad Command Headquarters • Purulia Ground
-              </h1>
-            </div>
-            <p className="text-[11px] sm:text-xs text-amber-400 font-mono leading-relaxed">
-              Ground: J.K College Ground Purulia Track • Active Cadets: {cadets.length} • Registered Roll: {currentUser?.phone || '+91 97359 47077'}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditTrainerModalOpen(true)}
-              leftIcon={<Edit3 className="w-4 h-4 text-amber-400" />}
-              className="flex-1 sm:flex-initial justify-center border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
-            >
-              Edit Ustad Profile
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleMarkAllPresent}
-              leftIcon={<Check className="w-4 h-4 text-emerald-400" />}
-              className="flex-1 sm:flex-initial justify-center"
-            >
-              All Present
-            </Button>
-            <Button
-              variant="saffron"
-              size="sm"
-              onClick={handleSaveAttendance}
-              leftIcon={<Save className="w-4 h-4 text-black" />}
-              className="flex-1 sm:flex-initial justify-center"
-            >
-              {attendanceSaved ? 'Saved!' : 'Save Roster'}
-            </Button>
-          </div>
-        </div>
-
-        {/* USTAD'S DAILY MOTIVATIONAL WAR CRY BROADCASTER */}
-        <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#241706] via-[#1A1F13] to-[#0E140C] border-2 border-amber-500/70 shadow-[0_0_30px_rgba(245,158,11,0.25)] relative overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-500/20">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-md">
-                <Flame className="w-5 h-5 animate-pulse text-black" />
-              </div>
-              <div>
-                <h3 className="font-display font-black text-sm sm:text-base text-white uppercase tracking-wider flex items-center gap-2">
-                  <span>Cadet Squad Daily War Cry & Ground Motivation</span>
-                  <span className="text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded uppercase">
-                    Live Broadcast
-                  </span>
-                </h3>
-                <p className="text-[11px] text-gray-400 font-mono">
-                  Reflects instantly in the header of each enrolled cadet&apos;s personal workspace.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {quoteSaved && (
-                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1 rounded-lg animate-fadeIn flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Broadcast Live!
-                </span>
-              )}
-              {!isEditingQuote ? (
-                <button
-                  type="button"
-                  onClick={() => setIsEditingQuote(true)}
-                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
-                >
-                  Edit War Cry
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsEditingQuote(false)}
-                  className="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          </div>
-
-          {!isEditingQuote ? (
-            <div className="pt-3">
-              <blockquote className="text-sm sm:text-base md:text-lg font-display font-black italic uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 leading-snug drop-shadow-[0_2px_8px_rgba(245,158,11,0.4)]">
-                &ldquo;{dailyQuote}&rdquo;
-              </blockquote>
-              <div className="text-xs font-mono text-gray-400 mt-2 flex items-center gap-2">
-                <span className="text-amber-500 font-bold">Author:</span>
-                <span className="text-white font-bold">{quoteAuthor}</span>
-                <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-900">
-                  Visible to All Cadets
-                </span>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSaveQuote} className="pt-3 space-y-3">
-              <div>
-                <label className="block text-xs font-mono text-amber-400 uppercase font-bold mb-1">
-                  Today&apos;s Motivational War Cry / Rally Quote
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={dailyQuote}
-                  onChange={e => setDailyQuote(e.target.value)}
-                  placeholder="Enter high-energy motivational quote to drive cadets during 1600m and drill..."
-                  className="w-full bg-[#0B0F0A] border border-amber-500/50 rounded-xl p-3 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 text-xs sm:text-sm font-sans"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
-                <div>
-                  <label className="block text-xs font-mono text-gray-400 uppercase mb-1">
-                    Sign-off / Ustad Authority Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={quoteAuthor}
-                    onChange={e => setQuoteAuthor(e.target.value)}
-                    placeholder="e.g. Havaldar Anup Kumar Mahato"
-                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 text-xs font-mono"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    type="submit"
-                    variant="saffron"
-                    size="sm"
-                    className="w-full justify-center"
-                    leftIcon={<Send className="w-3.5 h-3.5 text-black" />}
-                  >
-                    Broadcast to All Cadets
-                  </Button>
-                </div>
-              </div>
-            </form>
-          )}
-        </div>
-
-        {/* 24-HOUR DISAPPEARING WAR CRY STORIES TRAY */}
-        <WarCryStoriesTray onUploadClick={() => setIsPostWarCryOpen(true)} className="mb-2" />
-
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-1.5 sm:gap-2 border-b border-[#273623] pb-2 font-display uppercase tracking-wider text-xs font-bold overflow-x-auto no-scrollbar touch-pan-x w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 pb-28 md:pb-8 w-full space-y-6">
+        {/* DESKTOP APP BAR TABS (WHATSAPP MULTI-PAGE EXPERIENCE) */}
+        <div className="hidden md:flex items-center gap-2 border-b border-[#273623] pb-3 mb-2 font-display uppercase tracking-wider text-xs font-bold overflow-x-auto no-scrollbar touch-pan-x w-full">
           {[
-            { id: 'STOPWATCH', label: '⏱️ Drill Stopwatch' },
-            { id: 'WARCRY_HONOUR', label: '🔥 War Cry & Honour Review' },
+            { id: 'STOPWATCH', label: '⏱️ Drill Timer', count: null },
+            { id: 'WARCRY', label: '🔥 War Cry & Stories', count: null },
             {
-              id: 'VERIFICATION',
-              label: `🎖️ Verify Admissions ${
-                allApplications.filter(a => a.admissionStatus === 'PENDING' || a.admissionStatus === 'UNDER_REVIEW' || !a.admissionStatus).length > 0
-                  ? `(${allApplications.filter(a => a.admissionStatus === 'PENDING' || a.admissionStatus === 'UNDER_REVIEW' || !a.admissionStatus).length})`
-                  : ''
-              }`
+              id: 'ADMISSIONS',
+              label: '🎖️ Verify Admissions',
+              count: allApplications.filter(a => a.admissionStatus === 'PENDING' || a.admissionStatus === 'UNDER_REVIEW' || !a.admissionStatus).length
             },
-            { id: 'ATTENDANCE', label: '📋 Batch Attendance' },
-            { id: 'TELEMETRY', label: '⚡ Telemetry Scoring' },
-            { id: 'DEFAULTERS', label: '⚠️ Defaulters & Alerts' },
-            { id: 'EVENTS', label: '📢 Upload Events' },
-            { id: 'HONOUR', label: '🎖️ Role of Honour' },
-            { id: 'ORDERS', label: '📜 Orders & Gallery' }
+            { id: 'ATTENDANCE', label: '📋 Roll Call & Defaulters', count: null },
+            { id: 'BULLETIN', label: '📢 Notices & Orders', count: events.length }
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all whitespace-nowrap border flex-shrink-0 text-[11px] sm:text-xs cursor-pointer ${activeTab === tab.id
-                ? 'bg-amber-500 text-black border-amber-400 font-extrabold shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                : 'bg-[#121811] text-gray-400 border-[#273623] hover:text-white'
-                }`}
+              className={`px-4 py-2.5 rounded-xl transition-all whitespace-nowrap border flex items-center gap-2 cursor-pointer ${
+                effectiveTab === tab.id
+                  ? 'bg-amber-500 text-black border-amber-400 font-extrabold shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                  : 'bg-[#121811] text-gray-400 border-[#273623] hover:text-white hover:border-[#384c31]'
+              }`}
             >
-              {tab.label}
+              <span>{tab.label}</span>
+              {tab.count !== null && tab.count > 0 && (
+                <span className={`px-1.5 py-0.5 rounded-full font-mono font-black text-[10px] ${
+                  effectiveTab === tab.id ? 'bg-black text-amber-400' : 'bg-amber-500 text-black'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
         </div>
 
-        {/* TAB 0: PARADE DRILL STOPWATCH & BROADCAST */}
-        {activeTab === 'STOPWATCH' && (
-          <ParadeDrillStopwatch mode="TRAINER_CONTROLLER" />
-        )}
-
-        {/* TAB 0.2: WAR CRY STORIES & ROLL OF HONOUR VERIFICATION DESK */}
-        {activeTab === 'WARCRY_HONOUR' && (
+        {/* ===================================================================
+            PAGE 1: PARADE DRILL STOPWATCH & BROADCAST CONTROLLER
+            =================================================================== */}
+        {effectiveTab === 'STOPWATCH' && (
           <div className="space-y-6 animate-fadeIn">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#1A1F13] to-[#0E140C] border border-amber-500/40">
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#121811] border border-[#273623] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
               <div>
-                <h3 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-wider flex items-center gap-2">
-                  <Flame className="w-5 h-5 text-amber-400" />
-                  <span>Ustad War Cry & Ground Broadcast Desk</span>
-                </h3>
-                <p className="text-xs text-gray-400 font-mono mt-0.5">
-                  Publish 24-hour drill updates or verify cadet success stories for induction onto the permanent Roll of Honour.
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-display font-black text-base uppercase text-white">Live Drill Broadcast Controller</span>
+                </div>
+                <p className="text-xs font-mono text-gray-400 mt-0.5">
+                  Start or stop the parade drill stopwatch. Enrolled cadets tuned into their mobile portal will sync in real time.
                 </p>
               </div>
-
-              <button
-                onClick={() => setIsPostWarCryOpen(true)}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-display font-black text-xs uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ Broadcast Ustad War Cry Story</span>
-              </button>
+              <div className="flex items-center gap-2 text-xs font-mono">
+                <span className="bg-[#0B0F0A] border border-[#273623] text-amber-400 px-3 py-1.5 rounded-xl">
+                  Ground: <strong>J.K College Field</strong>
+                </span>
+                <span className="bg-[#0B0F0A] border border-[#273623] text-emerald-400 px-3 py-1.5 rounded-xl">
+                  Enlisted: <strong>{cadets.length} Cadets</strong>
+                </span>
+              </div>
             </div>
 
-            <UstadStoryVerificationDesk />
+            <ParadeDrillStopwatch mode="TRAINER_CONTROLLER" />
           </div>
         )}
 
-        {/* TAB 0.5: ADMISSIONS & ENLISTMENT VERIFICATION QUEUE */}
-        {activeTab === 'VERIFICATION' && (
+        {/* ===================================================================
+            PAGE 2: WAR CRY BROADCASTER, 24H STORIES & ROLL OF HONOUR
+            =================================================================== */}
+        {effectiveTab === 'WARCRY' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Sub-tab Navigation */}
+            <div className="p-1.5 rounded-2xl bg-[#121811] border border-[#273623] flex items-center gap-1.5 max-w-md">
+              <button
+                onClick={() => setWarCrySubTab('BROADCAST')}
+                className={`flex-1 py-2 px-3 rounded-xl font-display uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  warCrySubTab === 'BROADCAST'
+                    ? 'bg-amber-500 text-black shadow-md'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5" />
+                <span>War Cry & Stories</span>
+              </button>
+              <button
+                onClick={() => setWarCrySubTab('HONOUR_LIST')}
+                className={`flex-1 py-2 px-3 rounded-xl font-display uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  warCrySubTab === 'HONOUR_LIST'
+                    ? 'bg-amber-500 text-black shadow-md'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>Roll of Honour Wall</span>
+              </button>
+            </div>
+
+            {warCrySubTab === 'BROADCAST' ? (
+              <div className="space-y-6">
+                {/* USTAD'S DAILY MOTIVATIONAL WAR CRY BROADCASTER */}
+                <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#241706] via-[#1A1F13] to-[#0E140C] border-2 border-amber-500/70 shadow-[0_0_30px_rgba(245,158,11,0.25)] relative overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-500/20">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-md">
+                        <Flame className="w-5 h-5 animate-pulse text-black" />
+                      </div>
+                      <div>
+                        <h3 className="font-display font-black text-sm sm:text-base text-white uppercase tracking-wider flex items-center gap-2">
+                          <span>Cadet Squad Daily War Cry & Ground Motivation</span>
+                          <span className="text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded uppercase">
+                            Live Broadcast
+                          </span>
+                        </h3>
+                        <p className="text-[11px] text-gray-400 font-mono">
+                          Reflects instantly in the header of each enrolled cadet&apos;s personal workspace.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {quoteSaved && (
+                        <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1 rounded-lg animate-fadeIn flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Broadcast Live!
+                        </span>
+                      )}
+                      {!isEditingQuote ? (
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingQuote(true)}
+                          className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                        >
+                          Edit War Cry
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingQuote(false)}
+                          className="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {!isEditingQuote ? (
+                    <div className="pt-3">
+                      <blockquote className="text-sm sm:text-base md:text-lg font-display font-black italic uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 leading-snug drop-shadow-[0_2px_8px_rgba(245,158,11,0.4)]">
+                        &ldquo;{dailyQuote}&rdquo;
+                      </blockquote>
+                      <div className="text-xs font-mono text-gray-400 mt-2 flex items-center gap-2">
+                        <span className="text-amber-500 font-bold">Author:</span>
+                        <span className="text-white font-bold">{quoteAuthor}</span>
+                        <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-900">
+                          Visible to All Cadets
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSaveQuote} className="pt-3 space-y-3">
+                      <div>
+                        <label className="block text-xs font-mono text-amber-400 uppercase font-bold mb-1">
+                          Today&apos;s Motivational War Cry / Rally Quote
+                        </label>
+                        <textarea
+                          required
+                          rows={3}
+                          value={dailyQuote}
+                          onChange={e => setDailyQuote(e.target.value)}
+                          placeholder="Enter high-energy motivational quote to drive cadets during 1600m and drill..."
+                          className="w-full bg-[#0B0F0A] border border-amber-500/50 rounded-xl p-3 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 text-xs sm:text-sm font-sans"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                        <div>
+                          <label className="block text-xs font-mono text-gray-400 uppercase mb-1">
+                            Sign-off / Ustad Authority Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={quoteAuthor}
+                            onChange={e => setQuoteAuthor(e.target.value)}
+                            placeholder="e.g. Havaldar Anup Kumar Mahato"
+                            className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 text-xs font-mono"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="submit"
+                            variant="saffron"
+                            size="sm"
+                            className="w-full justify-center"
+                            leftIcon={<Send className="w-3.5 h-3.5 text-black" />}
+                          >
+                            Broadcast to All Cadets
+                          </Button>
+                        </div>
+                      </div>
+                    </form>
+                  )}
+                </div>
+
+                {/* 24-HOUR DISAPPEARING WAR CRY STORIES TRAY */}
+                <WarCryStoriesTray onUploadClick={() => setIsPostWarCryOpen(true)} className="mb-2" />
+
+                {/* USTAD STORY VERIFICATION DESK */}
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#1A1F13] to-[#0E140C] border border-amber-500/40">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-wider flex items-center gap-2">
+                        <Flame className="w-5 h-5 text-amber-400" />
+                        <span>Cadet Success Stories Review Desk</span>
+                      </h3>
+                      <p className="text-xs text-gray-400 font-mono mt-0.5">
+                        Verify cadet-submitted achievements and approve them for permanent induction on the Roll of Honour.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setIsPostWarCryOpen(true)}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-display font-black text-xs uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>+ Broadcast Ustad War Cry Story</span>
+                    </button>
+                  </div>
+
+                  <UstadStoryVerificationDesk />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Create Entry Card */}
+                <div className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-[#121811] border border-[#273623] space-y-5">
+                  <div className="flex items-center gap-3 pb-3 border-b border-[#273623]">
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold">
+                      <Award className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-black text-lg sm:text-xl text-white uppercase tracking-wider">
+                        Role of Honour & Wall of Fame Manager
+                      </h3>
+                      <p className="text-xs text-gray-400 font-mono">
+                        Induct recruited cadets who have cracked the Indian Armed Forces & State Police into the Hall of Fame.
+                      </p>
+                    </div>
+                  </div>
+
+                  {honourSuccess && (
+                    <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 text-xs font-mono flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Cadet successfully inducted into the AIM Role of Honour!</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleAddHonour} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
+                        Soldier / Cadet Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Sepoy Bikram Gorai"
+                        value={newHonour.name}
+                        onChange={e => setNewHonour({ ...newHonour, name: e.target.value })}
+                        className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
+                        Belt / Roll Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. ARMY-GD-7429"
+                        value={newHonour.beltNo}
+                        onChange={e => setNewHonour({ ...newHonour, beltNo: e.target.value })}
+                        className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
+                        Recruited Force / Regiment *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Indian Army (Rajputana Rifles)"
+                        value={newHonour.force}
+                        onChange={e => setNewHonour({ ...newHonour, force: e.target.value })}
+                        className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
+                        Batch Year
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="2025-2026 Batch"
+                        value={newHonour.batchYear}
+                        onChange={e => setNewHonour({ ...newHonour, batchYear: e.target.value })}
+                        className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
+                        Soldier Uniform Photo URL
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://... (or leave empty for default tactical portrait)"
+                        value={newHonour.photoUrl}
+                        onChange={e => setNewHonour({ ...newHonour, photoUrl: e.target.value })}
+                        className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div className="md:col-span-3">
+                      <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
+                        Selection Citation & PET Score Record
+                      </label>
+                      <textarea
+                        rows={2}
+                        placeholder="e.g. Clocked 05m 12s in 1600m Barrackpore Army Rally. 10 Pull-ups on first whistle."
+                        value={newHonour.achievement}
+                        onChange={e => setNewHonour({ ...newHonour, achievement: e.target.value })}
+                        className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div className="md:col-span-3 flex justify-end">
+                      <Button
+                        type="submit"
+                        variant="saffron"
+                        size="sm"
+                        leftIcon={<Plus className="w-4 h-4 text-black" />}
+                      >
+                        Induct Soldier to Hall of Fame
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Wall of Fame Grid */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-display font-black text-base text-white uppercase tracking-wider">
+                      Purulia AIM Selected Cadets ({honourList.length})
+                    </h4>
+                    <span className="text-[11px] font-mono text-amber-400">Displayed on Institute Wall of Fame</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {honourList.map(soldier => (
+                      <div
+                        key={soldier.id}
+                        className="rounded-2xl sm:rounded-3xl bg-[#161F15] border border-amber-500/30 overflow-hidden flex flex-col justify-between hover:border-amber-400 transition-all shadow-[0_0_20px_rgba(0,0,0,0.4)]"
+                      >
+                        <div className="p-4 sm:p-5 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-amber-400 flex-shrink-0 bg-black">
+                              <img
+                                src={soldier.photoUrl}
+                                alt={soldier.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div>
+                              <Badge variant="army" size="sm">{soldier.batchYear}</Badge>
+                              <h4 className="font-display font-black text-base text-white uppercase mt-1">
+                                {soldier.name}
+                              </h4>
+                              <div className="text-[11px] font-mono text-amber-400 font-bold">
+                                {soldier.force}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-[11px] font-mono text-gray-400">
+                            Belt: <span className="text-white font-bold">{soldier.beltNo}</span>
+                          </div>
+
+                          <p className="text-xs text-gray-300 font-sans italic leading-relaxed border-t border-[#273623] pt-2">
+                            &ldquo;{soldier.achievement}&rdquo;
+                          </p>
+                        </div>
+
+                        <div className="p-3 bg-[#0B0F0A] border-t border-[#273623] flex items-center justify-between text-xs font-mono">
+                          <span className="text-emerald-400 flex items-center gap-1 font-bold">
+                            <Award className="w-3.5 h-3.5" />
+                            Selected
+                          </span>
+                          <button
+                            onClick={() => handleDeleteHonour(soldier.id)}
+                            className="text-red-400 hover:text-red-300 transition-colors p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===================================================================
+            PAGE 3: ADMISSIONS & ENLISTMENT VERIFICATION QUEUE
+            =================================================================== */}
+        {effectiveTab === 'ADMISSIONS' && (
           <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#121811] border border-[#273623] space-y-5">
             {/* Header Banner */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-[#273623]">
@@ -1126,8 +1353,85 @@ export default function TrainerCommandCenter() {
           </div>
         )}
 
-        {/* TAB 1: BATCH ATTENDANCE MARKER */}
-        {activeTab === 'ATTENDANCE' && (
+        {/* ===================================================================
+            PAGE 4: BATCH ROLL CALL, DEFAULTERS & TELEMETRY SCORING
+            =================================================================== */}
+        {effectiveTab === 'ATTENDANCE' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Morning Session Command Bar */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#161F15] via-[#121811] to-[#0E140C] border border-[#273623] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-md">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <h2 className="font-display font-black text-lg sm:text-xl text-white uppercase tracking-wider">
+                    Morning Muster Roll • J.K. College Field
+                  </h2>
+                </div>
+                <p className="text-xs text-amber-400 font-mono">
+                  Enrolled Alfa Batch: {cadets.length} Cadets • Reporting Time: 05:00 AM Sharp
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleMarkAllPresent}
+                  leftIcon={<Check className="w-4 h-4 text-emerald-400" />}
+                  className="flex-1 sm:flex-initial justify-center"
+                >
+                  All Present
+                </Button>
+                <Button
+                  variant="saffron"
+                  size="sm"
+                  onClick={handleSaveAttendance}
+                  leftIcon={<Save className="w-4 h-4 text-black" />}
+                  className="flex-1 sm:flex-initial justify-center"
+                >
+                  {attendanceSaved ? 'Saved!' : 'Save Attendance Roster'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Sub-tab Navigation */}
+            <div className="p-1.5 rounded-2xl bg-[#121811] border border-[#273623] flex items-center gap-1.5 max-w-lg">
+              <button
+                onClick={() => setAttendanceSubTab('ROSTER')}
+                className={`flex-1 py-2 px-3 rounded-xl font-display uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  attendanceSubTab === 'ROSTER'
+                    ? 'bg-amber-500 text-black shadow-md'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Roll Call</span>
+              </button>
+              <button
+                onClick={() => setAttendanceSubTab('DEFAULTERS')}
+                className={`flex-1 py-2 px-3 rounded-xl font-display uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  attendanceSubTab === 'DEFAULTERS'
+                    ? 'bg-amber-500 text-black shadow-md'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>Defaulters ({cadets.filter(c => c.consecutiveAbsences >= 3).length})</span>
+              </button>
+              <button
+                onClick={() => setAttendanceSubTab('TELEMETRY')}
+                className={`flex-1 py-2 px-3 rounded-xl font-display uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  attendanceSubTab === 'TELEMETRY'
+                    ? 'bg-amber-500 text-black shadow-md'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>Sunday Scoring</span>
+              </button>
+            </div>
+
+            {attendanceSubTab === 'ROSTER' && (
           <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#121811] border border-[#273623] space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-[#273623]">
               <div className="relative w-full sm:w-72">
@@ -1220,8 +1524,7 @@ export default function TrainerCommandCenter() {
           </div>
         )}
 
-        {/* TAB 2: TELEMETRY ASSESSMENT ENTRY TOOL */}
-        {activeTab === 'TELEMETRY' && (
+        {attendanceSubTab === 'TELEMETRY' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-7 p-6 rounded-3xl bg-[#121811] border border-[#273623] space-y-6">
               <div className="space-y-1">
@@ -1375,8 +1678,7 @@ export default function TrainerCommandCenter() {
           </div>
         )}
 
-        {/* TAB 3: DEFAULTER DETECTION */}
-        {activeTab === 'DEFAULTERS' && (
+        {attendanceSubTab === 'DEFAULTERS' && (
           <div className="p-6 rounded-3xl bg-[#121811] border border-[#273623] space-y-6">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -1432,10 +1734,42 @@ export default function TrainerCommandCenter() {
             </div>
           </div>
         )}
+          </div>
+        )}
 
-        {/* TAB 4: DRILL & RALLY EVENT MANAGER */}
-        {activeTab === 'EVENTS' && (
-          <div className="space-y-6">
+        {/* ===================================================================
+            PAGE 5: BULLETIN, RALLY NOTICES & RECRUITMENT ORDERS
+            =================================================================== */}
+        {effectiveTab === 'BULLETIN' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Sub-tab Navigation */}
+            <div className="p-1.5 rounded-2xl bg-[#121811] border border-[#273623] flex items-center gap-1.5 max-w-md">
+              <button
+                onClick={() => setBulletinSubTab('EVENTS')}
+                className={`flex-1 py-2 px-3 rounded-xl font-display uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  bulletinSubTab === 'EVENTS'
+                    ? 'bg-amber-500 text-black shadow-md'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Megaphone className="w-3.5 h-3.5" />
+                <span>Rally Events</span>
+              </button>
+              <button
+                onClick={() => setBulletinSubTab('ORDERS')}
+                className={`flex-1 py-2 px-3 rounded-xl font-display uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  bulletinSubTab === 'ORDERS'
+                    ? 'bg-amber-500 text-black shadow-md'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Orders & Media</span>
+              </button>
+            </div>
+
+            {bulletinSubTab === 'EVENTS' ? (
+              <div className="space-y-6">
             {/* Create Event Card */}
             <div className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-[#121811] border border-[#273623] space-y-5">
               <div className="flex items-center gap-3 pb-3 border-b border-[#273623]">
@@ -1671,191 +2005,7 @@ export default function TrainerCommandCenter() {
               </div>
             </div>
           </div>
-        )}
-
-        {/* TAB 5: ROLE OF HONOUR / WALL OF FAME */}
-        {activeTab === 'HONOUR' && (
-          <div className="space-y-6">
-            {/* Create Entry Card */}
-            <div className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-[#121811] border border-[#273623] space-y-5">
-              <div className="flex items-center gap-3 pb-3 border-b border-[#273623]">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold">
-                  <Award className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-display font-black text-lg sm:text-xl text-white uppercase tracking-wider">
-                    Role of Honour & Wall of Fame Manager
-                  </h3>
-                  <p className="text-xs text-gray-400 font-mono">
-                    Induct recruited cadets who have cracked the Indian Armed Forces & State Police into the Hall of Fame.
-                  </p>
-                </div>
-              </div>
-
-              {honourSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 text-xs font-mono flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Cadet successfully inducted into the AIM Role of Honour!</span>
-                </div>
-              )}
-
-              <form onSubmit={handleAddHonour} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
-                    Soldier / Cadet Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Sepoy Bikram Gorai"
-                    value={newHonour.name}
-                    onChange={e => setNewHonour({ ...newHonour, name: e.target.value })}
-                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
-                    Belt / Roll Number
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. ARMY-GD-7429"
-                    value={newHonour.beltNo}
-                    onChange={e => setNewHonour({ ...newHonour, beltNo: e.target.value })}
-                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
-                    Recruited Force / Regiment *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Indian Army (Rajputana Rifles)"
-                    value={newHonour.force}
-                    onChange={e => setNewHonour({ ...newHonour, force: e.target.value })}
-                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
-                    Batch Year
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="2025-2026 Batch"
-                    value={newHonour.batchYear}
-                    onChange={e => setNewHonour({ ...newHonour, batchYear: e.target.value })}
-                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
-                    Soldier Uniform Photo URL
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://... (or leave empty for default tactical portrait)"
-                    value={newHonour.photoUrl}
-                    onChange={e => setNewHonour({ ...newHonour, photoUrl: e.target.value })}
-                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div className="md:col-span-3">
-                  <label className="block text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-1.5">
-                    Selection Citation & PET Score Record
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder="e.g. Clocked 05m 12s in 1600m Barrackpore Army Rally. 10 Pull-ups on first whistle."
-                    value={newHonour.achievement}
-                    onChange={e => setNewHonour({ ...newHonour, achievement: e.target.value })}
-                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div className="md:col-span-3 flex justify-end">
-                  <Button
-                    type="submit"
-                    variant="saffron"
-                    size="sm"
-                    leftIcon={<Plus className="w-4 h-4 text-black" />}
-                  >
-                    Induct Soldier to Hall of Fame
-                  </Button>
-                </div>
-              </form>
-            </div>
-
-            {/* Wall of Fame Grid */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-display font-black text-base text-white uppercase tracking-wider">
-                  Purulia AIM Selected Cadets ({honourList.length})
-                </h4>
-                <span className="text-[11px] font-mono text-amber-400">Displayed on Institute Wall of Fame</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {honourList.map(soldier => (
-                  <div
-                    key={soldier.id}
-                    className="rounded-2xl sm:rounded-3xl bg-[#161F15] border border-amber-500/30 overflow-hidden flex flex-col justify-between hover:border-amber-400 transition-all shadow-[0_0_20px_rgba(0,0,0,0.4)]"
-                  >
-                    <div className="p-4 sm:p-5 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-amber-400 flex-shrink-0 bg-black">
-                          <img
-                            src={soldier.photoUrl}
-                            alt={soldier.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div>
-                          <Badge variant="army" size="sm">{soldier.batchYear}</Badge>
-                          <h4 className="font-display font-black text-base text-white uppercase mt-1">
-                            {soldier.name}
-                          </h4>
-                          <div className="text-[11px] font-mono text-amber-400 font-bold">
-                            {soldier.force}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-[11px] font-mono text-gray-400">
-                        Belt / Roll: <strong className="text-white">{soldier.beltNo}</strong>
-                      </div>
-
-                      <p className="text-xs text-gray-300 bg-[#0E140C] p-3 rounded-xl border border-[#273623] leading-relaxed">
-                        &quot;{soldier.achievement}&quot;
-                      </p>
-                    </div>
-
-                    <div className="p-3 bg-[#0E140C] border-t border-[#273623] flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-gray-500">ID: {soldier.id}</span>
-                      <button
-                        onClick={() => handleDeleteHonour(soldier.id)}
-                        className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 p-1 hover:bg-red-950/40 rounded transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 6: RECRUITMENT ORDERS & GALLERY CIRCULARS */}
-        {activeTab === 'ORDERS' && (
+        ) : (
           <div className="space-y-6">
             {/* Create Order Card */}
             <div className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-[#121811] border border-[#273623] space-y-5">
@@ -2006,6 +2156,58 @@ export default function TrainerCommandCenter() {
             </div>
           </div>
         )}
+          </div>
+        )}
+
+        {/* ===================================================================
+            WHATSAPP-STYLE BOTTOM NAVIGATION BAR (MOBILE ONLY)
+            =================================================================== */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0E140C]/95 backdrop-blur-md border-t border-[#273623] px-2 py-2">
+          <div className="flex items-center justify-around max-w-md mx-auto">
+            {[
+              { id: 'STOPWATCH', label: 'Drill', icon: Timer, count: null },
+              { id: 'WARCRY', label: 'War Cry', icon: Flame, count: null },
+              {
+                id: 'ADMISSIONS',
+                label: 'Admissions',
+                icon: Shield,
+                count: allApplications.filter(a => a.admissionStatus === 'PENDING' || a.admissionStatus === 'UNDER_REVIEW' || !a.admissionStatus).length > 0
+                  ? allApplications.filter(a => a.admissionStatus === 'PENDING' || a.admissionStatus === 'UNDER_REVIEW' || !a.admissionStatus).length
+                  : null
+              },
+              { id: 'ATTENDANCE', label: 'Roll Call', icon: Users, count: null },
+              { id: 'BULLETIN', label: 'Notices', icon: Megaphone, count: events.length > 0 ? events.length : null },
+            ].map(item => {
+              const isActive = effectiveTab === item.id;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as any)}
+                  className={`flex flex-col items-center justify-center flex-1 py-1 px-1 relative transition-all cursor-pointer ${
+                    isActive ? 'text-amber-400' : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <div className={`relative p-1 rounded-xl transition-all ${
+                    isActive ? 'bg-amber-500/20 shadow-[0_0_12px_rgba(245,158,11,0.3)]' : ''
+                  }`}>
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-amber-400 stroke-[2.5]' : 'text-gray-400'}`} />
+                    {item.count && (
+                      <span className="absolute -top-1 -right-2 text-[9px] font-black font-mono px-1 rounded-full bg-amber-500 text-black">
+                        {item.count}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
+                    isActive ? 'font-bold text-amber-400' : 'text-gray-400'
+                  }`}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       </main>
 
       {/* Drill Ustad Edit Profile Modal */}

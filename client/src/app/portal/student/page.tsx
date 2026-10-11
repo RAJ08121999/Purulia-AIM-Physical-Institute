@@ -100,10 +100,38 @@ function ReportDossierSkeleton() {
   );
 }
 
+export type StudentPortalTab =
+  | 'WARCRY'
+  | 'DRILL'
+  | 'NOTICES'
+  | 'PERFORMANCE'
+  | 'DOSSIER'
+  // Legacy aliases
+  | 'STOPWATCH'
+  | 'EVENTS'
+  | 'TELEMETRY'
+  | 'ACADEMIC'
+  | 'REPORT'
+  | 'ATTENDANCE'
+  | 'SCHEDULE'
+  | 'STORY';
+
 export default function StudentPortalPage() {
-  const [activeTab, setActiveTab] = useState<
-    'STOPWATCH' | 'EVENTS' | 'TELEMETRY' | 'ACADEMIC' | 'REPORT' | 'ATTENDANCE' | 'SCHEDULE' | 'STORY'
-  >('STOPWATCH');
+  const [activeTab, setActiveTab] = useState<StudentPortalTab>('WARCRY');
+  const [perfSubTab, setPerfSubTab] = useState<'TELEMETRY' | 'ACADEMIC'>('TELEMETRY');
+
+  const effectiveTab: 'WARCRY' | 'DRILL' | 'NOTICES' | 'PERFORMANCE' | 'DOSSIER' =
+    activeTab === 'STOPWATCH' || activeTab === 'SCHEDULE'
+      ? 'DRILL'
+      : activeTab === 'EVENTS'
+      ? 'NOTICES'
+      : activeTab === 'TELEMETRY' || activeTab === 'ACADEMIC'
+      ? 'PERFORMANCE'
+      : activeTab === 'REPORT' || activeTab === 'ATTENDANCE'
+      ? 'DOSSIER'
+      : activeTab === 'STORY'
+      ? 'WARCRY'
+      : (activeTab as any);
   const [liveDrill, setLiveDrill] = useState<LiveDrillSession | null>(null);
   const [storySubmitted, setStorySubmitted] = useState(false);
   const [storyText, setStoryText] = useState('');
@@ -677,7 +705,7 @@ export default function StudentPortalPage() {
       </header>
 
       {/* Main Cadet Container */}
-      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 w-full space-y-5 sm:space-y-7">
+      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 pb-28 md:pb-8 w-full space-y-5 sm:space-y-7">
         {/* ===================================================================
             GATE 1: LOADING STATE
             =================================================================== */}
@@ -930,303 +958,249 @@ export default function StudentPortalPage() {
             =================================================================== */}
         {admissionStatus === 'APPROVED' && (
           <>
-            {/* USTAD'S DAILY WAR CRY • BATTLEFIELD INSPIRATION QUOTE FIELD */}
-            <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#241706] via-[#1B2211] to-[#0E140C] border-2 border-amber-500/80 shadow-[0_0_35px_rgba(245,158,11,0.3)] relative overflow-hidden">
-              <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 relative z-10">
-                <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-black flex items-center justify-center font-black flex-shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.6)]">
-                  <Flame className="w-6 h-6 sm:w-7 sm:h-7 animate-pulse text-black" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="text-[10px] sm:text-[11px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-widest shadow-sm">
-                      🔥 USTAD&apos;S DAILY WAR CRY
-                    </span>
-                <span className="text-[10px] sm:text-xs font-mono text-amber-400 font-bold">
-                  Daily Ground Motivation & Rally Spirit
-                </span>
-              </div>
-              <p className="text-sm sm:text-base md:text-lg font-display font-black italic uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 leading-snug drop-shadow-[0_2px_10px_rgba(245,158,11,0.45)]">
-                &ldquo;{dailyQuote}&rdquo;
-              </p>
-              <div className="text-[11px] font-mono text-gray-400 mt-1 flex items-center gap-1.5">
-                <span className="text-amber-500 font-bold">Commanded by:</span>
-                <span className="text-white font-bold">{quoteAuthor}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* LIVE DRILL ALERT BANNER */}
-        {liveDrill && liveDrill.status !== 'IDLE' && (
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-950/80 via-[#1a150c] to-[#0E140C] border-2 border-amber-500/80 shadow-[0_0_25px_rgba(245,158,11,0.3)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-pulse">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black flex-shrink-0">
-                <Radio className="w-5 h-5 animate-spin" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-wider">
-                    {liveDrill.status === 'RUNNING' ? '🔴 LIVE DRILL RUNNING' : '⏸️ DRILL PAUSED'}
-                  </span>
-                  <span className="text-xs font-mono text-amber-300 font-bold">
-                    {liveDrill.category} ({liveDrill.distanceMeters}m)
-                  </span>
-                </div>
-                <p className="text-xs text-white mt-0.5 font-sans">
-                  Trainer <strong>{liveDrill.trainerName}</strong> is broadcasting. Cadets are in synchronized read-only mode.
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setActiveTab('STOPWATCH')}
-              className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-display font-black text-xs uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(245,158,11,0.5)] cursor-pointer text-center"
-            >
-              Open Synchronized Stopwatch →
-            </button>
-          </div>
-        )}
-
-        {/* LATEST DRILL NOTIFICATION / MUSTER CALL BANNER */}
-        {trainerEvents.length > 0 && (
-          <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#1E2613] via-[#161F15] to-[#0E140C] border-2 border-amber-500/70 shadow-[0_0_35px_rgba(245,158,11,0.25)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-start sm:items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center font-black flex-shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                <Megaphone className="w-6 h-6 animate-pulse text-amber-400" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-widest shadow-sm">
-                    📢 OFFICIAL NOTICE ({trainerEvents.length} ACTIVE)
-                  </span>
-                  <span className="text-[10px] sm:text-xs font-mono text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded">
-                    🎯 Target: {trainerEvents[0]?.targetCadre || 'All Cadets'}
-                  </span>
-                </div>
-                <h3 className="text-sm sm:text-base font-display font-black text-white uppercase tracking-wide leading-snug">
-                  {trainerEvents[0]?.title}
-                </h3>
-                <div className="text-[11px] font-mono text-gray-300 flex flex-wrap items-center gap-2">
-                  <span className="text-amber-400 font-bold">📅 {trainerEvents[0]?.date} • {trainerEvents[0]?.time}</span>
-                  <span className="text-gray-500">•</span>
-                  <span>📍 {trainerEvents[0]?.venue || trainerEvents[0]?.location}</span>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setActiveTab('EVENTS')}
-              className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-display font-black text-xs uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)] cursor-pointer text-center flex items-center justify-center gap-1.5 flex-shrink-0"
-            >
-              <span>View Notice & RSVP</span>
-              <ArrowLeft className="w-4 h-4 rotate-180" />
-            </button>
-          </div>
-        )}
-
-        {/* 24-HOUR GROUND WAR CRY STORIES TRAY */}
-        <WarCryStoriesTray />
-
-        {/* Cadet Profile Banner */}
-        <div className="no-print p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#161F15] via-[#121811] to-[#0E140C] border border-[#273623] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-          <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
-            {/* Passport Photo Frame (35mm x 45mm Indian Armed Forces ratio) */}
-            <div className="relative group flex-shrink-0">
-              <div
-                onClick={() => photoInputRef.current?.click()}
-                className="w-16 h-20 sm:w-20 sm:h-26 rounded-xl sm:rounded-2xl border-2 border-amber-500/80 bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center font-display font-black text-black text-xl sm:text-2xl shadow-[0_0_20px_rgba(245,158,11,0.3)] overflow-hidden cursor-pointer relative"
-                title="Click to upload / change passport photo (35mm × 45mm)"
-              >
-                {cadetPhoto ? (
-                  <>
-                    <img
-                      src={cadetPhoto}
-                      alt={cadetName}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
-                      <Camera className="w-5 h-5 text-amber-400" />
-                      <span className="text-[8px] font-mono text-white uppercase font-bold tracking-wider">
-                        Update
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center text-center p-1">
-                    <span className="font-display font-black text-lg sm:text-xl text-black">
-                      {cadetInitials}
-                    </span>
-                    <span className="text-[8px] font-mono font-bold text-black/80 uppercase mt-0.5">
-                      + Photo
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Quick Camera action badge on corner */}
-              <button
-                type="button"
-                onClick={() => photoInputRef.current?.click()}
-                className="absolute -bottom-1.5 -right-1.5 p-1 sm:p-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-black border-2 border-[#121811] shadow-md transition-transform hover:scale-110 cursor-pointer"
-                title="Upload or Change Passport Photo"
-              >
-                <Camera className="w-3 h-3" />
-              </button>
-
-              <input
-                ref={photoInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleDirectPhotoUpload}
-                className="hidden"
-              />
-            </div>
-
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-display font-black text-lg sm:text-2xl lg:text-3xl text-white uppercase tracking-wider truncate">
-                  {cadetName}
-                </h1>
-                <Badge variant="army" size="sm">
-                  Active Cadet
-                </Badge>
-                {cadetPhoto && (
-                  <Badge variant="saffron" size="sm" className="hidden sm:inline-flex bg-amber-500/20 text-amber-400 border-amber-500/40">
-                    ✓ Photo Attested
-                  </Badge>
-                )}
-              </div>
-              <div className="text-[11px] sm:text-xs font-mono text-amber-400 flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1">
-                <span>Batch: Agniveer Morning Alfa</span>
-                <span className="text-gray-600">•</span>
-                <span className="text-gray-300">Target: {targetForce}</span>
-                <span className="text-gray-600">•</span>
-                <span>Blood: <strong className="text-white font-bold">{bloodGroup}</strong></span>
-                {birthMarks && (
-                  <>
-                    <span className="text-gray-600 hidden sm:inline">•</span>
-                    <span className="text-gray-300 hidden sm:inline truncate max-w-[180px]" title={birthMarks}>
-                      Mark: {birthMarks}
-                    </span>
-                  </>
-                )}
-                <span className="text-gray-600 hidden xs:inline">•</span>
-                <span className="text-gray-400 hidden xs:inline">Roll: {cadetRoll}</span>
-              </div>
-
-              <div className="flex items-center gap-2 mt-1.5">
+            {/* DESKTOP APP BAR TABS (WHATSAPP MULTI-PAGE EXPERIENCE) */}
+            <div className="hidden md:flex items-center gap-2 border-b border-[#273623] pb-3 mb-4 font-display uppercase tracking-wider text-xs font-bold overflow-x-auto no-scrollbar touch-pan-x w-full">
+              {[
+                { id: 'WARCRY', label: '🔥 War Cry Stories', count: null },
+                { id: 'DRILL', label: liveDrill && liveDrill.status !== 'IDLE' ? '🔴 Live Drill Timer' : '⏱️ Drill & Stopwatch', count: null },
+                { id: 'NOTICES', label: '📢 Rallies & Events', count: trainerEvents.length },
+                { id: 'PERFORMANCE', label: '📊 1600m & Fitness', count: null },
+                { id: 'DOSSIER', label: '🪖 Cadet Dossier & Bio', count: null }
+              ].map(tab => (
                 <button
-                  type="button"
-                  onClick={() => photoInputRef.current?.click()}
-                  className="text-[10px] font-mono text-gray-400 hover:text-amber-400 flex items-center gap-1 underline transition-colors cursor-pointer"
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`px-4 py-2.5 rounded-xl transition-all whitespace-nowrap border flex items-center gap-2 cursor-pointer ${
+                    effectiveTab === tab.id
+                      ? 'bg-amber-500 text-black border-amber-400 font-extrabold shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                      : 'bg-[#121811] text-gray-400 border-[#273623] hover:text-white hover:border-[#384c31]'
+                  }`}
                 >
-                  <Upload className="w-3 h-3" />
-                  {cadetPhoto ? 'Update Passport Photo (35x45mm)' : 'Affix Passport Photo (35x45mm)'}
+                  <span>{tab.label}</span>
+                  {tab.count !== null && tab.count > 0 && (
+                    <span className={`px-1.5 py-0.5 rounded-full font-mono font-black text-[10px] ${
+                      effectiveTab === tab.id ? 'bg-black text-amber-400' : 'bg-amber-500 text-black'
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
                 </button>
-                {photoUploadMsg && (
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold">
-                    {photoUploadMsg}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:flex items-center gap-2.5 sm:gap-3 w-full lg:w-auto">
-            <div className="bg-[#0B0F0A] p-2.5 sm:p-3 rounded-xl border border-[#273623] text-center px-3 sm:px-5">
-              <div className="text-[9px] sm:text-[10px] font-mono uppercase text-gray-500">
-                1600m PB
-              </div>
-              <div className="text-lg sm:text-xl font-display font-black text-amber-400">
-                {best1600m}
-              </div>
-              <div className="text-[9px] sm:text-[10px] text-emerald-400 font-mono font-bold truncate">
-                {isNewRecruit ? 'Baseline' : '-1m 51s PB'}
-              </div>
+              ))}
             </div>
 
-            <div className="bg-[#0B0F0A] p-2.5 sm:p-3 rounded-xl border border-[#273623] text-center px-3 sm:px-5">
-              <div className="text-[9px] sm:text-[10px] font-mono uppercase text-gray-500">
-                Attendance
-              </div>
-              <div className="text-lg sm:text-xl font-display font-black text-emerald-400">
-                {attendancePercent}%
-              </div>
-              <div className="text-[9px] sm:text-[10px] text-gray-400 font-mono truncate">
-                {attendanceStreak}
-              </div>
-            </div>
+            {/* ===================================================================
+                PAGE 1: WAR CRY STORIES & RALLY MOTIVATION
+                =================================================================== */}
+            {effectiveTab === 'WARCRY' && (
+              <div className="space-y-6 animate-fadeIn">
+                {/* Ustad's Daily Motivational War Cry Quote */}
+                <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#241706] via-[#1B2211] to-[#0E140C] border-2 border-amber-500/80 shadow-[0_0_35px_rgba(245,158,11,0.3)] relative overflow-hidden">
+                  <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 relative z-10">
+                    <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-black flex items-center justify-center font-black flex-shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.6)]">
+                      <Flame className="w-6 h-6 sm:w-7 sm:h-7 animate-pulse text-black" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="text-[10px] sm:text-[11px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-widest shadow-sm">
+                          🔥 USTAD&apos;S DAILY WAR CRY
+                        </span>
+                        <span className="text-[10px] sm:text-xs font-mono text-amber-400 font-bold">
+                          Daily Ground Motivation & Rally Spirit
+                        </span>
+                      </div>
+                      <p className="text-sm sm:text-base md:text-lg font-display font-black italic uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 leading-snug drop-shadow-[0_2px_10px_rgba(245,158,11,0.45)]">
+                        &ldquo;{dailyQuote}&rdquo;
+                      </p>
+                      <div className="text-[11px] font-mono text-gray-400 mt-1 flex items-center gap-1.5">
+                        <span className="text-amber-500 font-bold">Commanded by:</span>
+                        <span className="text-white font-bold">{quoteAuthor}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-            <button
-              onClick={() => setActiveTab('REPORT')}
-              className="col-span-2 sm:col-span-1 bg-amber-500 hover:bg-amber-400 p-2.5 sm:p-3 rounded-xl text-black flex sm:flex-col items-center justify-center gap-1.5 sm:gap-0 px-4 font-display font-bold text-xs uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(245,158,11,0.25)] cursor-pointer"
-            >
-              <FileText className="w-4 h-4 sm:w-5 sm:h-5 sm:mb-0.5" />
-              <span>Dossier</span>
-            </button>
+                {/* 24-Hour War Cry Stories Tray */}
+                <WarCryStoriesTray />
 
-            <button
-              onClick={() => setIsEditProfileModalOpen(true)}
-              className="col-span-2 sm:col-span-1 bg-[#1A2415] hover:bg-[#273623] border border-amber-500/50 text-amber-400 hover:text-white p-2.5 sm:p-3 rounded-xl flex sm:flex-col items-center justify-center gap-1.5 sm:gap-0 px-3.5 font-display font-bold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
-            >
-              <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 sm:mb-0.5 text-amber-400" />
-              <span>Edit Profile</span>
-            </button>
-          </div>
-        </div>
+                {/* Cadet Ground Voice Hub */}
+                <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#182213] via-[#121811] to-[#0A0F08] border-2 border-amber-500/70 shadow-[0_0_40px_rgba(245,158,11,0.25)] space-y-5">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#273623]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-black flex-shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+                        <Flame className="w-7 h-7 text-amber-400 animate-pulse" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-widest">
+                            GROUND VOICE
+                          </span>
+                          <span className="text-xs font-mono text-emerald-400 font-bold">
+                            WhatsApp & Instagram Style 24h Stories
+                          </span>
+                        </div>
+                        <h3 className="font-display font-black text-xl sm:text-2xl text-white uppercase tracking-wider mt-0.5">
+                          Cadet War Cry & Roll of Honour
+                        </h3>
+                      </div>
+                    </div>
 
-        {/* Navigation Tabs */}
-        <div className="no-print flex items-center gap-1.5 sm:gap-2 border-b border-[#273623] pb-2 font-display uppercase tracking-wider text-xs font-bold overflow-x-auto no-scrollbar touch-pan-x w-full">
-          {[
-            {
-              id: 'STOPWATCH',
-              label: liveDrill && liveDrill.status !== 'IDLE'
-                ? '🔴 Live Parade Drill Timer'
-                : '⏱️ Drill & Self-Training Stopwatch'
-            },
-            { id: 'EVENTS', label: '📢 Rallies & Drill Events' },
-            { id: 'TELEMETRY', label: '1600m & Category Telemetry' },
-            { id: 'ACADEMIC', label: '🎓 Qualifications (10th/12th/Grad/PG)' },
-            { id: 'REPORT', label: 'Official Evaluation Sheet (PDF Export)' },
-            { id: 'ATTENDANCE', label: 'Attendance Calendar & Defaulter Check' },
-            { id: 'SCHEDULE', label: 'Daily Drill Regimen & Timetable' },
-            { id: 'STORY', label: '🔥 War Cry Stories & Honour' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all whitespace-nowrap border cursor-pointer flex-shrink-0 text-[11px] sm:text-xs flex items-center gap-1.5 ${
-                activeTab === tab.id
-                  ? 'bg-amber-500 text-black border-amber-400 font-extrabold shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                  : 'bg-[#121811] text-gray-400 border-[#273623] hover:text-white'
-              }`}
-            >
-              <span>{tab.label}</span>
-              {tab.id === 'EVENTS' && trainerEvents.length > 0 && (
-                <span className={`px-1.5 py-0.5 rounded-full font-mono font-black text-[9px] ${
-                  activeTab === tab.id ? 'bg-black text-amber-400' : 'bg-amber-500 text-black'
-                }`}>
-                  {trainerEvents.length}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+                    <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                      <Button
+                        variant="saffron"
+                        size="md"
+                        onClick={() => setIsPostWarCryOpen(true)}
+                        className="w-full sm:w-auto font-black font-display uppercase tracking-wider text-black flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(245,158,11,0.4)]"
+                      >
+                        <Flame className="w-4 h-4 text-black" />
+                        <span>Post War Cry Story</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Information Cards Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs font-mono">
+                    <div className="p-4 rounded-2xl bg-[#0B0F09] border border-[#273623] space-y-1.5">
+                      <div className="flex items-center gap-2 text-amber-400 font-bold">
+                        <Clock className="w-4 h-4 text-amber-400" />
+                        <span>24-Hour Ephemeral Stories</span>
+                      </div>
+                      <p className="text-gray-400 text-[11px] leading-relaxed">
+                        Share daily morning sprint timings, pull-up records, and ground struggle photos. Stories stay active for 24 hours.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-[#0B0F09] border border-[#273623] space-y-1.5">
+                      <div className="flex items-center gap-2 text-rose-400 font-bold">
+                        <Heart className="w-4 h-4 text-rose-400" />
+                        <span>Public Salutes & Sharing</span>
+                      </div>
+                      <p className="text-gray-400 text-[11px] leading-relaxed">
+                        Anyone can watch and like your War Cry story. Share your stories to WhatsApp & social media with one tap.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-[#0B0F09] border border-[#273623] space-y-1.5">
+                      <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                        <Award className="w-4 h-4 text-emerald-400" />
+                        <span>Roll of Honour Induction</span>
+                      </div>
+                      <p className="text-gray-400 text-[11px] leading-relaxed">
+                        Cleared your physical trial or final selection? Nominate your story for Ustad Anup&apos;s verification to be permanently inducted on the Wall of Fame.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
         {/* ===================================================================
             TAB 0: LIVE DRILL STOPWATCH & CADET SELF-TRAINING
             =================================================================== */}
-        {activeTab === 'STOPWATCH' && (
-          <ParadeDrillStopwatch
-            mode="CADET_VIEWER"
-            cadetName={cadetName ? `Cadet ${cadetName}` : 'Enlisted Cadet'}
-            cadetRoll={cadetRoll}
-          />
+        {/* ===================================================================
+            PAGE 2: LIVE DRILL STOPWATCH & REGIMEN (WHATSAPP MULTI-PAGE)
+            =================================================================== */}
+        {effectiveTab === 'DRILL' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* LIVE DRILL ALERT BANNER */}
+            {liveDrill && liveDrill.status !== 'IDLE' && (
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-950/80 via-[#1a150c] to-[#0E140C] border-2 border-amber-500/80 shadow-[0_0_25px_rgba(245,158,11,0.3)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black flex-shrink-0">
+                    <Radio className="w-5 h-5 animate-spin" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-wider">
+                        {liveDrill.status === 'RUNNING' ? '🔴 LIVE DRILL RUNNING' : '⏸️ DRILL PAUSED'}
+                      </span>
+                      <span className="text-xs font-mono text-amber-300 font-bold">
+                        {liveDrill.category} ({liveDrill.distanceMeters}m)
+                      </span>
+                    </div>
+                    <p className="text-xs text-white mt-0.5 font-sans">
+                      Trainer <strong>{liveDrill.trainerName}</strong> is broadcasting. Cadets are in synchronized mode.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <ParadeDrillStopwatch
+              mode="CADET_VIEWER"
+              cadetName={cadetName ? `Cadet ${cadetName}` : 'Enlisted Cadet'}
+              cadetRoll={cadetRoll}
+            />
+
+            {/* Daily Regimental Drill Timetable */}
+            <div className="pt-4 space-y-4">
+              <h3 className="font-display font-black text-lg text-white uppercase tracking-wider flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-400" />
+                <span>Daily Regimental Drill Timetable & Syllabus</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-5 rounded-2xl bg-[#121811] border border-[#273623] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono text-amber-400 uppercase font-bold">
+                      Phase 1 (05:00 - 05:30 AM)
+                    </span>
+                    <Clock className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <h4 className="text-sm font-display font-bold text-white uppercase">
+                    Dynamic Warm-Up & Mobility
+                  </h4>
+                  <ul className="space-y-1.5 text-xs text-gray-400 font-sans">
+                    <li>• 800m Slow Aerobic Jogging</li>
+                    <li>• Ankle, Hamstring & Hip Drills</li>
+                    <li>• High Knees & Carioca Crossover</li>
+                    <li>• 4 x 50m Accelerated Strides</li>
+                  </ul>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-[#121811] border border-amber-500/40 space-y-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono text-amber-400 uppercase font-bold">
+                      Phase 2 (05:30 - 07:15 AM)
+                    </span>
+                    <Flame className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <h4 className="text-sm font-display font-bold text-white uppercase">
+                    Track Speed & 1600m Pacing
+                  </h4>
+                  <ul className="space-y-1.5 text-xs text-gray-400 font-sans">
+                    <li>• 6 x 400m Track Intervals (1m 16s pace)</li>
+                    <li>• Continuous 2400m Tempo Drill</li>
+                    <li>• Resistance Band Sprint Starts</li>
+                    <li>• Stadium Step Climb Drills</li>
+                  </ul>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-[#121811] border border-[#273623] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono text-amber-400 uppercase font-bold">
+                      Phase 3 (07:15 - 08:30 AM)
+                    </span>
+                    <Activity className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <h4 className="text-sm font-display font-bold text-white uppercase">
+                    Beam, Ditch & Cool-down
+                  </h4>
+                  <ul className="space-y-1.5 text-xs text-gray-400 font-sans">
+                    <li>• 5 Sets x 10 Strict Pull-ups</li>
+                    <li>• Push-up Pyramid (50-40-30-20)</li>
+                    <li>• 9-Feet Ditch Clearance technique</li>
+                    <li>• Diaphragmatic Decompression</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* ===================================================================
-            TAB: UPCOMING RALLIES & TRAINING EVENTS (UPLOADED BY TRAINERS)
+            PAGE 3: UPCOMING RALLIES & TRAINING EVENTS (NOTICES)
             =================================================================== */}
-        {activeTab === 'EVENTS' && (
+        {effectiveTab === 'NOTICES' && (
           <div className="space-y-6 animate-fadeIn">
             <div className="p-4 sm:p-6 rounded-3xl bg-[#121811] border border-[#273623] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
@@ -1427,24 +1401,47 @@ export default function StudentPortalPage() {
         )}
 
         {/* ===================================================================
-            TAB 1: TELEMETRY & STUDENT PROGRESS VISUALIZER (MODULE 6)
+            PAGE 4: PERFORMANCE TELEMETRY & ACADEMIC PORTFOLIO
             =================================================================== */}
-        {activeTab === 'TELEMETRY' && (
-          <Suspense fallback={<TelemetryChartSkeleton />}>
-            <DynamicStudentProgressVisualizer
-              cadetId={cadetRoll}
-              studentName={cadetName ? `Cadet ${cadetName}` : 'Enlisted Cadet'}
-              initialForce="ARMY_GD"
-              onExportReport={() => setActiveTab('REPORT')}
-            />
-          </Suspense>
-        )}
-
-        {/* ===================================================================
-            TAB: PREVIOUS EDUCATIONAL QUALIFICATIONS (10th, 12th, GRAD, PG)
-            =================================================================== */}
-        {activeTab === 'ACADEMIC' && (
+        {effectiveTab === 'PERFORMANCE' && (
           <div className="space-y-6 animate-fadeIn">
+            {/* Sub-tab Navigation Switcher */}
+            <div className="p-1.5 rounded-2xl bg-[#121811] border border-[#273623] flex items-center gap-1.5 max-w-md">
+              <button
+                onClick={() => setPerfSubTab('TELEMETRY')}
+                className={`flex-1 py-2 px-3 rounded-xl font-display uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  perfSubTab === 'TELEMETRY'
+                    ? 'bg-amber-500 text-black shadow-md'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>1600m Telemetry</span>
+              </button>
+              <button
+                onClick={() => setPerfSubTab('ACADEMIC')}
+                className={`flex-1 py-2 px-3 rounded-xl font-display uppercase tracking-wider text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  perfSubTab === 'ACADEMIC'
+                    ? 'bg-amber-500 text-black shadow-md'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Qualifications</span>
+              </button>
+            </div>
+
+            {perfSubTab === 'TELEMETRY' ? (
+              <Suspense fallback={<TelemetryChartSkeleton />}>
+                <DynamicStudentProgressVisualizer
+                  cadetId={cadetRoll}
+                  studentName={cadetName ? `Cadet ${cadetName}` : 'Enlisted Cadet'}
+                  initialForce="ARMY_GD"
+                  onExportReport={() => setActiveTab('DOSSIER')}
+                />
+              </Suspense>
+            ) : (
+              <div className="space-y-6 animate-fadeIn">
             {/* Header & Quick Action */}
             <div className="p-4 sm:p-6 rounded-3xl bg-[#121811] border border-[#273623] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
@@ -1987,303 +1984,289 @@ export default function StudentPortalPage() {
                 </div>
               </div>
             )}
+              </div>
+            )}
           </div>
         )}
 
         {/* ===================================================================
-            TAB 2: OFFICIAL EVALUATION SHEET & PDF REPORT EXPORT (MODULE 6)
+            PAGE 5: CADET DOSSIER, ATTENDANCE & OFFICIAL EVALUATION
             =================================================================== */}
-        {activeTab === 'REPORT' && (
-          <Suspense fallback={<ReportDossierSkeleton />}>
-            <DynamicProgressReportPDFView
-              data={{
-                ...DEFAULT_CADET_REPORT,
-                cadetName,
-                dossierNumber: cadetRoll,
-                targetForce: targetForce || DEFAULT_CADET_REPORT.targetForce,
-                bloodGroup: bloodGroup || DEFAULT_CADET_REPORT.bloodGroup,
-                birthMarks: birthMarks || undefined,
-                passportPhoto: cadetPhoto || undefined,
-                heightCm: cadetHeight,
-                weightKg: cadetWeight,
-                chestNormalCm: cadetChestNormal,
-                chestExpandedCm: cadetChestExpanded,
-                attendancePercent: attendancePercent
-              }}
-              onClose={() => setActiveTab('TELEMETRY')}
-            />
-          </Suspense>
-        )}
-
-        {/* ===================================================================
-            TAB 3: ATTENDANCE & DEFAULTER RECORD
-            =================================================================== */}
-        {activeTab === 'ATTENDANCE' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 p-6 rounded-3xl bg-[#121811] border border-[#273623] space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-display font-black text-xl text-white uppercase tracking-wider">
-                    Monthly Ground Attendance (October 2026)
-                  </h3>
-                  <p className="text-xs text-gray-400 font-sans mt-0.5">
-                    Automatic defaulter detection flags candidates with 3 consecutive unexcused absences.
-                  </p>
-                </div>
-                <Badge variant="success" size="sm">
-                  Active (0 Defaulter Alerts)
-                </Badge>
-              </div>
-
-              {/* Daily Parade Ground Attendance State */}
-              {attendancePercent === 0 ? (
-                <div className="py-12 text-center p-6 border border-dashed border-[#273623] rounded-2xl bg-[#0B0F0A] space-y-2">
-                  <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mx-auto border border-amber-500/30">
-                    <Calendar className="w-6 h-6" />
-                  </div>
-                  <h5 className="font-display font-bold text-white text-base">New Recruit Muster Status</h5>
-                  <p className="text-xs font-mono text-gray-400 max-w-md mx-auto">
-                    0 parade ground roll-call attendances recorded. Your daily morning parade attendance markings will appear here once morning roll call is logged by Ustad.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-7 gap-2 pt-4">
-                  {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-                    <div
-                      key={i}
-                      className="text-center font-mono text-[11px] text-gray-500 font-bold py-1"
+        {effectiveTab === 'DOSSIER' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Cadet Official Identity Card with 35x45mm Passport Photo & Vitals */}
+            <div className="p-5 sm:p-7 rounded-3xl bg-[#121811] border border-[#273623] shadow-xl space-y-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-5 pb-5 border-b border-[#273623]">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+                  {/* Standard 35x45mm Indian Armed Forces Passport Frame */}
+                  <div className="relative group">
+                    <div className="w-[105px] h-[135px] rounded-xl overflow-hidden border-2 border-amber-500/70 shadow-lg bg-[#0E140C] flex items-center justify-center flex-shrink-0 relative">
+                      {cadetPhoto ? (
+                        <img
+                          src={cadetPhoto}
+                          alt={cadetName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-amber-400 bg-amber-500/10">
+                          <User className="w-12 h-12 stroke-[1.5]" />
+                          <span className="text-[9px] font-mono uppercase mt-1">35 x 45 mm</span>
+                        </div>
+                      )}
+                    </div>
+                    {/* Direct Upload Trigger */}
+                    <button
+                      onClick={() => photoInputRef.current?.click()}
+                      className="absolute bottom-1 right-1 p-1.5 rounded-lg bg-amber-500 text-black hover:bg-amber-400 shadow-md cursor-pointer"
+                      title="Update Passport Photo (<100KB)"
                     >
-                      {d}
-                    </div>
-                  ))}
-                  {Array.from({ length: 31 }, (_, i) => {
-                    const day = i + 1;
-                    const isSunday = day % 7 === 0;
-                    const isFuture = day > 1;
-
-                    return (
-                      <div
-                        key={day}
-                        className={`h-12 rounded-xl border flex flex-col items-center justify-center font-mono text-xs transition-colors ${
-                          isFuture
-                            ? 'border-[#1A2415] bg-[#0E140C] text-gray-600'
-                            : isSunday
-                            ? 'border-amber-500/40 bg-amber-500/10 text-amber-400 font-bold'
-                            : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold'
-                        }`}
-                      >
-                        <span>{day}</span>
-                        <span className="text-[9px]">
-                          {isFuture ? '' : isSunday ? 'TRIAL' : 'P'}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              <div className="flex flex-wrap items-center gap-6 pt-4 text-xs font-mono text-gray-400 border-t border-[#1A2415]">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded bg-emerald-500/30 border border-emerald-500" />
-                  <span>Present (Morning Drill)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded bg-amber-500/30 border border-amber-500" />
-                  <span>Sunday Super-Timed Trial</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded bg-rose-500/30 border border-rose-500" />
-                  <span>Unexcused Absence</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Attendance Rules & Standing */}
-            <div className="lg:col-span-4 space-y-4">
-              <div className="p-6 rounded-3xl bg-[#161F15] border border-[#273623] space-y-4">
-                <h4 className="font-display font-bold text-lg text-white uppercase">
-                  AIM Attendance Rules
-                </h4>
-                <div className="space-y-3 text-xs text-gray-300 leading-relaxed font-sans">
-                  <p>
-                    • Minimum <strong className="text-amber-400 font-mono">85% monthly attendance</strong> is required to remain in the morning Alfa batch.
-                  </p>
-                  <p>
-                    • <strong className="text-rose-400 font-mono">3 consecutive absences</strong> without informing Anup Sir results in automated suspension to the waiting reserve list.
-                  </p>
-                  <p>
-                    • Reporting time at J.K College Ground Purulia is <strong className="text-white font-mono">05:00 AM sharp</strong>. Cadets arriving after national anthem will not be marked present.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===================================================================
-            TAB 4: DAILY DRILL SCHEDULE
-            =================================================================== */}
-        {activeTab === 'SCHEDULE' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="p-6 rounded-3xl bg-[#121811] border border-[#273623] space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono text-amber-400 uppercase font-bold">
-                  Phase 1 (05:00 - 05:30 AM)
-                </span>
-                <Clock className="w-4 h-4 text-amber-400" />
-              </div>
-              <h4 className="text-lg font-display font-bold text-white uppercase">
-                Dynamic Warm-Up & Joint Mobility
-              </h4>
-              <ul className="space-y-2 text-xs text-gray-300 font-sans">
-                <li>• 800m Slow Aerobic Jogging</li>
-                <li>• Ankle, Hamstring & Hip Mobility Drills</li>
-                <li>• High Knees, Butt Kicks, Carioca Crossover</li>
-                <li>• 4 x 50m Accelerated Strides</li>
-              </ul>
-            </div>
-
-            <div className="p-6 rounded-3xl bg-[#121811] border border-amber-500/40 space-y-4 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono text-amber-400 uppercase font-bold">
-                  Phase 2 (05:30 - 07:15 AM)
-                </span>
-                <Flame className="w-4 h-4 text-amber-400" />
-              </div>
-              <h4 className="text-lg font-display font-bold text-white uppercase">
-                Core Track Speed & Endurance
-              </h4>
-              <ul className="space-y-2 text-xs text-gray-300 font-sans">
-                <li>• 6 x 400m Track Intervals at 1m 16s pace (90s rest)</li>
-                <li>• Continuous 2400m Tempo Pacing Drill</li>
-                <li>• Resistance Band Sprint Starts</li>
-                <li>• Incline Sprint Climbs (Stadium Steps)</li>
-              </ul>
-            </div>
-
-            <div className="p-6 rounded-3xl bg-[#121811] border border-[#273623] space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono text-amber-400 uppercase font-bold">
-                  Phase 3 (07:15 - 08:30 AM)
-                </span>
-                <Activity className="w-4 h-4 text-amber-400" />
-              </div>
-              <h4 className="text-lg font-display font-bold text-white uppercase">
-                Strength, Beam & Cool-down
-              </h4>
-              <ul className="space-y-2 text-xs text-gray-300 font-sans">
-                <li>• 5 Sets x 10 Strict Beam Pull-ups (Dead-hang)</li>
-                <li>• Push-up Pyramid: 50 - 40 - 30 - 20 reps</li>
-                <li>• 9-Feet Sandpit Clearance technique</li>
-                <li>• Static Decompression & Diaphragmatic Breathing</li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* ===================================================================
-            TAB 5: WAR CRY STORIES & ROLL OF HONOUR HUB
-            =================================================================== */}
-        {activeTab === 'STORY' && (
-          <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
-            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#182213] via-[#121811] to-[#0A0F08] border-2 border-amber-500/70 shadow-[0_0_40px_rgba(245,158,11,0.25)] space-y-5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#273623]">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-black flex-shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
-                    <Flame className="w-7 h-7 text-amber-400 animate-pulse" />
+                      <Camera className="w-3.5 h-3.5" />
+                    </button>
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleDirectPhotoUpload}
+                      className="hidden"
+                    />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono uppercase bg-amber-500 text-black px-2 py-0.5 rounded font-black tracking-widest">
-                        GROUND VOICE
+
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500 text-black font-black uppercase tracking-wider">
+                        AIM ENLISTED CADET
                       </span>
-                      <span className="text-xs font-mono text-emerald-400 font-bold">
-                        WhatsApp & Instagram Style 24h Stories
+                      <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded font-bold">
+                        Dossier: {cadetRoll || 'AIM-CADET'}
                       </span>
                     </div>
-                    <h3 className="font-display font-black text-xl sm:text-2xl text-white uppercase tracking-wider mt-0.5">
-                      Cadet War Cry & Roll of Honour
-                    </h3>
+                    <h2 className="font-display font-black text-2xl text-white uppercase tracking-wider">
+                      {cadetName || 'Active Recruit'}
+                    </h2>
+                    <p className="text-xs font-mono text-gray-300">
+                      Target Wing: <strong className="text-amber-400">{targetForce}</strong> • Blood Group: <strong className="text-white">{bloodGroup}</strong>
+                    </p>
+                    {birthMarks && birthMarks !== '—' && (
+                      <p className="text-[11px] font-mono text-gray-400">
+                        Identification Mark: {birthMarks}
+                      </p>
+                    )}
+                    {photoUploadMsg && (
+                      <p className="text-xs font-mono text-amber-300 animate-fadeIn">{photoUploadMsg}</p>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                  <Button
-                    variant="saffron"
-                    size="md"
-                    onClick={() => setIsPostWarCryOpen(true)}
-                    className="w-full sm:w-auto font-black font-display uppercase tracking-wider text-black flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(245,158,11,0.4)]"
+                {/* Dossier Quick Actions */}
+                <div className="flex flex-wrap sm:flex-col items-center gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={() => setIsEditProfileModalOpen(true)}
+                    className="flex-1 sm:flex-initial w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-display font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
                   >
-                    <Flame className="w-4 h-4 text-black" />
-                    <span>Post War Cry Story</span>
-                  </Button>
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Edit Profile Data</span>
+                  </button>
+                  <a
+                    href={`${getApiBaseUrl()}/mvc/cadet-card/${cadetRoll}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 sm:flex-initial w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#161F15] hover:bg-[#1f2c1e] text-emerald-400 border border-emerald-500/40 text-xs font-mono font-bold transition-all"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Download Admit Card</span>
+                  </a>
                 </div>
               </div>
 
-              {/* Information Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs font-mono">
-                <div className="p-4 rounded-2xl bg-[#0B0F09] border border-[#273623] space-y-1.5">
-                  <div className="flex items-center gap-2 text-amber-400 font-bold">
-                    <Clock className="w-4 h-4 text-amber-400" />
-                    <span>24-Hour Ephemeral Stories</span>
+              {/* Physical Telemetry Vitals Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
+                <div className="p-3 rounded-xl bg-[#0B0F0A] border border-[#273623]">
+                  <span className="text-[10px] text-gray-400 uppercase block">Cadet Height</span>
+                  <span className="text-base font-bold text-white font-display">{cadetHeight > 0 ? `${cadetHeight} cm` : 'Not Measured'}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-[#0B0F0A] border border-[#273623]">
+                  <span className="text-[10px] text-gray-400 uppercase block">Body Weight</span>
+                  <span className="text-base font-bold text-white font-display">{cadetWeight > 0 ? `${cadetWeight} kg` : 'Not Measured'}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-[#0B0F0A] border border-[#273623]">
+                  <span className="text-[10px] text-gray-400 uppercase block">Chest (Normal)</span>
+                  <span className="text-base font-bold text-white font-display">{cadetChestNormal > 0 ? `${cadetChestNormal} cm` : 'Not Measured'}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-[#0B0F0A] border border-[#273623]">
+                  <span className="text-[10px] text-gray-400 uppercase block">Chest (Expanded)</span>
+                  <span className="text-base font-bold text-amber-400 font-display">{cadetChestExpanded > 0 ? `${cadetChestExpanded} cm (+${Math.max(0, cadetChestExpanded - cadetChestNormal)}cm)` : 'Not Measured'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Attendance & Defaulter Record */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-8 p-6 rounded-3xl bg-[#121811] border border-[#273623] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-display font-black text-xl text-white uppercase tracking-wider">
+                      Monthly Ground Attendance (October 2026)
+                    </h3>
+                    <p className="text-xs text-gray-400 font-sans mt-0.5">
+                      Automatic defaulter detection flags candidates with 3 consecutive unexcused absences.
+                    </p>
                   </div>
-                  <p className="text-gray-400 text-[11px] leading-relaxed">
-                    Share daily morning sprint timings, pull-up records, and ground struggle photos. Stories stay active for 24 hours, just like WhatsApp & Instagram.
-                  </p>
+                  <Badge variant="success" size="sm">
+                    Active (0 Defaulter Alerts)
+                  </Badge>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-[#0B0F09] border border-[#273623] space-y-1.5">
-                  <div className="flex items-center gap-2 text-rose-400 font-bold">
-                    <Heart className="w-4 h-4 text-rose-400" />
-                    <span>Public Salutes & Sharing</span>
+                {/* Daily Parade Ground Attendance State */}
+                {attendancePercent === 0 ? (
+                  <div className="py-12 text-center p-6 border border-dashed border-[#273623] rounded-2xl bg-[#0B0F0A] space-y-2">
+                    <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mx-auto border border-amber-500/30">
+                      <Calendar className="w-6 h-6" />
+                    </div>
+                    <h5 className="font-display font-bold text-white text-base">New Recruit Muster Status</h5>
+                    <p className="text-xs font-mono text-gray-400 max-w-md mx-auto">
+                      0 parade ground roll-call attendances recorded. Your daily morning parade attendance markings will appear here once morning roll call is logged by Ustad.
+                    </p>
                   </div>
-                  <p className="text-gray-400 text-[11px] leading-relaxed">
-                    Anyone can watch and like your War Cry story. Share your stories to WhatsApp & social media to show your dedication to family & friends!
-                  </p>
-                </div>
+                ) : (
+                  <div className="grid grid-cols-7 gap-2 pt-4">
+                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+                      <div
+                        key={i}
+                        className="text-center font-mono text-[11px] text-gray-500 font-bold py-1"
+                      >
+                        {d}
+                      </div>
+                    ))}
+                    {Array.from({ length: 31 }, (_, i) => {
+                      const day = i + 1;
+                      const isSunday = day % 7 === 0;
+                      const isFuture = day > 1;
 
-                <div className="p-4 rounded-2xl bg-[#0B0F09] border border-[#273623] space-y-1.5">
-                  <div className="flex items-center gap-2 text-emerald-400 font-bold">
-                    <Award className="w-4 h-4 text-emerald-400" />
-                    <span>Roll of Honour Induction</span>
+                      return (
+                        <div
+                          key={day}
+                          className={`h-12 rounded-xl border flex flex-col items-center justify-center font-mono text-xs transition-colors ${
+                            isFuture
+                              ? 'border-[#1A2415] bg-[#0E140C] text-gray-600'
+                              : isSunday
+                              ? 'border-amber-500/40 bg-amber-500/10 text-amber-400 font-bold'
+                              : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold'
+                          }`}
+                        >
+                          <span>{day}</span>
+                          <span className="text-[9px]">
+                            {isFuture ? '' : isSunday ? 'TRIAL' : 'P'}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <p className="text-gray-400 text-[11px] leading-relaxed">
-                    Cleared your physical trial or final selection? Nominate your story for Ustad Anup&apos;s verification to be permanently inducted on the Wall of Fame.
-                  </p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-6 pt-4 text-xs font-mono text-gray-400 border-t border-[#1A2415]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-emerald-500/30 border border-emerald-500" />
+                    <span>Present (Morning Drill)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-amber-500/30 border border-amber-500" />
+                    <span>Sunday Super-Timed Trial</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-rose-500/30 border border-rose-500" />
+                    <span>Unexcused Absence</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Direct Post Quick Action Banner */}
-              <div className="p-4 rounded-2xl bg-[#0E150B] border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="space-y-0.5 text-center sm:text-left">
-                  <h4 className="font-display font-black text-sm text-white uppercase tracking-wider">
-                    Ready to inspire fellow recruits?
+              {/* Attendance Rules & Standing */}
+              <div className="lg:col-span-4 space-y-4">
+                <div className="p-6 rounded-3xl bg-[#161F15] border border-[#273623] space-y-4">
+                  <h4 className="font-display font-bold text-lg text-white uppercase">
+                    AIM Attendance Rules
                   </h4>
-                  <p className="text-[11px] font-mono text-gray-400">
-                    Post your 1600m PR, pull-up milestone, or morning assembly motivation right now.
-                  </p>
+                  <div className="space-y-3 text-xs text-gray-300 leading-relaxed font-sans">
+                    <p>
+                      • Minimum <strong className="text-amber-400 font-mono">85% monthly attendance</strong> is required to remain in the morning Alfa batch.
+                    </p>
+                    <p>
+                      • <strong className="text-rose-400 font-mono">3 consecutive absences</strong> without informing Anup Sir results in automated suspension to the waiting reserve list.
+                    </p>
+                    <p>
+                      • Reporting time at J.K College Ground Purulia is <strong className="text-white font-mono">05:00 AM sharp</strong>. Cadets arriving after national anthem will not be marked present.
+                    </p>
+                  </div>
                 </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsPostWarCryOpen(true)}
-                  className="w-full sm:w-auto text-amber-400 border-amber-500/50 hover:bg-amber-500/10 font-bold font-mono text-xs uppercase"
-                >
-                  + Add Daily Story
-                </Button>
               </div>
             </div>
 
-            {/* Embedded Active Stories Showcase */}
-            <div className="space-y-3">
-              <h4 className="font-display font-black text-base text-white uppercase tracking-wider flex items-center gap-2">
-                <span>Active 24-Hour Ground Stories</span>
-              </h4>
-              <WarCryStoriesTray showPostButton={false} />
-            </div>
+            {/* Official Evaluation Sheet & PDF Report */}
+            <Suspense fallback={<ReportDossierSkeleton />}>
+              <DynamicProgressReportPDFView
+                data={{
+                  ...DEFAULT_CADET_REPORT,
+                  cadetName,
+                  dossierNumber: cadetRoll,
+                  targetForce: targetForce || DEFAULT_CADET_REPORT.targetForce,
+                  bloodGroup: bloodGroup || DEFAULT_CADET_REPORT.bloodGroup,
+                  birthMarks: birthMarks || undefined,
+                  passportPhoto: cadetPhoto || undefined,
+                  heightCm: cadetHeight,
+                  weightKg: cadetWeight,
+                  chestNormalCm: cadetChestNormal,
+                  chestExpandedCm: cadetChestExpanded,
+                  attendancePercent: attendancePercent
+                }}
+                onClose={() => setActiveTab('PERFORMANCE')}
+              />
+            </Suspense>
           </div>
         )}
+
+        {/* ===================================================================
+            WHATSAPP-STYLE BOTTOM NAVIGATION BAR (MOBILE ONLY)
+            =================================================================== */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0E140C]/95 backdrop-blur-md border-t border-[#273623] px-2 py-2">
+          <div className="flex items-center justify-around max-w-md mx-auto">
+            {[
+              { id: 'WARCRY', label: 'War Cry', icon: Flame, count: null },
+              { id: 'DRILL', label: 'Drill', icon: Timer, count: liveDrill && liveDrill.status !== 'IDLE' ? 'LIVE' : null },
+              { id: 'NOTICES', label: 'Notices', icon: Megaphone, count: trainerEvents.length > 0 ? trainerEvents.length : null },
+              { id: 'PERFORMANCE', label: 'Telemetry', icon: Activity, count: null },
+              { id: 'DOSSIER', label: 'Dossier', icon: Shield, count: null },
+            ].map(item => {
+              const isActive = effectiveTab === item.id;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as any)}
+                  className={`flex flex-col items-center justify-center flex-1 py-1 px-1 relative transition-all cursor-pointer ${
+                    isActive ? 'text-amber-400' : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <div className={`relative p-1 rounded-xl transition-all ${
+                    isActive ? 'bg-amber-500/20 shadow-[0_0_12px_rgba(245,158,11,0.3)]' : ''
+                  }`}>
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-amber-400 stroke-[2.5]' : 'text-gray-400'}`} />
+                    {item.count && (
+                      <span className={`absolute -top-1 -right-2 text-[9px] font-black font-mono px-1 rounded-full ${
+                        item.count === 'LIVE' ? 'bg-red-500 text-white animate-pulse' : 'bg-amber-500 text-black'
+                      }`}>
+                        {item.count}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
+                    isActive ? 'font-bold text-amber-400' : 'text-gray-400'
+                  }`}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       </>
     )}
 
