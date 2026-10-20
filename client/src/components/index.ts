@@ -14,4 +14,5 @@ export * from './WarCryStoriesTray';
 export * from './WarCryStoryModal';
 export * from './PostWarCryModal';
 export * from './UstadStoryVerificationDesk';
+export * from './ThemeToggle';
 export * from './ui';

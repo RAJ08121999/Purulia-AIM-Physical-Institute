@@ -40,7 +40,7 @@ import {
 } from 'lucide-react';
 import { Button, Badge, Card, StatMetricCard } from '@/components/ui';
 import { submitBulkAttendance, recordTrialAssessment, getCurrentUser, logoutUser, fetchCadetApplications, updateCadetStatus, getApiBaseUrl, fetchTrainerProfile, createInstituteEvent, deleteInstituteEvent, fetchInstituteEvents } from '@/lib/api';
-import { ParadeDrillStopwatch, EditTrainerProfileModal, WarCryStoriesTray, UstadStoryVerificationDesk, PostWarCryModal } from '@/components';
+import { ParadeDrillStopwatch, EditTrainerProfileModal, WarCryStoriesTray, UstadStoryVerificationDesk, PostWarCryModal, ThemeToggle } from '@/components';
 
 interface CadetAttendance {
   id: string;
@@ -642,6 +642,9 @@ export default function TrainerCommandCenter() {
                 {currentUser?.email || 'Purulia Ground In-Charge'}
               </div>
             </div>
+
+            {/* Tactical Theme Switcher */}
+            <ThemeToggle variant="compact" />
 
             <button
               onClick={() => setIsEditTrainerModalOpen(true)}
@@ -1886,7 +1889,7 @@ export default function TrainerCommandCenter() {
                     required
                     value={newEvent.date}
                     onChange={e => setNewEvent({ ...newEvent, date: e.target.value })}
-                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-[#0B0F0A] border border-[#273623] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200 hover:[&::-webkit-calendar-picker-indicator]:scale-110 transition-all"
                   />
                 </div>
 

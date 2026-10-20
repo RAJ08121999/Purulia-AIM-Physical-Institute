@@ -142,8 +142,189 @@ body {
   border-radius: 3px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #4B6135;
+/* Date input native calendar picker icon - Pure White in dark mode, Dark in light mode */
+input[type="date"] {
+  color-scheme: dark;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.95;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+html.light input[type="date"],
+[data-theme="light"] input[type="date"] {
+  color-scheme: light;
+}
+
+html.light input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 0.75;
+}
+
+/* ==========================================================================
+   REGIMENTAL DAY OPERATIONS: AUTHENTIC MILITARY LIGHT THEME
+   ========================================================================== */
+html.light,
+[data-theme="light"] {
+  color-scheme: light;
+  --bg-dark: #F8FAF6;
+  --bg-card: #FFFFFF;
+  --text-main: #0F172A;
+}
+
+html.light body,
+[data-theme="light"] body {
+  background-color: #F8FAF6 !important;
+  color: #0F172A !important;
+}
+
+/* Light Mode Tactical Grid */
+html.light .bg-tactical-grid,
+[data-theme="light"] .bg-tactical-grid {
+  background-image: radial-gradient(circle at 1px 1px, rgba(45, 62, 36, 0.12) 1px, transparent 0) !important;
+  background-size: 32px 32px;
+}
+
+html.light .bg-tactical-dots,
+[data-theme="light"] .bg-tactical-dots {
+  background-image: radial-gradient(rgba(217, 119, 6, 0.2) 1px, transparent 1px) !important;
+  background-size: 24px 24px;
+}
+
+/* Light Mode Main Backgrounds */
+html.light .bg-\[\#0B0F0A\],
+[data-theme="light"] .bg-\[\#0B0F0A\] {
+  background-color: #F8FAF6 !important;
+}
+
+html.light .bg-\[\#070B06\],
+[data-theme="light"] .bg-\[\#070B06\],
+html.light .bg-\[\#070B06\]\/95,
+[data-theme="light"] .bg-\[\#070B06\]\/95,
+html.light .bg-\[\#070B06\]\/98,
+[data-theme="light"] .bg-\[\#070B06\]\/98,
+html.light .bg-\[\#0E140C\]\/95,
+[data-theme="light"] .bg-\[\#0E140C\]\/95 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Light Mode Card Panels & Containers */
+html.light .bg-\[\#121811\],
+[data-theme="light"] .bg-\[\#121811\],
+html.light .bg-\[\#161F15\],
+[data-theme="light"] .bg-\[\#161F15\],
+html.light .bg-\[\#0E140C\],
+[data-theme="light"] .bg-\[\#0E140C\],
+html.light .bg-\[\#171D12\],
+[data-theme="light"] .bg-\[\#171D12\],
+html.light .bg-gradient-to-r.from-\[\#161F15\],
+[data-theme="light"] .bg-gradient-to-r.from-\[\#161F15\],
+html.light .bg-gradient-to-r.from-\[\#171D12\],
+[data-theme="light"] .bg-gradient-to-r.from-\[\#171D12\] {
+  background-color: #FFFFFF !important;
+  background-image: none !important;
+  box-shadow: 0 4px 20px -2px rgba(45, 62, 36, 0.08) !important;
+}
+
+html.light .bg-\[\#1A2415\],
+[data-theme="light"] .bg-\[\#1A2415\] {
+  background-color: #F1F5EE !important;
+}
+
+/* Light Mode Borders */
+html.light .border-\[\#273623\],
+[data-theme="light"] .border-\[\#273623\],
+html.light .border-\[\#1A2415\],
+[data-theme="light"] .border-\[\#1A2415\],
+html.light .border-\[\#1C2618\],
+[data-theme="light"] .border-\[\#1C2618\] {
+  border-color: #DDE5D8 !important;
+}
+
+/* Light Mode Typography */
+html.light .text-white,
+[data-theme="light"] .text-white {
+  color: #0F172A !important;
+}
+
+html.light .text-slate-100,
+[data-theme="light"] .text-slate-100,
+html.light .text-slate-200,
+[data-theme="light"] .text-slate-200 {
+  color: #1E293B !important;
+}
+
+html.light .text-gray-100,
+[data-theme="light"] .text-gray-100,
+html.light .text-gray-200,
+[data-theme="light"] .text-gray-200,
+html.light .text-gray-300,
+[data-theme="light"] .text-gray-300 {
+  color: #334155 !important;
+}
+
+html.light .text-gray-400,
+[data-theme="light"] .text-gray-400 {
+  color: #475569 !important;
+}
+
+html.light .text-gray-500,
+[data-theme="light"] .text-gray-500 {
+  color: #64748B !important;
+}
+
+/* Light Mode Form Inputs & Controls */
+html.light input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+html.light select,
+html.light textarea,
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder,
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus,
+[data-theme="light"] input:focus,
+[data-theme="light"] select:focus,
+[data-theme="light"] textarea:focus {
+  border-color: #D97706 !important;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2) !important;
+}
+
+/* Light Mode Scrollbar */
+html.light ::-webkit-scrollbar-track,
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #F1F5EE !important;
+}
+
+html.light ::-webkit-scrollbar-thumb,
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #CBD5E1 !important;
+}
+
+html.light ::-webkit-scrollbar-thumb:hover,
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8 !important;
 }
 
 /* ==========================================================================

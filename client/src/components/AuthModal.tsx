@@ -400,7 +400,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       required
                       value={trainerForm.dob}
                       onChange={e => setTrainerForm({ ...trainerForm, dob: e.target.value })}
-                      className="w-full bg-[#121811] border border-[#273623] rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 text-xs font-mono"
+                      className="w-full bg-[#121811] border border-[#273623] rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 text-xs font-mono [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200 hover:[&::-webkit-calendar-picker-indicator]:scale-110 transition-all"
                     />
                   </div>
                   <div>

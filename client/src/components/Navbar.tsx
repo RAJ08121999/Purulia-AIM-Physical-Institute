@@ -17,6 +17,7 @@ import {
 import { FacebookIcon, InstagramIcon, YoutubeIcon } from '@/components/SocialIcons';
 import { Button, Badge, KineticButton } from '@/components/ui';
 import { AuthModal } from '@/components/AuthModal';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { getCurrentUser, logoutUser } from '@/lib/api';
 
 interface NavbarProps {
@@ -205,6 +206,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
                 )}
               </div>
 
+              {/* Tactical Theme Toggle (Day / Night Ops) */}
+              <ThemeToggle variant="compact" />
+
               {/* Authentication Status / Login Trigger - Positioned at Right-Most End */}
               {currentUser ? (
                 <div className="flex items-center gap-2 bg-[#121811] border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-mono">
@@ -234,8 +238,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
               )}
             </div>
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Actions: Theme Toggle + Menu Hamburger */}
             <div className="flex lg:hidden items-center gap-2">
+              <ThemeToggle variant="compact" />
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2.5 rounded-lg text-gray-300 hover:text-white hover:bg-[#1A2415] border border-[#273623]"
@@ -250,6 +255,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onApplyClick, onLoginClick }) =>
         {/* Mobile Drawer */}
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-[#273623] bg-[#070B06]/98 backdrop-blur-2xl px-5 pt-3 pb-8 space-y-2.5 font-display uppercase tracking-widest text-sm max-h-[85vh] overflow-y-auto no-scrollbar touch-pan-y">
+            {/* Tactical Theme Selector on Mobile */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#1A2415]">
+              <span className="text-xs font-mono text-gray-400">Regimental Theme:</span>
+              <ThemeToggle variant="pill" />
+            </div>
+
             {/* Social Icons on Mobile */}
             <div className="flex items-center justify-between pb-3 border-b border-[#1A2415]">
               <span className="text-xs font-mono text-gray-400">Official Social Media:</span>
