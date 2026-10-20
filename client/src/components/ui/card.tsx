@@ -14,10 +14,10 @@ export const Card: React.FC<CardProps> = ({
   ...props
 }) => {
   const variantStyles = {
-    default: 'bg-AIM-dark-elevated/90 border border-AIM-dark-border/80 backdrop-blur-md',
-    elevated: 'bg-AIM-dark-card border border-AIM-army/40 shadow-xl shadow-black/50',
-    tactical: 'bg-AIM-dark-elevated border border-AIM-army/60 tactical-corner shadow-lg shadow-black/40',
-    accent: 'bg-gradient-to-b from-AIM-dark-card to-AIM-dark border border-amber-500/30'
+    default: 'bg-AIM-dark-elevated/90 border border-AIM-dark-border/80 backdrop-blur-md light:bg-white light:border-slate-200 light:shadow-sm light:text-slate-800',
+    elevated: 'bg-AIM-dark-card border border-AIM-army/40 shadow-xl shadow-black/50 light:bg-white light:border-slate-200 light:shadow-md light:text-slate-800',
+    tactical: 'bg-AIM-dark-elevated border border-AIM-army/60 tactical-corner shadow-lg shadow-black/40 light:bg-white light:border-slate-200 light:shadow-sm light:text-slate-800',
+    accent: 'bg-gradient-to-b from-AIM-dark-card to-AIM-dark border border-amber-500/30 light:from-white light:to-slate-50 light:border-amber-400/40 light:shadow-sm light:text-slate-800'
   };
 
   return (

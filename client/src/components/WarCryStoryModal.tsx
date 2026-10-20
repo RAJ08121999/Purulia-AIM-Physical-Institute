@@ -256,7 +256,7 @@ export const WarCryStoryModal: React.FC<WarCryStoryModalProps> = ({
       onTouchEnd={() => setIsPaused(false)}
     >
       {/* Container: Max phone dimension width on desktop (max-w-md), full height on mobile */}
-      <div className="relative w-full max-w-md h-full sm:h-[92vh] sm:rounded-3xl bg-[#090D08] border border-[#273623] overflow-hidden flex flex-col justify-between shadow-[0_0_80px_rgba(0,0,0,0.9)]">
+      <div className="warcry-theater-mode relative w-full max-w-md h-full sm:h-[92vh] sm:rounded-3xl bg-[#090D08] border border-[#273623] overflow-hidden flex flex-col justify-between shadow-[0_0_80px_rgba(0,0,0,0.9)]">
         
         {/* ===================================================================
             HEADER CONTROLS & SEGMENTED PROGRESS BARS

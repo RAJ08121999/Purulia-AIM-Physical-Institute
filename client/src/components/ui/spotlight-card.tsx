@@ -39,7 +39,8 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        'relative rounded-xl border border-AIM-army/30 bg-AIM-dark-elevated p-6 overflow-hidden transition-all duration-300 hover:border-amber-500/50 group',
+        'aim-spotlight-card relative rounded-xl border border-AIM-army/30 bg-AIM-dark-elevated p-6 overflow-hidden transition-all duration-300 hover:border-amber-500/50 group',
+        'light:bg-white light:border-slate-200 light:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.06)] light:hover:border-amber-500/60 light:hover:shadow-[0_10px_25px_-5px_rgba(245,158,11,0.12)]',
         className
       )}
       {...props}

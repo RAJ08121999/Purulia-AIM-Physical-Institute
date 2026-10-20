@@ -35,26 +35,26 @@ export const StatMetricCard: React.FC<StatMetricCardProps> = ({
       viewport={{ once: true }}
       transition={{ duration: 0.4 }}
       className={cn(
-        'relative overflow-hidden rounded-xl bg-gradient-to-b from-AIM-dark-elevated to-AIM-dark-card border border-AIM-army/30 p-5 shadow-lg hover:border-amber-500/40 transition-all duration-300 group',
+        'relative overflow-hidden rounded-xl bg-gradient-to-b from-AIM-dark-elevated to-AIM-dark-card border border-AIM-army/30 light:bg-white light:from-white light:to-white light:border-slate-200 light:shadow-sm p-5 shadow-lg hover:border-amber-500/40 transition-all duration-300 group',
         className
       )}
     >
       <div className="flex items-start justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-gray-400 font-display">
+        <span className="text-xs font-bold uppercase tracking-wider text-gray-400 light:text-slate-500 font-display">
           {label}
         </span>
         {icon && (
-          <div className="p-2 rounded-lg bg-AIM-olive/40 border border-AIM-army/40 text-amber-400 group-hover:scale-110 transition-transform">
+          <div className="p-2 rounded-lg bg-AIM-olive/40 border border-AIM-army/40 text-amber-400 light:bg-amber-50 light:border-amber-200 light:text-amber-600 group-hover:scale-110 transition-transform">
             {icon}
           </div>
         )}
       </div>
 
       <div className="mt-3 flex items-baseline gap-2">
-        <span className="text-3xl lg:text-4xl font-extrabold font-display tracking-tight text-white">
+        <span className="text-3xl lg:text-4xl font-extrabold font-display tracking-tight text-white light:text-slate-900">
           {value}
         </span>
-        {unit && <span className="text-sm font-semibold text-gray-400">{unit}</span>}
+        {unit && <span className="text-sm font-semibold text-gray-400 light:text-slate-500">{unit}</span>}
       </div>
 
       {(percentageChange || baseline) && (

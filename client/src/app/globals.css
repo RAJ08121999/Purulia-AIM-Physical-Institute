@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=Bebas+Neue&family=Manrope:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+@custom-variant light (&:where(.light, [data-theme="light"], .light *, [data-theme="light"] *));
+
 @theme {
   --color-AIM-olive: #26351F;
   --color-AIM-olive-dark: #1A2415;
@@ -172,6 +174,7 @@ html.light input[type="date"]::-webkit-calendar-picker-indicator,
 
 /* ==========================================================================
    REGIMENTAL DAY OPERATIONS: AUTHENTIC MILITARY LIGHT THEME
+   Crisp, high-contrast, military-academy grade daytime palette
    ========================================================================== */
 html.light,
 [data-theme="light"] {
@@ -179,6 +182,10 @@ html.light,
   --bg-dark: #F8FAF6;
   --bg-card: #FFFFFF;
   --text-main: #0F172A;
+  --color-AIM-dark: #F8FAF6;
+  --color-AIM-dark-elevated: #FFFFFF;
+  --color-AIM-dark-card: #FFFFFF;
+  --color-AIM-dark-border: #E2E8F0;
 }
 
 html.light body,
@@ -187,37 +194,64 @@ html.light body,
   color: #0F172A !important;
 }
 
-/* Light Mode Tactical Grid */
+/* Light Mode Tactical Grid & Dots (Clean Military Blueprint Grid) */
 html.light .bg-tactical-grid,
 [data-theme="light"] .bg-tactical-grid {
-  background-image: radial-gradient(circle at 1px 1px, rgba(45, 62, 36, 0.12) 1px, transparent 0) !important;
+  background-image: radial-gradient(circle at 1px 1px, rgba(38, 53, 31, 0.12) 1px, transparent 0) !important;
   background-size: 32px 32px;
 }
 
 html.light .bg-tactical-dots,
 [data-theme="light"] .bg-tactical-dots {
-  background-image: radial-gradient(rgba(217, 119, 6, 0.2) 1px, transparent 1px) !important;
+  background-image: radial-gradient(rgba(217, 119, 6, 0.22) 1px, transparent 1px) !important;
   background-size: 24px 24px;
 }
 
-/* Light Mode Main Backgrounds */
+/* Base Canvas & Background Overrides */
 html.light .bg-\[\#0B0F0A\],
-[data-theme="light"] .bg-\[\#0B0F0A\] {
+[data-theme="light"] .bg-\[\#0B0F0A\],
+html.light .bg-\[\#070B06\],
+[data-theme="light"] .bg-\[\#070B06\],
+html.light .bg-\[\#070A06\],
+[data-theme="light"] .bg-\[\#070A06\],
+html.light .bg-\[\#080B07\],
+[data-theme="light"] .bg-\[\#080B07\],
+html.light .bg-\[\#090D08\],
+[data-theme="light"] .bg-\[\#090D08\],
+html.light .bg-\[\#0A0E08\],
+[data-theme="light"] .bg-\[\#0A0E08\],
+html.light .bg-\[\#0A0F08\],
+[data-theme="light"] .bg-\[\#0A0F08\],
+html.light .bg-\[\#0B0F09\],
+[data-theme="light"] .bg-\[\#0B0F09\],
+html.light .bg-\[\#0D120B\],
+[data-theme="light"] .bg-\[\#0D120B\],
+html.light .bg-\[\#0F150D\],
+[data-theme="light"] .bg-\[\#0F150D\],
+html.light .bg-AIM-dark,
+[data-theme="light"] .bg-AIM-dark {
   background-color: #F8FAF6 !important;
 }
 
-html.light .bg-\[\#070B06\],
-[data-theme="light"] .bg-\[\#070B06\],
+/* Header & Sticky Navbars */
+html.light header,
+[data-theme="light"] header,
 html.light .bg-\[\#070B06\]\/95,
 [data-theme="light"] .bg-\[\#070B06\]\/95,
 html.light .bg-\[\#070B06\]\/98,
 [data-theme="light"] .bg-\[\#070B06\]\/98,
 html.light .bg-\[\#0E140C\]\/95,
 [data-theme="light"] .bg-\[\#0E140C\]\/95 {
-  background-color: rgba(255, 255, 255, 0.95) !important;
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-bottom-color: #E2E8F0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
 }
 
-/* Light Mode Card Panels & Containers */
+/* Primary Card Panels, Stat Cards, Spotlight Cards & Interactive Tiles */
+html.light .bg-AIM-dark-elevated,
+[data-theme="light"] .bg-AIM-dark-elevated,
+html.light .bg-AIM-dark-card,
+[data-theme="light"] .bg-AIM-dark-card,
 html.light .bg-\[\#121811\],
 [data-theme="light"] .bg-\[\#121811\],
 html.light .bg-\[\#161F15\],
@@ -226,33 +260,180 @@ html.light .bg-\[\#0E140C\],
 [data-theme="light"] .bg-\[\#0E140C\],
 html.light .bg-\[\#171D12\],
 [data-theme="light"] .bg-\[\#171D12\],
+html.light .bg-\[\#172012\],
+[data-theme="light"] .bg-\[\#172012\],
+html.light .bg-\[\#182213\],
+[data-theme="light"] .bg-\[\#182213\],
+html.light .bg-\[\#182316\],
+[data-theme="light"] .bg-\[\#182316\],
+html.light .bg-\[\#182415\],
+[data-theme="light"] .bg-\[\#182415\],
+html.light .bg-\[\#141C0E\],
+[data-theme="light"] .bg-\[\#141C0E\],
+html.light .bg-\[\#141C10\],
+[data-theme="light"] .bg-\[\#141C10\],
+html.light .bg-\[\#151D14\],
+[data-theme="light"] .bg-\[\#151D14\],
+html.light .bg-\[\#161F13\],
+[data-theme="light"] .bg-\[\#161F13\],
+html.light .bg-\[\#162014\],
+[data-theme="light"] .bg-\[\#162014\],
+html.light .bg-\[\#1A1F13\],
+[data-theme="light"] .bg-\[\#1A1F13\],
 html.light .bg-gradient-to-r.from-\[\#161F15\],
 [data-theme="light"] .bg-gradient-to-r.from-\[\#161F15\],
 html.light .bg-gradient-to-r.from-\[\#171D12\],
-[data-theme="light"] .bg-gradient-to-r.from-\[\#171D12\] {
+[data-theme="light"] .bg-gradient-to-r.from-\[\#171D12\],
+html.light .bg-gradient-to-b.from-AIM-dark-elevated,
+[data-theme="light"] .bg-gradient-to-b.from-AIM-dark-elevated,
+html.light [class*="SpotlightCard"],
+[data-theme="light"] [class*="SpotlightCard"],
+html.light .aim-spotlight-card,
+[data-theme="light"] .aim-spotlight-card {
   background-color: #FFFFFF !important;
   background-image: none !important;
-  box-shadow: 0 4px 20px -2px rgba(45, 62, 36, 0.08) !important;
+  border-color: #E2E8F0 !important;
+  color: #0F172A !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03) !important;
 }
 
+/* Card Hover Elevation */
+html.light .group:hover .bg-AIM-dark-elevated,
+[data-theme="light"] .group:hover .bg-AIM-dark-elevated,
+html.light .hover\:border-amber-500\/60:hover,
+[data-theme="light"] .hover\:border-amber-500\/60:hover,
+html.light .hover\:border-amber-500\/50:hover,
+[data-theme="light"] .hover\:border-amber-500\/50:hover {
+  border-color: rgba(217, 119, 6, 0.6) !important;
+  box-shadow: 0 12px 30px -4px rgba(217, 119, 6, 0.16), 0 4px 6px -2px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Sub-surfaces, Inset Chips, Filters, & Secondary Elements */
 html.light .bg-\[\#1A2415\],
-[data-theme="light"] .bg-\[\#1A2415\] {
-  background-color: #F1F5EE !important;
+[data-theme="light"] .bg-\[\#1A2415\],
+html.light .bg-\[\#1B2211\],
+[data-theme="light"] .bg-\[\#1B2211\],
+html.light .bg-\[\#140E0E\],
+[data-theme="light"] .bg-\[\#140E0E\],
+html.light .bg-\[\#180A0A\],
+[data-theme="light"] .bg-\[\#180A0A\],
+html.light .bg-\[\#18140A\],
+[data-theme="light"] .bg-\[\#18140A\],
+html.light .bg-\[\#1a150c\],
+[data-theme="light"] .bg-\[\#1a150c\],
+html.light .bg-AIM-olive\/40,
+[data-theme="light"] .bg-AIM-olive\/40 {
+  background-color: #F1F5F9 !important;
+  border-color: #E2E8F0 !important;
 }
 
-/* Light Mode Borders */
+/* Section Gradients (e.g. War Cry tray & Section Transitions) */
+html.light [class*="from-\[\#12190E\]"],
+[data-theme="light"] [class*="from-\[\#12190E\]"] {
+  background-image: linear-gradient(to bottom, #F8FAF6, #F1F5F9, #F8FAF6) !important;
+}
+
+/* War Cry Story Theater Viewport (Maintains dark immersion for video/photo playback) */
+html.light .warcry-theater-mode,
+[data-theme="light"] .warcry-theater-mode {
+  background-color: #090D08 !important;
+  border-color: #273623 !important;
+  color: #FFFFFF !important;
+}
+
+html.light .warcry-theater-mode .text-white,
+[data-theme="light"] .warcry-theater-mode .text-white {
+  color: #FFFFFF !important;
+}
+
+html.light .warcry-theater-mode .text-gray-300,
+[data-theme="light"] .warcry-theater-mode .text-gray-300 {
+  color: #D1D5DB !important;
+}
+
+html.light .warcry-theater-mode .bg-\[\#121811\],
+[data-theme="light"] .warcry-theater-mode .bg-\[\#121811\] {
+  background-color: #121811 !important;
+  border-color: #273623 !important;
+}
+
+/* Footer in Light Mode */
+html.light footer,
+[data-theme="light"] footer {
+  background-color: #FFFFFF !important;
+  border-top-color: #E2E8F0 !important;
+  color: #475569 !important;
+}
+
+/* All Military Dark Borders -> Soft Stone / Slate-200 */
 html.light .border-\[\#273623\],
 [data-theme="light"] .border-\[\#273623\],
+html.light .border-\[\#1E2B1A\],
+[data-theme="light"] .border-\[\#1E2B1A\],
 html.light .border-\[\#1A2415\],
 [data-theme="light"] .border-\[\#1A2415\],
 html.light .border-\[\#1C2618\],
-[data-theme="light"] .border-\[\#1C2618\] {
-  border-color: #DDE5D8 !important;
+[data-theme="light"] .border-\[\#1C2618\],
+html.light .border-\[\#1C2619\],
+[data-theme="light"] .border-\[\#1C2619\],
+html.light .border-\[\#1E2613\],
+[data-theme="light"] .border-\[\#1E2613\],
+html.light .border-\[\#1E2918\],
+[data-theme="light"] .border-\[\#1E2918\],
+html.light .border-\[\#1F2B1A\],
+[data-theme="light"] .border-\[\#1F2B1A\],
+html.light .border-\[\#1F2B1C\],
+[data-theme="light"] .border-\[\#1F2B1C\],
+html.light .border-\[\#1f2c1e\],
+[data-theme="light"] .border-\[\#1f2c1e\],
+html.light .border-\[\#202E1D\],
+[data-theme="light"] .border-\[\#202E1D\],
+html.light .border-\[\#22331F\],
+[data-theme="light"] .border-\[\#22331F\],
+html.light .border-\[\#26351F\],
+[data-theme="light"] .border-\[\#26351F\],
+html.light .border-\[\#2B3B26\],
+[data-theme="light"] .border-\[\#2B3B26\],
+html.light .border-\[\#34491E\],
+[data-theme="light"] .border-\[\#34491E\],
+html.light .border-\[\#364A2C\],
+[data-theme="light"] .border-\[\#364A2C\],
+html.light .border-\[\#384c31\],
+[data-theme="light"] .border-\[\#384c31\],
+html.light .border-\[\#384F32\],
+[data-theme="light"] .border-\[\#384F32\],
+html.light .border-\[\#3E5529\],
+[data-theme="light"] .border-\[\#3E5529\],
+html.light .border-AIM-army\/20,
+[data-theme="light"] .border-AIM-army\/20,
+html.light .border-AIM-army\/30,
+[data-theme="light"] .border-AIM-army\/30,
+html.light .border-AIM-army\/40,
+[data-theme="light"] .border-AIM-army\/40,
+html.light .border-AIM-dark-border,
+[data-theme="light"] .border-AIM-dark-border,
+html.light .border-AIM-dark-border\/80,
+[data-theme="light"] .border-AIM-dark-border\/80,
+html.light .border-AIM-army-muted\/40,
+[data-theme="light"] .border-AIM-army-muted\/40 {
+  border-color: #E2E8F0 !important;
 }
 
-/* Light Mode Typography */
-html.light .text-white,
-[data-theme="light"] .text-white {
+/* Light Mode Typography Hierarchy (Crisp, authoritative slate) */
+html.light h1:not([class*="from-"]):not([class*="text-transparent"]),
+html.light h2:not([class*="from-"]):not([class*="text-transparent"]),
+html.light h3:not([class*="from-"]):not([class*="text-transparent"]),
+html.light h4:not([class*="from-"]):not([class*="text-transparent"]),
+[data-theme="light"] h1:not([class*="from-"]):not([class*="text-transparent"]),
+[data-theme="light"] h2:not([class*="from-"]):not([class*="text-transparent"]),
+[data-theme="light"] h3:not([class*="from-"]):not([class*="text-transparent"]),
+[data-theme="light"] h4:not([class*="from-"]):not([class*="text-transparent"]) {
+  color: #0F172A !important;
+}
+
+/* White text converted to deep slate (EXCEPT on dark saturated action buttons) */
+html.light :not(button):not([class*="bg-AIM-olive"]):not([class*="from-AIM-olive"]):not([class*="bg-emerald-600"]):not([class*="bg-green-600"]):not([class*="bg-red-"]):not([class*="bg-blue-600"]).text-white,
+[data-theme="light"] :not(button):not([class*="bg-AIM-olive"]):not([class*="from-AIM-olive"]):not([class*="bg-emerald-600"]):not([class*="bg-green-600"]):not([class*="bg-red-"]):not([class*="bg-blue-600"]).text-white {
   color: #0F172A !important;
 }
 
@@ -282,6 +463,95 @@ html.light .text-gray-500,
   color: #64748B !important;
 }
 
+html.light .text-gray-600,
+[data-theme="light"] .text-gray-600 {
+  color: #94A3B8 !important;
+}
+
+/* High-Contrast Regimental Accents on White Canvas */
+html.light .text-amber-400,
+[data-theme="light"] .text-amber-400 {
+  color: #D97706 !important;
+}
+
+html.light .text-amber-300,
+[data-theme="light"] .text-amber-300 {
+  color: #B45309 !important;
+}
+
+html.light .text-lime-400,
+[data-theme="light"] .text-lime-400 {
+  color: #15803D !important;
+}
+
+html.light .text-yellow-400,
+[data-theme="light"] .text-yellow-400 {
+  color: #D97706 !important;
+}
+
+html.light .text-blue-400,
+[data-theme="light"] .text-blue-400 {
+  color: #2563EB !important;
+}
+
+html.light .text-emerald-400,
+[data-theme="light"] .text-emerald-400 {
+  color: #15803D !important;
+}
+
+/* Group hover accent colors */
+html.light .group:hover .group-hover\:text-amber-400,
+[data-theme="light"] .group:hover .group-hover\:text-amber-400 {
+  color: #D97706 !important;
+}
+
+/* Soft Radiant Icon Containers on White Cards */
+html.light .bg-amber-500\/10,
+[data-theme="light"] .bg-amber-500\/10 {
+  background-color: #FEF3C7 !important;
+  border-color: rgba(217, 119, 6, 0.35) !important;
+  color: #B45309 !important;
+}
+
+html.light .bg-lime-500\/10,
+[data-theme="light"] .bg-lime-500\/10 {
+  background-color: #DCFCE7 !important;
+  border-color: rgba(22, 163, 74, 0.35) !important;
+  color: #15803D !important;
+}
+
+html.light .bg-blue-500\/10,
+[data-theme="light"] .bg-blue-500\/10 {
+  background-color: #DBEAFE !important;
+  border-color: rgba(37, 99, 235, 0.35) !important;
+  color: #1D4ED8 !important;
+}
+
+html.light .bg-yellow-500\/10,
+[data-theme="light"] .bg-yellow-500\/10 {
+  background-color: #FEF9C3 !important;
+  border-color: rgba(202, 138, 4, 0.35) !important;
+  color: #A16207 !important;
+}
+
+/* Protect Action Buttons (Army / Saffron / Emerald) text legibility */
+html.light .bg-AIM-olive,
+[data-theme="light"] .bg-AIM-olive,
+html.light [class*="from-AIM-olive"],
+[data-theme="light"] [class*="from-AIM-olive"],
+html.light .bg-AIM-olive *,
+[data-theme="light"] .bg-AIM-olive *,
+html.light [class*="from-AIM-olive"] *,
+[data-theme="light"] [class*="from-AIM-olive"] * {
+  color: #FFFFFF !important;
+}
+
+/* Saffron / Kinetic Buttons: High Impact Black on Gold */
+html.light [class*="from-amber-500"],
+[data-theme="light"] [class*="from-amber-500"] {
+  color: #000000 !important;
+}
+
 /* Light Mode Form Inputs & Controls */
 html.light input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
 html.light select,
@@ -292,6 +562,12 @@ html.light textarea,
   background-color: #FFFFFF !important;
   color: #0F172A !important;
   border-color: #CBD5E1 !important;
+}
+
+html.light select option,
+[data-theme="light"] select option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
 }
 
 html.light input::placeholder,
