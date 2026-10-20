@@ -210,6 +210,38 @@ export default function TrainerCommandCenter() {
   const [verificationFilter, setVerificationFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING');
   const [verificationSearch, setVerificationSearch] = useState<string>('');
   const [verificationNotice, setVerificationNotice] = useState<{ type: 'success' | 'danger'; message: string } | null>(null);
+  const [isRefreshingApps, setIsRefreshingApps] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<string | null>(null);
+
+  const loadCadetApplications = React.useCallback(async (silent = false) => {
+    if (!silent) setIsRefreshingApps(true);
+    try {
+      const apps = await fetchCadetApplications();
+      if (Array.isArray(apps)) {
+        setAllApplications(apps);
+        // Only APPROVED cadets enter the active attendance and defaulters muster roll
+        const approvedApps = apps.filter((a: any) => a.admissionStatus === 'APPROVED');
+        const mapped: CadetAttendance[] = approvedApps.map((a: any, idx: number) => ({
+          id: a.id || String(idx + 1),
+          roll: a.dossierNumber || a.rollNumber || `AIM-2026-${String(idx + 1).padStart(3, '0')}`,
+          name: a.fullName || 'Enlisted Cadet',
+          batch: a.targetForce ? `${a.targetForce} Platoon` : 'Morning Alfa (Army GD)',
+          target: a.targetForce || 'Army GD (5m30s)',
+          consecutiveAbsences: 0,
+          last1600m: a.current1600mTime || 'Not Tested',
+          status: 'PRESENT'
+        }));
+        setCadets(mapped);
+        if (mapped.length > 0) setSelectedCadetId(prev => prev || mapped[0].roll);
+        const now = new Date();
+        setLastRefreshedAt(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      }
+    } catch (err) {
+      console.warn('Failed to load authentic cadets for trainer:', err);
+    } finally {
+      if (!silent) setIsRefreshingApps(false);
+    }
+  }, []);
 
   const handleVerificationAction = async (app: any, newStatus: 'APPROVED' | 'REJECTED') => {
     const idToUpdate = app.id || app.dossierNumber;
@@ -333,27 +365,23 @@ export default function TrainerCommandCenter() {
     if (user.name) setQuoteAuthor(`${user.name} (Drill Ustad)`);
 
     // Load authentic registered cadets from database
-    fetchCadetApplications().then(apps => {
-      if (Array.isArray(apps)) {
-        setAllApplications(apps);
-        // Only APPROVED cadets enter the active attendance and defaulters muster roll
-        const approvedApps = apps.filter((a: any) => a.admissionStatus === 'APPROVED');
-        const mapped: CadetAttendance[] = approvedApps.map((a: any, idx: number) => ({
-          id: a.id || String(idx + 1),
-          roll: a.dossierNumber || a.rollNumber || `AIM-2026-${String(idx + 1).padStart(3, '0')}`,
-          name: a.fullName || 'Enlisted Cadet',
-          batch: a.targetForce ? `${a.targetForce} Platoon` : 'Morning Alfa (Army GD)',
-          target: a.targetForce || 'Army GD (5m30s)',
-          consecutiveAbsences: 0,
-          last1600m: a.current1600mTime || 'Not Tested',
-          status: 'PRESENT'
-        }));
-        setCadets(mapped);
-        if (mapped.length > 0) setSelectedCadetId(mapped[0].roll);
+    loadCadetApplications();
+
+    // Live background polling: pull fresh registrations every 15s so new cadet applications auto-appear!
+    const pollInterval = setInterval(() => {
+      loadCadetApplications(true);
+    }, 15000);
+
+    // Cross-tab and window event listener for real-time cadet registration reflection
+    const handleEnlistmentEvent = () => loadCadetApplications(true);
+    const handleStorageEvent = (e: StorageEvent) => {
+      if (e.key === 'aim_last_enlistment_timestamp' || e.key === 'cadet_dossier_id') {
+        loadCadetApplications(true);
       }
-    }).catch(err => {
-      console.warn('Failed to load authentic cadets for trainer:', err);
-    });
+    };
+
+    window.addEventListener('cadet_enlistment_submitted', handleEnlistmentEvent);
+    window.addEventListener('storage', handleStorageEvent);
 
     // Load authentic trainer profile from database
     fetchTrainerProfile().then(tp => {
@@ -387,7 +415,20 @@ export default function TrainerCommandCenter() {
     } catch (e) {
       console.warn('Failed to load stored trainer items:', e);
     }
-  }, []);
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('cadet_enlistment_submitted', handleEnlistmentEvent);
+      window.removeEventListener('storage', handleStorageEvent);
+    };
+  }, [loadCadetApplications]);
+
+  // Auto-refresh applications whenever Ustad switches to the Admissions tab
+  React.useEffect(() => {
+    if (effectiveTab === 'ADMISSIONS') {
+      loadCadetApplications(true);
+    }
+  }, [effectiveTab, loadCadetApplications]);
 
   const handleSaveQuote = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1061,7 +1102,7 @@ export default function TrainerCommandCenter() {
                 </p>
               </div>
 
-              {/* Status Counters */}
+              {/* Status Counters & Refresh Action */}
               <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
                 <span className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
                   Pending: <strong>{allApplications.filter(a => a.admissionStatus === 'PENDING' || a.admissionStatus === 'UNDER_REVIEW' || !a.admissionStatus).length}</strong>
@@ -1072,6 +1113,17 @@ export default function TrainerCommandCenter() {
                 <span className="px-3 py-1.5 rounded-xl bg-red-500/20 text-red-400 border border-red-500/40">
                   Rejected: <strong>{allApplications.filter(a => a.admissionStatus === 'REJECTED').length}</strong>
                 </span>
+                <button
+                  type="button"
+                  onClick={() => loadCadetApplications(false)}
+                  disabled={isRefreshingApps}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#161F15] hover:bg-[#1C2618] text-amber-400 border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer disabled:opacity-50 font-bold ml-auto sm:ml-0"
+                  title="Fetch latest online cadet enlistments from database"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingApps ? 'animate-spin text-amber-300' : ''}`} />
+                  <span>{isRefreshingApps ? 'Syncing...' : 'Refresh Roster'}</span>
+                  {lastRefreshedAt && <span className="text-[10px] text-gray-500 font-normal hidden sm:inline">({lastRefreshedAt})</span>}
+                </button>
               </div>
             </div>
 

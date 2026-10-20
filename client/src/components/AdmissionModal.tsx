@@ -509,6 +509,10 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({ isOpen, onClose,
       try {
         localStorage.setItem('cadet_full_profile', JSON.stringify({ ...formData, dossierNumber: assignedId }));
       } catch (e) {}
+      try {
+        window.dispatchEvent(new CustomEvent('cadet_enlistment_submitted', { detail: { ...formData, dossierNumber: assignedId } }));
+        localStorage.setItem('aim_last_enlistment_timestamp', String(Date.now()));
+      } catch (e) {}
       persistQualificationsToLocal();
       setIsSubmitted(true);
     } catch (err: any) {

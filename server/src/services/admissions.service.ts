@@ -107,21 +107,54 @@ export class AdmissionsService {
   ) {}
 
   async getAllApplications(status?: string) {
+    let prismaList: any[] = [];
     try {
       const prismaStudents = await this.prisma.studentProfile.findMany({
         where: status ? { admissionStatus: status.toUpperCase() } : undefined,
         orderBy: { createdAt: 'desc' }
       });
-      if (prismaStudents) {
-        return prismaStudents.map(s => this.maskPrivateCadetData(s));
+      if (Array.isArray(prismaStudents)) {
+        prismaList = prismaStudents;
       }
     } catch (err: any) {
       this.logger.warn(`Prisma fetch failed, using fallback store: ${err.message}`);
     }
 
-    const students = this.db.getStudents();
-    const list = status ? students.filter(s => s.admissionStatus === status.toUpperCase()) : students;
-    return list.map(s => this.maskPrivateCadetData(s));
+    // Also get all registered cadets from persistent local store
+    const localStudents = this.db.getStudents();
+    const filteredLocal = status
+      ? localStudents.filter(s => (s.admissionStatus || 'PENDING').toUpperCase() === status.toUpperCase())
+      : localStudents;
+
+    // Merge both sources seamlessly without duplicates (keyed by dossierNumber or id)
+    const mergedMap = new Map<string, any>();
+
+    // 1. Seed with local students so local-first/offline submissions are never lost
+    for (const s of filteredLocal) {
+      const key = (s.dossierNumber || s.id || '').trim();
+      if (key) mergedMap.set(key, s);
+    }
+
+    // 2. Overlay / add prisma students
+    for (const p of prismaList) {
+      const key = (p.dossierNumber || p.id || '').trim();
+      if (key) {
+        const existingLocal = mergedMap.get(key) || {};
+        mergedMap.set(key, { ...existingLocal, ...p });
+      } else if (p.id) {
+        mergedMap.set(p.id, p);
+      }
+    }
+
+    const merged = Array.from(mergedMap.values());
+    // Sort descending by createdAt or joinedDate
+    merged.sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.joinedDate || 0).getTime();
+      const dateB = new Date(b.createdAt || b.joinedDate || 0).getTime();
+      return dateB - dateA;
+    });
+
+    return merged.map(s => this.maskPrivateCadetData(s));
   }
 
   private maskPrivateCadetData(cadet: any) {
@@ -179,13 +212,18 @@ export class AdmissionsService {
         where: {
           OR: [
             { aadhaarNumber: cleanAadhaar },
-            { aadhaarNumber: `XXXX-XXXX-${cleanAadhaar.slice(-4)}` }
+            {
+              AND: [
+                { aadhaarNumber: `XXXX-XXXX-${cleanAadhaar.slice(-4)}` },
+                { phone: cleanPhone }
+              ]
+            }
           ]
         }
       });
       if (existingInPrisma) {
         throw new BadRequestException(
-          `A cadet with Aadhaar number ending in ${cleanAadhaar.slice(-4)} is already registered (${existingInPrisma.fullName}, Dossier: ${existingInPrisma.dossierNumber}). Duplicate registrations with the same Aadhaar number are strictly prohibited.`
+          `A cadet with Aadhaar (${cleanAadhaar.slice(0, 4)} XXXX ${cleanAadhaar.slice(-4)}) is already registered (${existingInPrisma.fullName}, Dossier: ${existingInPrisma.dossierNumber}). Duplicate registrations are strictly prohibited.`
         );
       }
     } catch (e: any) {
@@ -195,11 +233,13 @@ export class AdmissionsService {
 
     const existingInLocal = this.db.getStudents().find(s => {
       const stored = s.aadhaarNumber ? s.aadhaarNumber.replace(/\D/g, '') : '';
-      return stored === cleanAadhaar || (s.aadhaarNumber && s.aadhaarNumber.endsWith(cleanAadhaar.slice(-4)));
+      if (stored === cleanAadhaar && cleanAadhaar.length === 12) return true;
+      if (s.aadhaarNumber && s.aadhaarNumber.endsWith(cleanAadhaar.slice(-4)) && s.phone === cleanPhone) return true;
+      return false;
     });
     if (existingInLocal) {
       throw new BadRequestException(
-        `A cadet with Aadhaar number ending in ${cleanAadhaar.slice(-4)} is already registered (${existingInLocal.fullName}, Dossier: ${existingInLocal.dossierNumber}). Duplicate registrations with the same Aadhaar number are strictly prohibited.`
+        `A cadet with Aadhaar (${cleanAadhaar.slice(0, 4)} XXXX ${cleanAadhaar.slice(-4)}) is already registered (${existingInLocal.fullName}, Dossier: ${existingInLocal.dossierNumber}). Duplicate registrations are strictly prohibited.`
       );
     }
 
@@ -353,7 +393,15 @@ export class AdmissionsService {
             }
           });
           if (existingUser) {
-            createdUserId = existingUser.id;
+            // Check if user is already bound to a StudentProfile to avoid unique constraint violation
+            const boundProfile = await this.prisma.studentProfile.findUnique({
+              where: { userId: existingUser.id }
+            });
+            if (!boundProfile) {
+              createdUserId = existingUser.id;
+            } else {
+              this.logger.log(`Existing user ${cleanEmail} already linked to cadet profile ${boundProfile.dossierNumber}`);
+            }
           } else {
             const passwordHash = await argon2.hash(dto.password);
             const user = await this.prisma.user.create({
